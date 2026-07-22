@@ -51,8 +51,9 @@ struct WorkbenchView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .navigationDestination(isPresented: $showsSettings) {
+        .fullScreenCover(isPresented: $showsSettings) {
             ThemeSettingsView()
+                .environmentObject(entitlement)
         }
         .photosPicker(
             isPresented: $showsPhotoPicker,
@@ -81,7 +82,10 @@ struct WorkbenchView: View {
             .ignoresSafeArea()
         }
         .fullScreenCover(item: $model.session) { session in
-            ConversionModalView(model: session) {
+            ConversionModalView(
+                model: session,
+                opensPalettePicker: reviewScreen == .palettePicker
+            ) {
                 model.session = nil
             }
             .environmentObject(entitlement)
@@ -157,6 +161,8 @@ struct WorkbenchView: View {
             model.prepareReviewHome(imageData: sourceData)
             pendingDeletion = model.records.first
         case .conversionEditing:
+            model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+        case .palettePicker:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
         case .conversionResult:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)

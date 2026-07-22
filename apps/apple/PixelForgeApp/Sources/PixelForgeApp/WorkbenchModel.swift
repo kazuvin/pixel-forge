@@ -153,20 +153,40 @@ enum ConversionSaveMode {
     case update
 }
 
-enum CropSelection: String, CaseIterable, Identifiable {
-    case full
-    case rectangle
-
-    var id: Self { self }
+enum PaletteSelection: Hashable {
+    case source
+    case preset(String)
+    case custom
 }
 
-enum PaletteSelection: String, CaseIterable, Identifiable {
-    case source
-    case gameBoy
-    case pico8
-    case custom
+struct PalettePreset: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let colorValues: [UInt32]
 
-    var id: Self { self }
+    var colors: [PixelRGBColor] {
+        colorValues.map { value in
+            PixelRGBColor(
+                red: UInt8((value >> 16) & 0xFF),
+                green: UInt8((value >> 8) & 0xFF),
+                blue: UInt8(value & 0xFF)
+            )
+        }
+    }
+
+    var displayName: String {
+        switch id {
+        case "game-boy": L10n.palettePresetGameBoy
+        case "pico-8": L10n.palettePresetPico8
+        case "mono-ink": L10n.palettePresetMonoInk
+        case "ocean-8": L10n.palettePresetOcean8
+        case "sunset-8": L10n.palettePresetSunset8
+        case "forest-8": L10n.palettePresetForest8
+        case "candy-8": L10n.palettePresetCandy8
+        case "sepia-6": L10n.palettePresetSepia6
+        default: name
+        }
+    }
 }
 
 @MainActor
@@ -187,11 +207,6 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     @Published var longSide = 64
     @Published var upscale = 8
-    @Published var cropSelection: CropSelection = .full
-    @Published var cropX = 0
-    @Published var cropY = 0
-    @Published var cropWidth = 1
-    @Published var cropHeight = 1
     @Published var paletteSelection: PaletteSelection = .source
     @Published var customPaletteText = "#000000, #FFFFFF"
     @Published var preservesTone = false
@@ -221,8 +236,6 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         self.sourceFilename = sourceFilename
         sourceImage = UIImage(data: sourceData)
         sourceDimensions = processor.sourceDimensions
-        cropWidth = Int(processor.sourceDimensions.width)
-        cropHeight = Int(processor.sourceDimensions.height)
         state = .editing
         self.store = store
         self.entitlement = entitlement
@@ -282,6 +295,34 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     var logicalDimensionsLabel: String {
         guard let record = currentRecord else { return "—" }
         return "\(record.metadata.logicalWidth) × \(record.metadata.logicalHeight) px"
+    }
+
+    var selectedPaletteTitle: String {
+        switch paletteSelection {
+        case .source:
+            L10n.paletteSource
+        case let .preset(identifier):
+            Self.palettePresets.first(where: { $0.id == identifier })?.displayName ?? L10n.palette
+        case .custom:
+            L10n.custom
+        }
+    }
+
+    var selectedPaletteColorValues: [UInt32] {
+        switch paletteSelection {
+        case .source:
+            []
+        case let .preset(identifier):
+            Self.palettePresets.first(where: { $0.id == identifier })?.colorValues ?? []
+        case .custom:
+            customPaletteColorValues
+        }
+    }
+
+    var customPaletteColorValues: [UInt32] {
+        customPaletteText
+            .split(separator: ",")
+            .compactMap { Self.parseHexValue(String($0)) }
     }
 
     func edit() {
@@ -395,21 +436,6 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     private func makeSettings() throws -> PixelConversionSettings {
-        let crop: PixelCropRegion
-        switch cropSelection {
-        case .full:
-            crop = .full
-        case .rectangle:
-            crop = .rectangle(
-                PixelCropRect(
-                    x: UInt32(max(0, cropX)),
-                    y: UInt32(max(0, cropY)),
-                    width: UInt32(max(1, cropWidth)),
-                    height: UInt32(max(1, cropHeight))
-                )
-            )
-        }
-
         let colorMode: PixelColorMode
         if paletteSelection == .source {
             colorMode = .source
@@ -426,7 +452,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         return PixelConversionSettings(
             longSide: UInt32(clamping: longSide),
             upscale: UInt32(clamping: upscale),
-            crop: crop,
+            crop: .full,
             colorMode: colorMode,
             outline: PixelOutlineSettings(
                 mode: outlineMode,
@@ -439,10 +465,11 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         switch paletteSelection {
         case .source:
             throw ConversionModelError.emptyPalette
-        case .gameBoy:
-            return PixelPalette(name: "Game Boy", colors: Self.gameBoyColors)
-        case .pico8:
-            return PixelPalette(name: "PICO-8", colors: Self.pico8Colors)
+        case let .preset(identifier):
+            guard let preset = Self.palettePresets.first(where: { $0.id == identifier }) else {
+                throw ConversionModelError.emptyPalette
+            }
+            return PixelPalette(name: preset.name, colors: preset.colors)
         case .custom:
             let colors = customPaletteText
                 .split(separator: ",")
@@ -455,29 +482,13 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private func apply(_ settings: PixelConversionSettings) {
         longSide = Int(settings.longSide)
         upscale = Int(settings.upscale)
-        switch settings.crop {
-        case .full:
-            cropSelection = .full
-            cropX = 0
-            cropY = 0
-            cropWidth = Int(sourceDimensions.width)
-            cropHeight = Int(sourceDimensions.height)
-        case let .rectangle(rect):
-            cropSelection = .rectangle
-            cropX = Int(rect.x)
-            cropY = Int(rect.y)
-            cropWidth = Int(rect.width)
-            cropHeight = Int(rect.height)
-        }
         switch settings.colorMode {
         case .source:
             paletteSelection = .source
             preservesTone = false
         case let .palette(palette, application):
-            if palette.name == "Game Boy" {
-                paletteSelection = .gameBoy
-            } else if palette.name == "PICO-8" {
-                paletteSelection = .pico8
+            if let preset = Self.palettePresets.first(where: { $0.name == palette.name }) {
+                paletteSelection = .preset(preset.id)
             } else {
                 paletteSelection = .custom
                 customPaletteText = palette.colors.map(Self.hex).joined(separator: ", ")
@@ -502,9 +513,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     private static func parseHex(_ value: String) -> PixelRGBColor? {
-        let clean = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        guard clean.count == 6, let rgb = UInt32(clean, radix: 16) else { return nil }
+        guard let rgb = parseHexValue(value) else { return nil }
         return PixelRGBColor(
             red: UInt8((rgb >> 16) & 0xFF),
             green: UInt8((rgb >> 8) & 0xFF),
@@ -516,22 +525,43 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         String(format: "#%02X%02X%02X", color.red, color.green, color.blue)
     }
 
-    private static let gameBoyColors = [
-        PixelRGBColor(red: 15, green: 56, blue: 15),
-        PixelRGBColor(red: 48, green: 98, blue: 48),
-        PixelRGBColor(red: 139, green: 172, blue: 15),
-        PixelRGBColor(red: 155, green: 188, blue: 15),
-    ]
+    private static func parseHexValue(_ value: String) -> UInt32? {
+        let clean = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+        guard clean.count == 6 else { return nil }
+        return UInt32(clean, radix: 16)
+    }
 
-    private static let pico8Colors = [
-        PixelRGBColor(red: 0, green: 0, blue: 0),
-        PixelRGBColor(red: 29, green: 43, blue: 83),
-        PixelRGBColor(red: 126, green: 37, blue: 83),
-        PixelRGBColor(red: 0, green: 135, blue: 81),
-        PixelRGBColor(red: 255, green: 241, blue: 232),
-        PixelRGBColor(red: 255, green: 0, blue: 77),
-        PixelRGBColor(red: 255, green: 163, blue: 0),
-        PixelRGBColor(red: 255, green: 236, blue: 39),
+    static let palettePresets = [
+        PalettePreset(id: "game-boy", name: "Game Boy", colorValues: [
+            0x0F380F, 0x306230, 0x8BAC0F, 0x9BBC0F,
+        ]),
+        PalettePreset(id: "pico-8", name: "PICO-8", colorValues: [
+            0x000000, 0x1D2B53, 0x7E2553, 0x008751,
+            0xFFF1E8, 0xFF004D, 0xFFA300, 0xFFEC27,
+        ]),
+        PalettePreset(id: "mono-ink", name: "Mono Ink", colorValues: [
+            0x111318, 0x505866, 0xA9B0BA, 0xF5F1E8,
+        ]),
+        PalettePreset(id: "ocean-8", name: "Ocean 8", colorValues: [
+            0x071A2B, 0x0B3C5D, 0x086788, 0x00A6A6,
+            0x7FD1B9, 0xD5F2E3, 0xF0C36E, 0xF47E60,
+        ]),
+        PalettePreset(id: "sunset-8", name: "Sunset 8", colorValues: [
+            0x211A3A, 0x51355A, 0x8E3B66, 0xD4515C,
+            0xF58A5C, 0xFFC46B, 0xFFE7A0, 0xFFF4D6,
+        ]),
+        PalettePreset(id: "forest-8", name: "Forest 8", colorValues: [
+            0x10231A, 0x214E34, 0x397A4A, 0x61A052,
+            0xA1C95A, 0xD4DB72, 0x8A5A3B, 0xE8D8A8,
+        ]),
+        PalettePreset(id: "candy-8", name: "Candy 8", colorValues: [
+            0x2A1B3D, 0x6A2C70, 0xB83B8F, 0xF06F9C,
+            0xFFB3C6, 0xFFD6A5, 0xA0E7E5, 0xB4F8C8,
+        ]),
+        PalettePreset(id: "sepia-6", name: "Sepia 6", colorValues: [
+            0x241A14, 0x4D3427, 0x76523A, 0xA47A55, 0xD2AC7B, 0xF1DFC0,
+        ]),
     ]
 }
 
@@ -549,16 +579,29 @@ protocol PhotoLibrarySaving {
 
 struct SystemPhotoLibrarySaver: PhotoLibrarySaving {
     func savePNG(_ data: Data, filename: String) async throws {
+        guard !data.isEmpty, UIImage(data: data) != nil else {
+            throw PhotoLibrarySaveError.invalidImage
+        }
         let authorization = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard PhotoLibraryAccessPolicy.canSave(status: authorization) else {
             throw PhotoLibrarySaveError.accessDenied
         }
-        let options = PHAssetResourceCreationOptions()
-        options.originalFilename = filename
-        try await PHPhotoLibrary.shared().performChanges {
-            let request = PHAssetCreationRequest.forAsset()
-            request.addResource(with: .photo, data: data, options: options)
-        }
+        let temporaryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pixel-forge-\(UUID().uuidString).png", isDirectory: false)
+        try data.write(to: temporaryURL, options: .atomic)
+        defer { try? FileManager.default.removeItem(at: temporaryURL) }
+
+        try await addPNGToPhotoLibrary(at: temporaryURL, filename: filename)
+    }
+}
+
+// Photos runs this closure on its private changes queue, so it must not inherit the saver protocol's MainActor.
+private func addPNGToPhotoLibrary(at fileURL: URL, filename: String) async throws {
+    let options = PHAssetResourceCreationOptions()
+    options.originalFilename = filename
+    try await PHPhotoLibrary.shared().performChanges {
+        let request = PHAssetCreationRequest.forAsset()
+        request.addResource(with: .photo, fileURL: fileURL, options: options)
     }
 }
 
@@ -570,9 +613,15 @@ enum PhotoLibraryAccessPolicy {
 
 private enum PhotoLibrarySaveError: LocalizedError {
     case accessDenied
+    case invalidImage
 
     var errorDescription: String? {
-        L10n.photosAccessDenied
+        switch self {
+        case .accessDenied:
+            L10n.photosAccessDenied
+        case .invalidImage:
+            L10n.invalidPhotoImage
+        }
     }
 }
 

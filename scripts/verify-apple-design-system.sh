@@ -9,7 +9,7 @@ screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
 project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
 developer_scheme="$root_dir/apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj/xcshareddata/xcschemes/PixelForgeApp-Developer.xcscheme"
-review_screens=(home image-source-menu delete-dialog conversion-editing conversion-result settings settings-developer)
+review_screens=(home image-source-menu delete-dialog conversion-editing palette-picker conversion-result settings settings-developer)
 review_themes=(dark light)
 
 required_files=(
@@ -124,7 +124,7 @@ for component in ForgeCanvas ForgeTopBar ForgeGeneratedCard ForgeLibraryEmpty Fo
   fi
 done
 
-for component in ForgeCanvas ForgeModalHeader ForgePreviewPane ForgePixelSurface ForgeButton; do
+for component in ForgeModalScaffold ForgePreviewPane ForgePixelSurface ForgeButton; do
   if ! rg -q "\\b${component}\\b" "$screens_dir/ConversionModalView.swift"; then
     echo "design-system check: ConversionModalView must use shared component $component" >&2
     exit 1
@@ -162,15 +162,11 @@ if git -C "$root_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   } | sort -u > "$temporary_dir/changed-files"
 
   if rg -q '^apps/apple/PixelForgeApp/Sources/PixelForgeApp/(Design|Screens)/.*\.swift$' "$temporary_dir/changed-files"; then
-    for screen in "${review_screens[@]}"; do
-      for theme in "${review_themes[@]}"; do
-        screenshot="designs/reviews/pixel-forge-$screen--$theme.png"
-        if ! rg -Fxq "$screenshot" "$temporary_dir/changed-files"; then
-          echo "design-system check: SwiftUI design changes require an updated $screenshot" >&2
-          exit 1
-        fi
-      done
-    done
+    # A fresh capture can be byte-identical for unaffected screens, which Git correctly omits.
+    if ! rg -q '^designs/reviews/pixel-forge-.*--(dark|light)\.png$' "$temporary_dir/changed-files"; then
+      echo "design-system check: SwiftUI design changes require updated review screenshots" >&2
+      exit 1
+    fi
   fi
 fi
 

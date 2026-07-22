@@ -86,6 +86,7 @@ enum L10n {
     static var saveAsNew: String { text("action.save_as_new") }
     static var delete: String { text("action.delete") }
     static var cancel: String { text("action.cancel") }
+    static var done: String { text("action.done") }
     static var close: String { text("action.close") }
     static var returnToSettings: String { text("action.return_to_settings") }
     static var overwrite: String { text("action.overwrite") }
@@ -101,11 +102,29 @@ enum L10n {
     static var conversionOptions: String { text("conversion.options") }
     static var conversionOptionsDetail: String { text("conversion.options.detail") }
     static var longSide: String { text("setting.long_side") }
-    static var crop: String { text("setting.crop") }
-    static var cropFull: String { text("setting.crop.full") }
-    static var cropRectangle: String { text("setting.crop.rectangle") }
     static var palette: String { text("setting.palette") }
     static var paletteSource: String { text("setting.palette.source") }
+    static var paletteSourceDetail: String { text("setting.palette.source.detail") }
+    static var paletteSourceCardDetail: String { text("setting.palette.source.card_detail") }
+    static var paletteCustomCardDetail: String { text("setting.palette.custom.card_detail") }
+    static var paletteEyebrow: String { text("palette.picker.eyebrow") }
+    static var palettePickerTitle: String { text("palette.picker.title") }
+    static var palettePickerDetail: String { text("palette.picker.detail") }
+    static var paletteCollectionEyebrow: String { text("palette.collection.eyebrow") }
+    static var paletteCollectionTitle: String { text("palette.collection.title") }
+    static var paletteCollectionDetail: String { text("palette.collection.detail") }
+    static var paletteApplicationEyebrow: String { text("palette.application.eyebrow") }
+    static var paletteApplicationTitle: String { text("palette.application.title") }
+    static var paletteApplicationDetail: String { text("palette.application.detail") }
+    static var paletteExact: String { text("palette.application.exact") }
+    static var palettePresetGameBoy: String { text("palette.preset.game_boy") }
+    static var palettePresetPico8: String { text("palette.preset.pico_8") }
+    static var palettePresetMonoInk: String { text("palette.preset.mono_ink") }
+    static var palettePresetOcean8: String { text("palette.preset.ocean_8") }
+    static var palettePresetSunset8: String { text("palette.preset.sunset_8") }
+    static var palettePresetForest8: String { text("palette.preset.forest_8") }
+    static var palettePresetCandy8: String { text("palette.preset.candy_8") }
+    static var palettePresetSepia6: String { text("palette.preset.sepia_6") }
     static var custom: String { text("setting.custom") }
     static var customPalette: String { text("setting.custom_palette") }
     static var preserveTone: String { text("setting.preserve_tone") }
@@ -137,6 +156,7 @@ enum L10n {
     static var cameraPermissionDetail: String { text("camera.permission.detail") }
     static var photoSaveSuccess: String { text("photos.save.success") }
     static var photosAccessDenied: String { text("error.photos_access_denied") }
+    static var invalidPhotoImage: String { text("error.photo_image_invalid") }
     static var appearanceTitle: String { text("settings.appearance.title") }
     static var appearanceEyebrow: String { text("settings.appearance.eyebrow") }
     static var appearanceDescription: String { text("settings.appearance.description") }
@@ -187,6 +207,10 @@ enum L10n {
 
     static func colorCount(_ value: Int) -> String {
         format("value.colors", value)
+    }
+
+    static func paletteColorCount(_ value: Int) -> String {
+        format("palette.color_count", value)
     }
 
     static func scale(_ value: Int) -> String {

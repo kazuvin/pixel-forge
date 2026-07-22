@@ -14,7 +14,7 @@ Home
 │  └─ editing -> rendering -> result / failure
 ├─ Existing Result (same full screen)
 │  └─ result -> editing -> update or save as new
-└─ Settings (in-app destination)
+└─ Settings (full screen)
    ├─ Language
    ├─ Appearance
    ├─ Pixel Forge Pro
@@ -24,7 +24,7 @@ Home
 
 - 起点はHomeだけとし、tab barを置かない。
 - 変換は新規・既存とも同じfull-screen coverを使い、状態ごとに別画面を重ねない。
-- SettingsはHomeからアプリ内遷移し、専用の閉じる操作でHomeへ戻る。
+- SettingsはHomeからfull-screen coverで開き、専用の閉じる操作でHomeへ戻る。横方向の戻るgestureは提供しない。
 - 変換中はinteractive dismissalを無効にし、重複実行を許可しない。
 
 ## Home
@@ -77,14 +77,17 @@ Home
 │                           │
 │ CONVERSION OPTIONS        │
 │ logical size / upscale    │
-│ crop                      │
-│ palette / tone            │
+│ palette card -> picker    │
 │ outline                   │
 │ [      変換する       ]   │
 └───────────────────────────┘
 ```
 
 - preview、幾何、色、輪郭、主操作を縦一列で並べ、画面全体をscroll可能にする。
+- 切り抜き機能は置かず、入力画像全体を対象にする。
+- 数値は直接入力でき、増減buttonの長押しとtrackの水平scrubでも連続変更できる。
+- paletteは現在の選択を参考画像付きcardで示し、tapすると2列のpalette pickerを開く。pickerの各cardにはpixel参考画像と使用色swatchを表示する。
+- palette適用と輪郭modeはpixel preview付きcardで選択し、文言だけに依存しない。
 - 無料範囲外の設定も隠さずlockを表示する。選択時にProが必要であることを説明し、現在の入力と設定を失わない。
 - 新規変換の主操作は`変換する`とする。
 - 既存recordの調整では`この画像を更新`を主操作、`別の画像として保存`を副操作として同時に提示する。
@@ -160,12 +163,13 @@ Home
 
 ## Review screenshots
 
-次の14枚をiPhone Simulatorの縦向きで保存する。
+次の16枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
 - `pixel-forge-delete-dialog--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
+- `pixel-forge-palette-picker--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`
 - `pixel-forge-settings-developer--{dark,light}.png`

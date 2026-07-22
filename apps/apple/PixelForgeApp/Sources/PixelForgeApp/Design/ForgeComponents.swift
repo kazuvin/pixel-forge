@@ -451,38 +451,61 @@ struct ForgeSuccessBanner: View {
 
 struct ForgeMetricStepper: View {
     @Environment(\.forgePalette) private var palette
+    @FocusState private var isEditing
     let title: String
     @Binding var value: Int
     let range: ClosedRange<Int>
     let step: Int
-    let valueLabel: String
+    let suffix: String
     var isLocked = false
+    @State private var draft = ""
 
     var body: some View {
-        HStack(spacing: ForgeDesign.Spacing.compact) {
-            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
-                Text(title)
-                    .forgeTextStyle(.caption)
-                    .foregroundStyle(palette.muted)
-                if isLocked {
-                    ForgeIcon(name: .lock, size: 12, colorRole: .accent)
+        VStack(spacing: ForgeDesign.Spacing.tight) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                HStack(spacing: ForgeDesign.Spacing.tight) {
+                    Text(title)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                    if isLocked {
+                        ForgeIcon(name: .lock, size: 12, colorRole: .accent)
+                    }
                 }
-                Text(valueLabel)
-                    .forgeTextStyle(.data)
-                    .foregroundStyle(palette.ink)
-                    .contentTransition(.numericText())
+                Spacer(minLength: 0)
+                ForgeStepButton(icon: .minus, isEnabled: value > range.lowerBound) {
+                    change(by: -step)
+                }
+                HStack(spacing: ForgeDesign.Spacing.hairline) {
+                    TextField(String(value), text: $draft)
+                        .focused($isEditing)
+                        .keyboardType(.numberPad)
+                        .multilineTextAlignment(.trailing)
+                        .forgeTextStyle(.data)
+                        .frame(minWidth: 38, maxWidth: 62)
+                        .onChange(of: draft) { _, newValue in
+                            guard isEditing, let entered = Int(newValue) else { return }
+                            value = min(range.upperBound, max(range.lowerBound, entered))
+                        }
+                    Text(suffix)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                }
+                .padding(.horizontal, ForgeDesign.Spacing.tight)
+                .frame(height: ForgeDesign.Size.controlHeight)
+                .background {
+                    ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                        .fill(palette.surfaceRaised)
+                }
+                .overlay {
+                    ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+                }
+                ForgeStepButton(icon: .plus, isEnabled: value < range.upperBound) {
+                    change(by: step)
+                }
             }
-            Spacer()
-            ForgeStepButton(icon: .minus, isEnabled: value - step >= range.lowerBound) {
-                value = max(range.lowerBound, value - step)
-            }
-            ForgeStepButton(icon: .plus, isEnabled: value + step <= range.upperBound) {
-                value = min(range.upperBound, value + step)
-            }
+            ForgeScrubTrack(value: $value, range: range, step: step)
         }
-        .padding(.leading, ForgeDesign.Spacing.compact)
-        .padding(.trailing, ForgeDesign.Spacing.tight)
-        .frame(height: 58)
+        .padding(ForgeDesign.Spacing.compact)
         .background {
             ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
                 .fill(palette.surface)
@@ -493,6 +516,27 @@ struct ForgeMetricStepper: View {
                 cut: ForgeDesign.Size.compactCornerCut
             )
         }
+        .onAppear { draft = String(value) }
+        .onChange(of: value) { _, newValue in
+            if !isEditing {
+                draft = String(newValue)
+            }
+        }
+        .onChange(of: isEditing) { _, editing in
+            if !editing {
+                draft = String(value)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityValue("\(value) \(suffix)")
+        .accessibilityAdjustableAction { direction in
+            change(by: direction == .increment ? step : -step)
+        }
+    }
+
+    private func change(by delta: Int) {
+        value = min(range.upperBound, max(range.lowerBound, value + delta))
+        draft = String(value)
     }
 }
 
@@ -516,8 +560,60 @@ private struct ForgeStepButton: View {
         .overlay {
             ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
         }
+        .buttonRepeatBehavior(.enabled)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.3)
+    }
+}
+
+private struct ForgeScrubTrack: View {
+    @Environment(\.forgePalette) private var palette
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let step: Int
+    @State private var dragOrigin: Int?
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(palette.grid.opacity(0.34))
+                Rectangle()
+                    .fill(palette.accent)
+                    .frame(width: max(4, proxy.size.width * progress))
+                Rectangle()
+                    .fill(palette.accentInk)
+                    .frame(width: 3)
+                    .offset(x: max(0, min(proxy.size.width - 3, proxy.size.width * progress - 1.5)))
+            }
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        guard abs(gesture.translation.width) >= abs(gesture.translation.height) else {
+                            return
+                        }
+                        if dragOrigin == nil {
+                            dragOrigin = value
+                        }
+                        guard let dragOrigin else { return }
+                        let steps = Int((gesture.translation.width / 12).rounded())
+                        value = clamp(dragOrigin + (steps * step))
+                    }
+                    .onEnded { _ in dragOrigin = nil }
+            )
+        }
+        .frame(height: 10)
+        .accessibilityHidden(true)
+    }
+
+    private var progress: CGFloat {
+        guard range.upperBound > range.lowerBound else { return 0 }
+        return CGFloat(value - range.lowerBound) / CGFloat(range.upperBound - range.lowerBound)
+    }
+
+    private func clamp(_ candidate: Int) -> Int {
+        min(range.upperBound, max(range.lowerBound, candidate))
     }
 }
 
@@ -558,6 +654,290 @@ struct ForgeSegmentedControl<Value: Hashable>: View {
             }
         }
     }
+}
+
+enum ForgeOptionArtwork {
+    case outlineNone
+    case outlineBlack
+    case outlineAdaptive
+    case toneExact
+    case tonePreserved
+}
+
+struct ForgeGraphicalOption<Value: Hashable>: Identifiable {
+    let id: String
+    let value: Value
+    let title: String
+    let artwork: ForgeOptionArtwork
+    var isLocked = false
+}
+
+struct ForgeGraphicalOptionPicker<Value: Hashable>: View {
+    @Environment(\.forgePalette) private var palette
+    @Binding var selection: Value
+    let options: [ForgeGraphicalOption<Value>]
+
+    var body: some View {
+        HStack(alignment: .top, spacing: ForgeDesign.Spacing.tight) {
+            ForEach(options) { option in
+                Button {
+                    selection = option.value
+                } label: {
+                    VStack(spacing: ForgeDesign.Spacing.tight) {
+                        ForgeOptionPreview(artwork: option.artwork)
+                            .frame(height: 58)
+                        Text(option.title)
+                            .forgeTextStyle(.caption)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .frame(maxWidth: .infinity, minHeight: 34, alignment: .top)
+                        ForgeIcon(
+                            name: option.isLocked
+                                ? .lock
+                                : (selection == option.value ? .selected : .unselected),
+                            size: 12,
+                            colorRole: selection == option.value ? .accent : .muted
+                        )
+                    }
+                    .padding(ForgeDesign.Spacing.tight)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background {
+                    ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                        .fill(selection == option.value ? palette.surfaceRaised : palette.surface)
+                }
+                .overlay {
+                    ForgePixelBorder(
+                        color: selection == option.value ? palette.accent : palette.grid,
+                        cut: ForgeDesign.Size.compactCornerCut,
+                        lineWidth: selection == option.value
+                            ? ForgeDesign.Size.activeBorder
+                            : ForgeDesign.Size.border
+                    )
+                }
+                .accessibilityAddTraits(selection == option.value ? .isSelected : [])
+            }
+        }
+    }
+}
+
+private struct ForgeOptionPreview: View {
+    @Environment(\.forgePalette) private var palette
+    let artwork: ForgeOptionArtwork
+
+    var body: some View {
+        Canvas(rendersAsynchronously: false) { context, size in
+            let columns = 7
+            let rows = 5
+            let cell = min(size.width / CGFloat(columns), size.height / CGFloat(rows))
+            let origin = CGPoint(
+                x: (size.width - CGFloat(columns) * cell) / 2,
+                y: (size.height - CGFloat(rows) * cell) / 2
+            )
+            for row in 0 ..< rows {
+                for column in 0 ..< columns {
+                    let isShape = (1 ... 5).contains(column) && (1 ... 3).contains(row)
+                    let isEdge = isShape && (column == 1 || column == 5 || row == 1 || row == 3)
+                    let color: Color
+                    switch artwork {
+                    case .outlineNone:
+                        color = isShape ? palette.accent : palette.surface
+                    case .outlineBlack:
+                        color = isEdge ? palette.ink : (isShape ? palette.accent : palette.surface)
+                    case .outlineAdaptive:
+                        color = isEdge ? palette.muted : (isShape ? palette.accent : palette.surface)
+                    case .toneExact:
+                        color = isShape
+                            ? ((column + row).isMultiple(of: 2) ? palette.accent : palette.surfaceRaised)
+                            : palette.surface
+                    case .tonePreserved:
+                        if !isShape {
+                            color = palette.surface
+                        } else if row == 1 {
+                            color = palette.muted
+                        } else if row == 2 {
+                            color = palette.accent
+                        } else {
+                            color = palette.surfaceRaised
+                        }
+                    }
+                    let rect = CGRect(
+                        x: origin.x + CGFloat(column) * cell,
+                        y: origin.y + CGFloat(row) * cell,
+                        width: ceil(cell),
+                        height: ceil(cell)
+                    )
+                    context.fill(Path(rect), with: .color(color))
+                }
+            }
+        }
+        .background(palette.surface)
+        .overlay {
+            ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+        }
+    }
+}
+
+struct ForgePaletteSelectionButton: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let colors: [UInt32]
+    var isLocked = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.regular) {
+                ForgePaletteReferencePreview(colors: colors)
+                    .frame(width: 92, height: 70)
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                    Text(title)
+                        .forgeTextStyle(.heading)
+                    Text(detail)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                ForgeIcon(name: isLocked ? .lock : .edit, colorRole: .accent)
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+        }
+    }
+}
+
+struct ForgePaletteCard: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let colors: [UInt32]
+    let isSelected: Bool
+    var isLocked = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                ForgePaletteReferencePreview(colors: colors)
+                    .frame(height: 92)
+                Text(title)
+                    .forgeTextStyle(.heading)
+                    .lineLimit(1)
+                Text(detail)
+                    .forgeTextStyle(.caption)
+                    .foregroundStyle(palette.muted)
+                    .lineLimit(1)
+                ForgePaletteSwatches(colors: colors)
+                    .frame(height: 12)
+                HStack {
+                    Spacer()
+                    ForgeIcon(
+                        name: isLocked ? .lock : (isSelected ? .selected : .unselected),
+                        size: 12,
+                        colorRole: isSelected ? .accent : .muted
+                    )
+                }
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape()
+                .fill(isSelected ? palette.surfaceRaised : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: isSelected ? palette.accent : palette.grid,
+                lineWidth: isSelected ? ForgeDesign.Size.activeBorder : ForgeDesign.Size.border
+            )
+        }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+private struct ForgePaletteReferencePreview: View {
+    @Environment(\.forgePalette) private var palette
+    let colors: [UInt32]
+
+    var body: some View {
+        Canvas(rendersAsynchronously: false) { context, size in
+            let sample = colors.isEmpty ? [palette.muted, palette.surfaceRaised, palette.accent] : colors.map(forgePaletteColor)
+            let columns = 8
+            let rows = 6
+            let cellWidth = size.width / CGFloat(columns)
+            let cellHeight = size.height / CGFloat(rows)
+            for row in 0 ..< rows {
+                for column in 0 ..< columns {
+                    let horizon = row < 2
+                    let mountain = row == 2 && (column == 1 || column == 2 || column == 5)
+                    let subject = (3 ... 5).contains(row) && (3 ... 4).contains(column)
+                    let index: Int
+                    if subject {
+                        index = sample.count - 1
+                    } else if mountain {
+                        index = min(1, sample.count - 1)
+                    } else if horizon {
+                        index = 0
+                    } else {
+                        index = (row + column) % sample.count
+                    }
+                    let rect = CGRect(
+                        x: CGFloat(column) * cellWidth,
+                        y: CGFloat(row) * cellHeight,
+                        width: ceil(cellWidth),
+                        height: ceil(cellHeight)
+                    )
+                    context.fill(Path(rect), with: .color(sample[index]))
+                }
+            }
+        }
+        .background(palette.surface)
+        .clipShape(ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut))
+        .overlay {
+            ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+        }
+    }
+}
+
+private struct ForgePaletteSwatches: View {
+    @Environment(\.forgePalette) private var palette
+    let colors: [UInt32]
+
+    var body: some View {
+        HStack(spacing: ForgeDesign.Spacing.hairline) {
+            ForEach(Array(colors.prefix(8).enumerated()), id: \.offset) { _, color in
+                Rectangle()
+                    .fill(forgePaletteColor(color))
+                    .frame(maxWidth: .infinity)
+            }
+            if colors.isEmpty {
+                Rectangle()
+                    .fill(palette.muted)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
+private func forgePaletteColor(_ hex: UInt32) -> Color {
+    Color(
+        red: Double((hex >> 16) & 0xFF) / 255,
+        green: Double((hex >> 8) & 0xFF) / 255,
+        blue: Double(hex & 0xFF) / 255
+    )
 }
 
 struct ForgeSidebar<Content: View>: View {
@@ -843,18 +1223,49 @@ struct ForgeModalHeader: View {
                 Text(eyebrow.uppercased())
                     .forgeTextStyle(.micro)
                     .foregroundStyle(palette.accent)
+                    .lineLimit(1)
                 Text(title)
                     .forgeTextStyle(.title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 Text(detail)
                     .forgeTextStyle(.caption)
                     .foregroundStyle(palette.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
             ForgeIconButton(icon: .close, accessibilityLabel: L10n.close, action: close)
         }
         .padding(.horizontal, ForgeDesign.Spacing.regular)
+        .frame(maxWidth: .infinity)
         .frame(height: ForgeDesign.Size.toolbarHeight)
         .background(palette.panel)
+    }
+}
+
+struct ForgeModalScaffold<Content: View>: View {
+    let eyebrow: String
+    let title: String
+    let detail: String
+    let close: () -> Void
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ForgeCanvas {
+            VStack(spacing: 0) {
+                ForgeModalHeader(
+                    eyebrow: eyebrow,
+                    title: title,
+                    detail: detail,
+                    close: close
+                )
+                ForgeDivider()
+                content()
+            }
+            .padding(.top, ForgeDesign.Spacing.regular)
+        }
     }
 }
 
@@ -1020,8 +1431,13 @@ private struct ForgeActionMenuRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(palette.surface)
-        .overlay { ForgePixelBorder(color: palette.grid) }
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+        }
     }
 }
 

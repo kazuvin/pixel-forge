@@ -5,6 +5,7 @@ enum ReviewScreen: String {
     case imageSourceMenu = "image-source-menu"
     case deleteDialog = "delete-dialog"
     case conversionEditing = "conversion-editing"
+    case palettePicker = "palette-picker"
     case conversionResult = "conversion-result"
     case settings
     case settingsDeveloper = "settings-developer"

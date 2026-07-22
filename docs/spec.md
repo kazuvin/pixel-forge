@@ -32,7 +32,7 @@
 ### iPhone app
 
 - UI targetはiOS 17以降のiPhoneだけとし、`TARGETED_DEVICE_FAMILY = 1`、Mac Catalyst無効、縦向きだけを宣言する。
-- メインSceneは単一の`WindowGroup`とし、`NavigationStack`上のホームからアプリ内設定へ遷移する。
+- メインSceneは単一の`WindowGroup`とし、ホームから設定と変換をそれぞれfull-screen coverで表示する。設定には横方向の戻るgestureを持たせない。
 - ホーム、変換モーダル、設定の3 surfaceでMVPを構成し、タブバーを設けない。
 - 変換モーダルは`editing`、`rendering`、`result`、`failure`の状態を持つ。
 - 変換はUI thread外で実行し、開始後200msを超えた場合だけ不定進捗を表示する。MVPでは複数変換を並列実行しない。
@@ -43,6 +43,11 @@
 - UI文言は日本語と英語を持ち、設定画面でsystem、English、日本語を切り替える。system時はiOSの最優先言語が日本語なら日本語、英語なら英語、それ以外なら英語へ解決する。
 - 画像追加メニューは、利用可能な場合だけカメラ撮影を先頭に表示し、写真ライブラリ、Filesを続ける。撮影画像はJPEGへ正規化して既存の新規変換フローへ渡し、写真ライブラリへ自動保存しない。
 - 画像追加メニューと生成結果の削除確認はDesign層のpixel UI overlayを使い、Reduce Motionを尊重した表示アニメーションを持つ。
+- 設定と変換はDesign層の共通modal scaffoldを使い、iPhoneの上部safe areaと共通paddingを常に確保する。
+- iPhoneアプリは切り抜きUIを持たず、変換時のcropを常に画像全体へ設定する。coreと既存recipeのcrop互換性は維持する。
+- 数値設定は直接入力、増減buttonの長押し、水平scrubのすべてに対応する。
+- paletteは専用のfull-screen pickerに元画像色、8種類の組み込みpreset、customを2列のcard gridで表示し、各cardへpixel参考画像と色swatchを示す。
+- paletteの適用方法と輪郭modeは文字だけのsegmented controlではなく、pixel preview付きの選択cardで示す。
 - カメラ権限は撮影操作時に要求し、拒否または制限時はiOS設定への導線を提示する。
 - 生成結果の外部保存はPNG画像だけを対象にし、Photosの追加専用権限を使って写真アプリへ保存する。recipeはローカルrecordの再生成用途に限る。
 - 画面層は`Design/`のshared token/style/componentから組み立て、直接の色・font・control chrome指定をCIで拒否する。
@@ -91,6 +96,5 @@ Cloudflareの現行構成は[Astro framework guide](https://developers.cloudflar
 - 正式な製品名、bundle identifier、App Store SKU
 - Non-Consumableの商品identifier、価格、Family Sharing
 - custom domain、GoogleフォームURL、運営者の法務表記
-- 組み込みpalette presetの標準セット
 - iPadOS版の追加時期
 - sprite sheet、透過背景除去、輪郭強調の追加

@@ -4,22 +4,33 @@ import SwiftUI
 struct ConversionModalView: View {
     @ObservedObject var model: ConversionSessionModel
     let close: () -> Void
+    @State private var showsPalettePicker: Bool
+
+    init(
+        model: ConversionSessionModel,
+        opensPalettePicker: Bool = false,
+        close: @escaping () -> Void
+    ) {
+        self.model = model
+        self.close = close
+        _showsPalettePicker = State(initialValue: opensPalettePicker)
+    }
 
     var body: some View {
-        ForgeCanvas {
-            VStack(spacing: 0) {
-                ForgeModalHeader(
-                    eyebrow: modalEyebrow,
-                    title: model.sourceFilename,
-                    detail: model.sourceDimensionsLabel,
-                    close: close
-                )
-                ForgeDivider()
-                modalContent
-            }
-            .safeAreaPadding(.top)
+        ForgeModalScaffold(
+            eyebrow: modalEyebrow,
+            title: model.sourceFilename,
+            detail: model.sourceDimensionsLabel,
+            close: close
+        ) {
+            modalContent
         }
         .interactiveDismissDisabled(model.state == .rendering)
+        .fullScreenCover(isPresented: $showsPalettePicker) {
+            PalettePickerView(model: model) {
+                showsPalettePicker = false
+            }
+        }
     }
 
     @ViewBuilder
@@ -42,7 +53,7 @@ struct ConversionModalView: View {
     }
 
     private var editor: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
                 ForgePreviewPane(
                     label: L10n.input,
@@ -65,7 +76,7 @@ struct ConversionModalView: View {
                             value: $model.longSide,
                             range: 1 ... 1024,
                             step: 1,
-                            valueLabel: L10n.pixels(model.longSide),
+                            suffix: "px",
                             isLocked: !model.isProActive
                         )
                         ForgeMetricStepper(
@@ -73,11 +84,10 @@ struct ConversionModalView: View {
                             value: $model.upscale,
                             range: 1 ... 32,
                             step: 1,
-                            valueLabel: L10n.scale(model.upscale),
+                            suffix: "×",
                             isLocked: !model.isProActive
                         )
-                        cropControls
-                        paletteControls
+                        paletteControl
                         outlineControls
                         if model.requiresPro {
                             ForgeAlertBanner(message: L10n.proRequired)
@@ -95,97 +105,24 @@ struct ConversionModalView: View {
                 .onChange(of: model.outlineMode) { _, _ in model.refreshProRequirement() }
             }
             .padding(ForgeDesign.Spacing.regular)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+        .scrollDismissesKeyboard(.interactively)
     }
 
-    private var cropControls: some View {
-        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
-            ForgeLabeledControl(label: L10n.crop) {
-                ForgeSegmentedControl(
-                    selection: $model.cropSelection,
-                    options: [
-                        ForgeSegmentOption(id: "full", value: .full, title: L10n.cropFull),
-                        ForgeSegmentOption(id: "rectangle", value: .rectangle, title: L10n.cropRectangle),
-                    ]
-                )
-            }
-            if model.cropSelection == .rectangle {
-                ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.tight) {
-                    VStack(spacing: ForgeDesign.Spacing.tight) {
-                        ForgeMetricStepper(
-                            title: "X",
-                            value: $model.cropX,
-                            range: 0 ... max(0, Int(model.sourceDimensions.width) - 1),
-                            step: 1,
-                            valueLabel: L10n.pixels(model.cropX)
-                        )
-                        ForgeMetricStepper(
-                            title: "Y",
-                            value: $model.cropY,
-                            range: 0 ... max(0, Int(model.sourceDimensions.height) - 1),
-                            step: 1,
-                            valueLabel: L10n.pixels(model.cropY)
-                        )
-                        ForgeMetricStepper(
-                            title: L10n.width,
-                            value: $model.cropWidth,
-                            range: 1 ... max(1, Int(model.sourceDimensions.width)),
-                            step: 1,
-                            valueLabel: L10n.pixels(model.cropWidth)
-                        )
-                        ForgeMetricStepper(
-                            title: L10n.height,
-                            value: $model.cropHeight,
-                            range: 1 ... max(1, Int(model.sourceDimensions.height)),
-                            step: 1,
-                            valueLabel: L10n.pixels(model.cropHeight)
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private var paletteControls: some View {
-        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
-            ForgeLabeledControl(label: L10n.palette, isLocked: !model.isProActive) {
-                ForgeSegmentedControl(
-                    selection: $model.paletteSelection,
-                    options: [
-                        ForgeSegmentOption(id: "source", value: .source, title: L10n.paletteSource),
-                        ForgeSegmentOption(id: "game-boy", value: .gameBoy, title: "GB"),
-                        ForgeSegmentOption(id: "pico-8", value: .pico8, title: "PICO"),
-                        ForgeSegmentOption(id: "custom", value: .custom, title: L10n.custom),
-                    ]
-                )
-            }
-            if model.paletteSelection == .custom {
-                ForgeTextInput(label: L10n.customPalette, text: $model.customPaletteText)
-            }
-            if model.paletteSelection != .source {
-                ForgeToggleRow(
-                    title: L10n.preserveTone,
-                    detail: L10n.proOption,
-                    isOn: $model.preservesTone,
-                    isLocked: !model.isProActive,
-                    onLockedTap: { model.requiresPro = true }
-                )
-                if model.preservesTone {
-                    ForgeMetricStepper(
-                        title: L10n.saturation,
-                        value: $model.saturation,
-                        range: 0 ... 100,
-                        step: 5,
-                        valueLabel: "\(model.saturation)%"
-                    )
-                    ForgeMetricStepper(
-                        title: L10n.lightness,
-                        value: $model.lightness,
-                        range: 0 ... 100,
-                        step: 5,
-                        valueLabel: "\(model.lightness)%"
-                    )
-                }
+    private var paletteControl: some View {
+        ForgeLabeledControl(
+            label: L10n.palette,
+            isLocked: !model.isProActive && model.paletteSelection != .source
+        ) {
+            ForgePaletteSelectionButton(
+                title: model.selectedPaletteTitle,
+                detail: selectedPaletteDetail,
+                colors: model.selectedPaletteColorValues,
+                isLocked: !model.isProActive && model.paletteSelection != .source
+            ) {
+                showsPalettePicker = true
             }
         }
     }
@@ -193,12 +130,29 @@ struct ConversionModalView: View {
     private var outlineControls: some View {
         VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
             ForgeLabeledControl(label: L10n.outline, isLocked: !model.isProActive) {
-                ForgeSegmentedControl(
+                ForgeGraphicalOptionPicker(
                     selection: $model.outlineMode,
                     options: [
-                        ForgeSegmentOption(id: "none", value: .none, title: L10n.none),
-                        ForgeSegmentOption(id: "black", value: .black, title: L10n.black),
-                        ForgeSegmentOption(id: "adaptive", value: .adaptive, title: L10n.adaptive),
+                        ForgeGraphicalOption(
+                            id: "none",
+                            value: .none,
+                            title: L10n.none,
+                            artwork: .outlineNone
+                        ),
+                        ForgeGraphicalOption(
+                            id: "black",
+                            value: .black,
+                            title: L10n.black,
+                            artwork: .outlineBlack,
+                            isLocked: !model.isProActive
+                        ),
+                        ForgeGraphicalOption(
+                            id: "adaptive",
+                            value: .adaptive,
+                            title: L10n.adaptive,
+                            artwork: .outlineAdaptive,
+                            isLocked: !model.isProActive
+                        ),
                     ]
                 )
             }
@@ -208,7 +162,8 @@ struct ConversionModalView: View {
                     value: $model.outlineThreshold,
                     range: 0 ... 100,
                     step: 5,
-                    valueLabel: "\(model.outlineThreshold)"
+                    suffix: "%",
+                    isLocked: !model.isProActive
                 )
             }
         }
@@ -231,7 +186,7 @@ struct ConversionModalView: View {
     }
 
     private var result: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: ForgeDesign.Spacing.regular) {
                 ForgePreviewPane(
                     label: L10n.input,
@@ -280,7 +235,9 @@ struct ConversionModalView: View {
                 }
             }
             .padding(ForgeDesign.Spacing.regular)
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .vertical)
     }
 
     private var failure: some View {
@@ -298,6 +255,13 @@ struct ConversionModalView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var selectedPaletteDetail: String {
+        if model.paletteSelection == .source {
+            return L10n.paletteSourceDetail
+        }
+        return L10n.paletteColorCount(model.selectedPaletteColorValues.count)
+    }
+
     private var modalEyebrow: String {
         switch model.state {
         case .editing:
@@ -308,6 +272,137 @@ struct ConversionModalView: View {
             L10n.stateResult
         case .failure:
             L10n.stateFailure
+        }
+    }
+}
+
+private struct PalettePickerView: View {
+    @ObservedObject var model: ConversionSessionModel
+    let close: () -> Void
+
+    var body: some View {
+        ForgeModalScaffold(
+            eyebrow: L10n.paletteEyebrow,
+            title: L10n.palettePickerTitle,
+            detail: L10n.palettePickerDetail,
+            close: close
+        ) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
+                    paletteGrid
+                    if model.paletteSelection == .custom {
+                        ForgeTextInput(label: L10n.customPalette, text: $model.customPaletteText)
+                    }
+                    if model.paletteSelection != .source {
+                        toneControls
+                    }
+                    if model.requiresPro {
+                        ForgeAlertBanner(message: L10n.proRequired)
+                    }
+                    ForgeButton(title: L10n.done, icon: .selected, role: .primary) {
+                        close()
+                    }
+                }
+                .padding(ForgeDesign.Spacing.regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
+        .onChange(of: model.customPaletteText) { _, _ in model.refreshProRequirement() }
+        .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
+        .onChange(of: model.saturation) { _, _ in model.refreshProRequirement() }
+        .onChange(of: model.lightness) { _, _ in model.refreshProRequirement() }
+    }
+
+    private var paletteGrid: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.paletteCollectionEyebrow,
+                title: L10n.paletteCollectionTitle,
+                detail: L10n.paletteCollectionDetail
+            )
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: ForgeDesign.Spacing.compact
+            ) {
+                ForgePaletteCard(
+                    title: L10n.paletteSource,
+                    detail: L10n.paletteSourceCardDetail,
+                    colors: [],
+                    isSelected: model.paletteSelection == .source
+                ) {
+                    model.paletteSelection = .source
+                }
+                ForEach(ConversionSessionModel.palettePresets) { preset in
+                    ForgePaletteCard(
+                        title: preset.displayName,
+                        detail: L10n.paletteColorCount(preset.colorValues.count),
+                        colors: preset.colorValues,
+                        isSelected: model.paletteSelection == .preset(preset.id),
+                        isLocked: !model.isProActive
+                    ) {
+                        model.paletteSelection = .preset(preset.id)
+                    }
+                }
+                ForgePaletteCard(
+                    title: L10n.custom,
+                    detail: L10n.paletteCustomCardDetail,
+                    colors: model.customPaletteColorValues,
+                    isSelected: model.paletteSelection == .custom,
+                    isLocked: !model.isProActive
+                ) {
+                    model.paletteSelection = .custom
+                }
+            }
+        }
+    }
+
+    private var toneControls: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.paletteApplicationEyebrow,
+                title: L10n.paletteApplicationTitle,
+                detail: L10n.paletteApplicationDetail
+            )
+            ForgeGraphicalOptionPicker(
+                selection: $model.preservesTone,
+                options: [
+                    ForgeGraphicalOption(
+                        id: "exact",
+                        value: false,
+                        title: L10n.paletteExact,
+                        artwork: .toneExact,
+                        isLocked: !model.isProActive
+                    ),
+                    ForgeGraphicalOption(
+                        id: "preserve-tone",
+                        value: true,
+                        title: L10n.preserveTone,
+                        artwork: .tonePreserved,
+                        isLocked: !model.isProActive
+                    ),
+                ]
+            )
+            if model.preservesTone {
+                ForgeMetricStepper(
+                    title: L10n.saturation,
+                    value: $model.saturation,
+                    range: 0 ... 100,
+                    step: 5,
+                    suffix: "%",
+                    isLocked: !model.isProActive
+                )
+                ForgeMetricStepper(
+                    title: L10n.lightness,
+                    value: $model.lightness,
+                    range: 0 ... 100,
+                    step: 5,
+                    suffix: "%",
+                    isLocked: !model.isProActive
+                )
+            }
         }
     }
 }

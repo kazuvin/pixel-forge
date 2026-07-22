@@ -11,33 +11,28 @@ struct ThemeSettingsView: View {
     @State private var showsShareSheet = false
 
     var body: some View {
-        ForgeCanvas {
-            VStack(spacing: 0) {
-                ForgeModalHeader(
-                    eyebrow: L10n.settingsEyebrow,
-                    title: L10n.settings,
-                    detail: L10n.settingsSubtitle,
-                    close: { dismiss() }
-                )
-                ForgeDivider()
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
-                        language
-                        if AppConfiguration.isDeveloperBuild {
-                            developerAccess
-                        }
-                        appearance
-                        pro
-                        support
-                        about
+        ForgeModalScaffold(
+            eyebrow: L10n.settingsEyebrow,
+            title: L10n.settings,
+            detail: L10n.settingsSubtitle,
+            close: { dismiss() }
+        ) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
+                    language
+                    if AppConfiguration.isDeveloperBuild {
+                        developerAccess
                     }
-                    .padding(ForgeDesign.Spacing.regular)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    appearance
+                    pro
+                    support
+                    about
                 }
-                .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+                .padding(ForgeDesign.Spacing.regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         }
-        .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showsShareSheet) {
             ActivitySheet(items: shareItems)
         }

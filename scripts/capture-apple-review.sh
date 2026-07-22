@@ -87,6 +87,7 @@ for theme in dark light; do
   capture image-source-menu "$theme"
   capture delete-dialog "$theme"
   capture conversion-editing "$theme"
+  capture palette-picker "$theme"
   capture conversion-result "$theme"
   capture settings "$theme"
 done

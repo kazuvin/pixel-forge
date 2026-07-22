@@ -66,6 +66,44 @@ struct PhotoLibraryAccessPolicyTests {
         #expect(!PhotoLibraryAccessPolicy.canSave(status: .denied))
         #expect(!PhotoLibraryAccessPolicy.canSave(status: .restricted))
     }
+
+    @MainActor
+    @Test("invalid image bytes fail before Photos receives a request")
+    func rejectsInvalidImageData() async {
+        var didThrow = false
+        do {
+            try await SystemPhotoLibrarySaver().savePNG(Data("not-an-image".utf8), filename: "bad.png")
+        } catch {
+            didThrow = true
+        }
+        #expect(didThrow)
+    }
+
+    @MainActor
+    @Test("a valid PNG saves when add-only Photos access is granted")
+    func savesValidPNGWhenAuthorized() async throws {
+        guard PhotoLibraryAccessPolicy.canSave(
+            status: PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        ) else {
+            return
+        }
+        let data = try #require(ReviewConfiguration.sourceData)
+        try await SystemPhotoLibrarySaver().savePNG(data, filename: "pixel-forge-photo-save-test.png")
+    }
+}
+
+@Suite("Built-in palette presets")
+struct PalettePresetTests {
+    @MainActor
+    @Test("picker offers eight distinct non-empty presets")
+    func providesPaletteCollection() {
+        let presets = ConversionSessionModel.palettePresets
+        #expect(presets.count == 8)
+        #expect(Set(presets.map(\.id)).count == presets.count)
+        #expect(Set(presets.map(\.name)).count == presets.count)
+        #expect(presets.allSatisfy { !$0.colorValues.isEmpty })
+        #expect(presets.allSatisfy { $0.colors.count == $0.colorValues.count })
+    }
 }
 
 #if PIXEL_FORGE_DEVELOPER
