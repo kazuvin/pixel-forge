@@ -13,7 +13,7 @@ Pixel ForgeのSwiftUI design systemは、pixel-art変換作業を行う「機材
 
 ## Theme contract
 
-`ForgeTheme.dark`と`ForgeTheme.light`はそれぞれ`ForgePalette`だけを切り替える。component側は`@Environment(\.forgePalette)`からsemantic colorを読み、theme名を条件分岐してはならない。
+`ForgeTheme.dark`と`ForgeTheme.light`はそれぞれ`ForgePalette`だけを切り替える。`ForgeTheme.system`は現在のmacOS appearanceを参照してdark/lightいずれかのpaletteへ解決し、第三のpaletteを持たない。component側は`@Environment(\.forgePalette)`からsemantic colorを読み、theme名や購入状態でstyleを条件分岐してはならない。
 
 新しい色が必要な場合は、用途を表すsemantic tokenとしてdark/light両方へ同時追加する。画面固有のhex値や`Color`は追加しない。
 
@@ -27,6 +27,8 @@ Pixel ForgeのSwiftUI design systemは、pixel-art変換作業を行う「機材
 - Settings: `ForgeThemeCard`, `ForgeTypographySample`
 
 Screenはこれらを組み合わせ、再利用されるchromeをprivate viewとして複製しない。新規componentはtheme環境、keyboard/disabled state、accessibility label、日英の文字長を考慮する。
+
+ホーム、共通変換モーダル、設定の新しいcomponentは`docs/ui/layouts/mvp-macos-screens.md`の実画面から導出する。Pro lock、生成画像card、drop target、modal statusのように複数箇所で使う見た目は`Design/`へ置き、画面固有のprivate styleとして複製しない。
 
 surfaceの面は45度のchamferで切り、斜めのborderは1セルごとに角だけが接するsquare pixel列で描く。斜線をL字のrect連続で描かず、通常のrounded strokeにも戻さない。iconの斜線にも同じ1セル対角ルールを使い、`ForgeIconName`の16×16 gridへ追加する。画面やcomponentからSF Symbolsを直接呼ばない。
 

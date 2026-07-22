@@ -44,4 +44,4 @@ cargo run -p pixel-cli -- \
 
 既存CLIとSwift adapterが利用している`PixelSession::render(PixelSettings)`は移行用の互換入口です。
 
-要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。
+要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、macOS画面は [`docs/ui/layouts/mvp-macos-screens.md`](docs/ui/layouts/mvp-macos-screens.md)、Astro/CloudflareのサポートWebは [`docs/web-spec.md`](docs/web-spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。
