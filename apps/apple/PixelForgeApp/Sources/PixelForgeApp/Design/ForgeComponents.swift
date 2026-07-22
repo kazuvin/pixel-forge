@@ -1609,7 +1609,7 @@ private struct ForgeContextActionRow: View {
 struct ForgeRecordActionPanel: View {
     let adjust: () -> Void
     let save: () -> Void
-    let copy: () -> Void
+    let duplicate: () -> Void
     let delete: () -> Void
     let isSaving: Bool
 
@@ -1626,7 +1626,7 @@ struct ForgeRecordActionPanel: View {
                 action: save
             )
             .disabled(isSaving)
-            ForgeButton(title: L10n.copy, icon: .copy, action: copy)
+            ForgeButton(title: L10n.duplicate, icon: .duplicate, action: duplicate)
             ForgeDestructiveButton(title: L10n.delete, icon: .trash, action: delete)
         }
     }
@@ -2098,7 +2098,10 @@ struct ForgeTextInput: View {
                 .textFieldStyle(.plain)
                 .forgeTextStyle(.data)
                 .padding(ForgeDesign.Spacing.compact)
-                .background(palette.surface)
+                .background {
+                    ForgePixelChamferShape()
+                        .fill(palette.surface)
+                }
                 .overlay {
                     ForgePixelBorder(color: palette.grid)
                 }

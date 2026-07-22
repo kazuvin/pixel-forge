@@ -59,7 +59,7 @@
 "action.adjust" = "조정";
 "action.update_image" = "이 이미지 업데이트";
 "action.save_as_new" = "새 이미지로 저장";
-"action.copy" = "복사";
+"action.duplicate" = "복제";
 "action.delete" = "삭제";
 "action.cancel" = "취소";
 "action.done" = "완료";
@@ -171,11 +171,11 @@
 "camera.permission.title" = "카메라 접근 필요";
 "camera.permission.detail" = "사진을 촬영하고 변환하려면 iPhone 설정에서 Pixel Forge의 카메라 접근을 허용하세요.";
 "photos.save.success" = "PNG 이미지를 사진 앱에 저장했습니다.";
-"copy.success" = "PNG 이미지를 복사했습니다.";
+"duplicate.success" = "이미지를 라이브러리에 복제했습니다.";
 "error.photos_access_denied" = "사진 앱에 이미지를 추가할 수 없습니다. iPhone 설정에서 접근을 허용하세요.";
 "error.photo_image_invalid" = "생성된 PNG 이미지가 올바르지 않아 사진 앱에 저장하지 않았습니다.";
 "error.photo_save_failed" = "사진 앱에 저장할 수 없습니다: %@";
-"error.copy_failed" = "이미지를 복사할 수 없습니다: %@";
+"error.duplicate_failed" = "이미지를 복제할 수 없습니다: %@";
 "conversion.state.editing" = "설정";
 "conversion.state.rendering" = "변환 중";
 "conversion.state.result" = "결과";
@@ -185,7 +185,7 @@
 "delete.detail" = "이 작업은 취소할 수 없습니다. 사진 앱에 저장된 이미지는 영향을 받지 않습니다.";
 "record_actions.eyebrow" = "이미지 작업";
 "record_actions.title" = "작업 선택";
-"record_actions.detail" = "이 생성 이미지를 조정, 저장, 복사 또는 삭제할 수 있습니다.";
+"record_actions.detail" = "이 생성 이미지를 조정, 저장, 복제 또는 삭제할 수 있습니다.";
 "error.pro_required" = "이 설정에는 일회성 구매인 Pixel Forge Pro가 필요합니다. 설정 화면에서 구매할 수 있습니다.";
 "error.invalid_palette" = "사용자 지정 팔레트에 하나 이상의 색상을 추가하세요.";
 "settings.theme.system" = "iOS와 일치";

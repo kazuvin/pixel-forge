@@ -2,7 +2,6 @@ import Foundation
 import Photos
 import PixelCoreKit
 import UIKit
-import UniformTypeIdentifiers
 
 @MainActor
 final class HomeModel: ObservableObject {
@@ -175,15 +174,15 @@ final class HomeModel: ObservableObject {
         }
     }
 
-    func copy(_ record: GeneratedImageRecord) async {
+    func duplicate(_ record: GeneratedImageRecord) async {
         do {
-            let data = try await store.pngData(for: record)
-            UIPasteboard.general.setData(data, forPasteboardType: UTType.png.identifier)
+            _ = try await store.duplicateRecord(id: record.id)
+            await loadLibrary()
             errorMessage = nil
-            actionMessage = L10n.copySuccess
+            actionMessage = L10n.duplicateSuccess
         } catch {
             actionMessage = nil
-            errorMessage = L10n.copyFailure(error.localizedDescription)
+            errorMessage = L10n.duplicateFailure(error.localizedDescription)
         }
     }
 
@@ -285,7 +284,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
     @Published var photoSaveState: PhotoSaveState = .idle
-    @Published var copyMessage: String?
+    @Published var duplicateMessage: String?
     @Published var settingsCompatibilityWarning: String?
     @Published private(set) var savedPresets: [SavedConversionPreset] = []
     @Published var presetSuccessMessage: String?
@@ -497,7 +496,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     func edit() {
         errorMessage = nil
-        copyMessage = nil
+        duplicateMessage = nil
         requiresPro = false
         photoSaveState = .idle
         restoreLastRenderedSettings()
@@ -699,11 +698,17 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
     }
 
-    func copyOutput() {
-        guard let pngData = latestPNGData else { return }
-        UIPasteboard.general.setData(pngData, forPasteboardType: UTType.png.identifier)
-        errorMessage = nil
-        copyMessage = L10n.copySuccess
+    func duplicateCurrentRecord() async {
+        guard let currentRecord else { return }
+        do {
+            _ = try await store.duplicateRecord(id: currentRecord.id)
+            await onLibraryChange()
+            errorMessage = nil
+            duplicateMessage = L10n.duplicateSuccess
+        } catch {
+            duplicateMessage = nil
+            errorMessage = L10n.duplicateFailure(error.localizedDescription)
+        }
     }
 
     @discardableResult

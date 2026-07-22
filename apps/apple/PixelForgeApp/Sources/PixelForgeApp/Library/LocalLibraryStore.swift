@@ -211,6 +211,31 @@ actor LocalLibraryStore {
         }
     }
 
+    func duplicateRecord(id: UUID, now: Date = Date()) throws -> GeneratedImageRecord {
+        let snapshot = try loadSnapshot()
+        guard let record = snapshot.records.first(where: { $0.id == id }) else {
+            throw LocalLibraryError.recordNotFound
+        }
+        guard let source = snapshot.sources.first(where: { $0.hash == record.sourceHash }) else {
+            throw LocalLibraryError.sourceNotFound
+        }
+        let artifact = GeneratedArtifact(
+            pngData: try Data(contentsOf: url(for: record.pngRelativePath)),
+            recipeJSON: try String(
+                contentsOf: url(for: record.recipeRelativePath),
+                encoding: .utf8
+            ),
+            metadata: record.metadata,
+            presetReference: record.presetReference
+        )
+        return try createRecord(
+            sourceData: Data(contentsOf: url(for: source.relativePath)),
+            sourceFilename: record.sourceFilename,
+            artifact: artifact,
+            now: now
+        )
+    }
+
     func deleteRecord(id: UUID) throws {
         var snapshot = try loadSnapshot()
         guard let index = snapshot.records.firstIndex(where: { $0.id == id }) else {

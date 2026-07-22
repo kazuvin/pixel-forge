@@ -47,6 +47,38 @@ struct LocalLibraryStoreTests {
         #expect(try await store.loadSnapshot().records.first?.presetReference == reference)
     }
 
+    @Test("duplicating a record reuses the source and copies its complete artifact")
+    func duplicatesGeneratedRecord() async throws {
+        let root = try temporaryDirectory()
+        let store = LocalLibraryStore(rootURL: root)
+        let reference = ConversionPresetReference.builtIn("game-sprite")
+        let original = try await store.createRecord(
+            sourceData: Data("source".utf8),
+            sourceFilename: "photo.png",
+            artifact: artifact(seed: 7, presetReference: reference),
+            now: Date(timeIntervalSince1970: 10)
+        )
+
+        let duplicate = try await store.duplicateRecord(
+            id: original.id,
+            now: Date(timeIntervalSince1970: 20)
+        )
+        let snapshot = try await store.loadSnapshot()
+
+        #expect(snapshot.sources.count == 1)
+        #expect(snapshot.records.count == 2)
+        #expect(duplicate.id != original.id)
+        #expect(duplicate.sourceHash == original.sourceHash)
+        #expect(duplicate.sourceFilename == original.sourceFilename)
+        #expect(duplicate.metadata == original.metadata)
+        #expect(duplicate.presetReference == original.presetReference)
+        #expect(duplicate.createdAt == Date(timeIntervalSince1970: 20))
+        let originalPNG = try await store.pngData(for: original)
+        let originalRecipe = try await store.recipeJSON(for: original)
+        #expect(try await store.pngData(for: duplicate) == originalPNG)
+        #expect(try await store.recipeJSON(for: duplicate) == originalRecipe)
+    }
+
     @Test("legacy library manifests without a preset reference remain readable")
     func loadsLegacyManifestWithoutPresetReference() async throws {
         let root = try temporaryDirectory()

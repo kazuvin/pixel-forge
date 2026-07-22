@@ -45,7 +45,7 @@
 - 無料版はsystem themeだけを選択でき、Proはdark/lightへ手動固定できる。
 - UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、全対応言語で共通利用する。
 - UI文言は日本語、英語、韓国語、繁体字中国語を持ち、設定画面のpixel selectorでsystemと各言語を切り替える。system時はiOSの最優先言語が対応言語ならその言語、それ以外なら英語へ解決する。
-- ホームの生成結果cardは固定高とし、選択言語のlocaleで更新日時を表示する。tapでresult、長押しと振動で調整・写真保存・コピー・削除のpixel action dialogを開く。
+- ホームの生成結果cardは固定高とし、選択言語のlocaleで更新日時を表示する。tapでresult、長押しと振動で調整・写真保存・ライブラリ内への複製・削除のpixel action dialogを開く。
 - 画像追加メニューは、利用可能な場合だけカメラ撮影を先頭に表示し、写真ライブラリ、Filesを続ける。撮影画像はJPEGへ正規化して既存の新規変換フローへ渡し、写真ライブラリへ自動保存しない。
 - 画像追加メニュー、生成結果の操作dialog、削除確認、言語selectorはDesign層のpixel UI overlayを使い、Reduce Motionを尊重した表示アニメーションを持つ。
 - 設定と変換はDesign層の共通modal scaffoldを使い、iPhoneの上部safe areaと共通paddingを常に確保する。
@@ -65,6 +65,7 @@
 - app sandbox内のApplication Supportへsource asset、生成PNG、recipe、metadataを保存する。
 - `SourceAsset`はcontent hashをidentityとし、同じ入力の複数バリエーションで一つのsource byte列を共有する。
 - `GeneratedImageRecord`はUUID、source hash、PNG path、recipe path、任意の変換preset参照、作成日時、更新日時、表示metadataを持つ。preset参照のないschema version 1 manifestも`nil`として読み込む。
+- record複製時はPNG、recipe、metadata、preset参照を新しいUUIDへコピーし、source assetは既存hash参照を再利用する。
 - record更新は一時出力へ変換した後、PNG、recipe、metadataを一つのcommitとして差し替える。失敗時は以前のrecordを変更しない。
 - record削除後にsource参照数が0になった場合だけ、対応するsource assetを削除する。
 - app内recordの削除は、写真アプリへ保存済みの画像へ影響させない。

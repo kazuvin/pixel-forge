@@ -59,7 +59,7 @@
 "action.adjust" = "調整する";
 "action.update_image" = "この画像を更新";
 "action.save_as_new" = "別の画像として保存";
-"action.copy" = "コピーする";
+"action.duplicate" = "複製する";
 "action.delete" = "削除";
 "action.cancel" = "キャンセル";
 "action.done" = "完了";
@@ -171,11 +171,11 @@
 "camera.permission.title" = "カメラへのアクセスが必要です";
 "camera.permission.detail" = "撮影して変換するには、iPhoneの設定でPixel Forgeのカメラアクセスを許可してください。";
 "photos.save.success" = "PNG画像を写真アプリに保存しました。";
-"copy.success" = "PNG画像をコピーしました。";
+"duplicate.success" = "画像をライブラリに複製しました。";
 "error.photos_access_denied" = "写真アプリへの追加が許可されていません。iPhoneの設定でPixel Forgeのアクセスを許可してください。";
 "error.photo_image_invalid" = "生成されたPNG画像が不正なため、写真アプリへ保存しませんでした。";
 "error.photo_save_failed" = "写真アプリへ保存できませんでした: %@";
-"error.copy_failed" = "画像をコピーできませんでした: %@";
+"error.duplicate_failed" = "画像を複製できませんでした: %@";
 "conversion.state.editing" = "設定";
 "conversion.state.rendering" = "変換中";
 "conversion.state.result" = "結果";
@@ -185,7 +185,7 @@
 "delete.detail" = "この操作は取り消せません。写真アプリへ保存済みの画像には影響しません。";
 "record_actions.eyebrow" = "画像の操作";
 "record_actions.title" = "操作を選ぶ";
-"record_actions.detail" = "この生成画像を調整・保存・コピー・削除できます。";
+"record_actions.detail" = "この生成画像を調整・保存・複製・削除できます。";
 "error.pro_required" = "この設定には買い切りのPixel Forge Proが必要です。設定画面から購入できます。";
 "error.invalid_palette" = "カスタムパレットへ色を1色以上追加してください。";
 "settings.theme.system" = "iOSに合わせる";

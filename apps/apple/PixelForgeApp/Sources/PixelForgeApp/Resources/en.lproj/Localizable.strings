@@ -59,7 +59,7 @@
 "action.adjust" = "Adjust";
 "action.update_image" = "Update This Image";
 "action.save_as_new" = "Save as New Image";
-"action.copy" = "Copy";
+"action.duplicate" = "Duplicate";
 "action.delete" = "Delete";
 "action.cancel" = "Cancel";
 "action.done" = "Done";
@@ -171,11 +171,11 @@
 "camera.permission.title" = "Camera Access Required";
 "camera.permission.detail" = "To take and convert a photo, allow Pixel Forge to access the camera in iPhone Settings.";
 "photos.save.success" = "The PNG image was saved to Photos.";
-"copy.success" = "The PNG image was copied.";
+"duplicate.success" = "The image was duplicated in your library.";
 "error.photos_access_denied" = "Pixel Forge cannot add images to Photos. Allow access in iPhone Settings.";
 "error.photo_image_invalid" = "The generated PNG image is invalid and was not sent to Photos.";
 "error.photo_save_failed" = "Could not save to Photos: %@";
-"error.copy_failed" = "Could not copy the image: %@";
+"error.duplicate_failed" = "Could not duplicate the image: %@";
 "conversion.state.editing" = "Settings";
 "conversion.state.rendering" = "Converting";
 "conversion.state.result" = "Result";
@@ -185,7 +185,7 @@
 "delete.detail" = "This cannot be undone. Images already saved to Photos are not affected.";
 "record_actions.eyebrow" = "Image actions";
 "record_actions.title" = "Choose an Action";
-"record_actions.detail" = "Adjust, save, copy, or delete this generated image.";
+"record_actions.detail" = "Adjust, save, duplicate, or delete this generated image.";
 "error.pro_required" = "These settings require the buy-once Pixel Forge Pro upgrade. Purchase it in Settings.";
 "error.invalid_palette" = "Add at least one color to the custom palette.";
 "settings.theme.system" = "Match iOS";

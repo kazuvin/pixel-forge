@@ -321,8 +321,8 @@ struct WorkbenchView: View {
             ForgeDialogActionItem(id: "save", title: L10n.saveToPhotos, icon: .savePhoto) {
                 Task { await model.saveToPhotos(record) }
             },
-            ForgeDialogActionItem(id: "copy", title: L10n.copy, icon: .copy) {
-                Task { await model.copy(record) }
+            ForgeDialogActionItem(id: "duplicate", title: L10n.duplicate, icon: .duplicate) {
+                Task { await model.duplicate(record) }
             },
             ForgeDialogActionItem(
                 id: "delete",

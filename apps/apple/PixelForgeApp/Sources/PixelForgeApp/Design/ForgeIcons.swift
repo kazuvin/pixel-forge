@@ -16,7 +16,7 @@ enum ForgeIconName {
     case unselected
     case trash
     case edit
-    case copy
+    case duplicate
     case close
     case lock
     case link
@@ -114,7 +114,7 @@ enum ForgeIconName {
                 pixel(9, 6, 2, 2), pixel(11, 4, 2, 2), pixel(12, 3, 2, 2),
                 pixel(3, 14, 5, 1),
             ]
-        case .copy:
+        case .duplicate:
             [
                 pixel(5, 2, 8, 1), pixel(5, 3, 1, 9), pixel(12, 3, 1, 9),
                 pixel(5, 11, 8, 1), pixel(3, 5, 1, 9), pixel(4, 13, 7, 1),

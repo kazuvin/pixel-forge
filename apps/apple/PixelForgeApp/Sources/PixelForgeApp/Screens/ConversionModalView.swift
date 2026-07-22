@@ -323,8 +323,8 @@ struct ConversionModalView: View {
                 case let .failed(message):
                     ForgeAlertBanner(message: message)
                 }
-                if let copyMessage = model.copyMessage {
-                    ForgeSuccessBanner(message: copyMessage)
+                if let duplicateMessage = model.duplicateMessage {
+                    ForgeSuccessBanner(message: duplicateMessage)
                 }
                 if let errorMessage = model.errorMessage {
                     ForgeAlertBanner(message: errorMessage)
@@ -332,7 +332,7 @@ struct ConversionModalView: View {
                 ForgeRecordActionPanel(
                     adjust: { model.edit() },
                     save: { Task { await model.saveOutputToPhotos() } },
-                    copy: { model.copyOutput() },
+                    duplicate: { Task { await model.duplicateCurrentRecord() } },
                     delete: { showsResultDeleteConfirmation = true },
                     isSaving: model.photoSaveState == .saving
                 )

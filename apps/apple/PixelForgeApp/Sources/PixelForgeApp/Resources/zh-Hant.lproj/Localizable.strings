@@ -59,7 +59,7 @@
 "action.adjust" = "調整";
 "action.update_image" = "更新此影像";
 "action.save_as_new" = "另存為新影像";
-"action.copy" = "複製";
+"action.duplicate" = "複製";
 "action.delete" = "刪除";
 "action.cancel" = "取消";
 "action.done" = "完成";
@@ -171,11 +171,11 @@
 "camera.permission.title" = "需要相機權限";
 "camera.permission.detail" = "若要拍攝並轉換照片，請在 iPhone 設定中允許 Pixel Forge 使用相機。";
 "photos.save.success" = "PNG 影像已儲存到照片 App。";
-"copy.success" = "PNG 影像已複製。";
+"duplicate.success" = "影像已複製到資料庫。";
 "error.photos_access_denied" = "Pixel Forge 無法將影像加入照片。請在 iPhone 設定中允許存取。";
 "error.photo_image_invalid" = "生成的 PNG 影像無效，因此未儲存到照片 App。";
 "error.photo_save_failed" = "無法儲存到照片 App：%@";
-"error.copy_failed" = "無法複製影像：%@";
+"error.duplicate_failed" = "無法複製影像：%@";
 "conversion.state.editing" = "設定";
 "conversion.state.rendering" = "轉換中";
 "conversion.state.result" = "結果";

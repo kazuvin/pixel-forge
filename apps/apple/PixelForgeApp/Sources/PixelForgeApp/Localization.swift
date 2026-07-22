@@ -108,7 +108,7 @@ enum L10n {
     static var adjust: String { text("action.adjust") }
     static var updateImage: String { text("action.update_image") }
     static var saveAsNew: String { text("action.save_as_new") }
-    static var copy: String { text("action.copy") }
+    static var duplicate: String { text("action.duplicate") }
     static var delete: String { text("action.delete") }
     static var cancel: String { text("action.cancel") }
     static var done: String { text("action.done") }
@@ -230,7 +230,7 @@ enum L10n {
     static var cameraPermissionTitle: String { text("camera.permission.title") }
     static var cameraPermissionDetail: String { text("camera.permission.detail") }
     static var photoSaveSuccess: String { text("photos.save.success") }
-    static var copySuccess: String { text("copy.success") }
+    static var duplicateSuccess: String { text("duplicate.success") }
     static var photosAccessDenied: String { text("error.photos_access_denied") }
     static var invalidPhotoImage: String { text("error.photo_image_invalid") }
     static var appearanceTitle: String { text("settings.appearance.title") }
@@ -303,8 +303,8 @@ enum L10n {
         format("error.photo_save_failed", detail)
     }
 
-    static func copyFailure(_ detail: String) -> String {
-        format("error.copy_failed", detail)
+    static func duplicateFailure(_ detail: String) -> String {
+        format("error.duplicate_failed", detail)
     }
 
     static func recipePresetCount(_ value: Int) -> String {
