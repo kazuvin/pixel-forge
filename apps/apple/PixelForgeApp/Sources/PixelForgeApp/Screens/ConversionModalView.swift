@@ -5,15 +5,20 @@ struct ConversionModalView: View {
     @ObservedObject var model: ConversionSessionModel
     let close: () -> Void
     @State private var showsPalettePicker: Bool
+    @State private var showsPresetLibrary: Bool
+    private let loadsPresetsOnAppear: Bool
 
     init(
         model: ConversionSessionModel,
         opensPalettePicker: Bool = false,
+        opensPresetLibrary: Bool = false,
         close: @escaping () -> Void
     ) {
         self.model = model
         self.close = close
+        loadsPresetsOnAppear = !opensPresetLibrary
         _showsPalettePicker = State(initialValue: opensPalettePicker)
+        _showsPresetLibrary = State(initialValue: opensPresetLibrary)
     }
 
     var body: some View {
@@ -29,6 +34,16 @@ struct ConversionModalView: View {
         .fullScreenCover(isPresented: $showsPalettePicker) {
             PalettePickerView(model: model) {
                 showsPalettePicker = false
+            }
+        }
+        .fullScreenCover(isPresented: $showsPresetLibrary) {
+            RecipePresetLibraryView(model: model) {
+                showsPresetLibrary = false
+            }
+        }
+        .task {
+            if loadsPresetsOnAppear {
+                await model.loadPresets()
             }
         }
     }
@@ -71,6 +86,18 @@ struct ConversionModalView: View {
                             title: L10n.conversionOptions,
                             detail: L10n.conversionOptionsDetail
                         )
+                        if let warning = model.settingsCompatibilityWarning {
+                            ForgeAlertBanner(message: warning)
+                        }
+                        ForgeRecipePresetLibraryButton(
+                            title: L10n.recipePresetTitle,
+                            detail: L10n.recipePresetCount(model.savedPresets.count)
+                        ) {
+                            Task {
+                                await model.loadPresets()
+                                showsPresetLibrary = true
+                            }
+                        }
                         ForgeMetricStepper(
                             title: L10n.longSide,
                             value: $model.longSide,
@@ -272,6 +299,150 @@ struct ConversionModalView: View {
             L10n.stateResult
         case .failure:
             L10n.stateFailure
+        }
+    }
+}
+
+private struct RecipePresetLibraryView: View {
+    @ObservedObject var model: ConversionSessionModel
+    let close: () -> Void
+    @State private var presetName = ""
+    @State private var pendingDeletion: SavedConversionPreset?
+
+    var body: some View {
+        ForgeModalScaffold(
+            eyebrow: L10n.recipePresetEyebrow,
+            title: L10n.recipePresetLibraryTitle,
+            detail: L10n.recipePresetLibraryDetail,
+            close: close
+        ) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
+                    savePanel
+                    savedPresetList
+                }
+                .padding(ForgeDesign.Spacing.regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+            .scrollDismissesKeyboard(.interactively)
+        }
+        .forgeOverlay {
+            ForgeConfirmationDialog(
+                isPresented: deletionIsPresented,
+                eyebrow: L10n.presetDeleteEyebrow,
+                title: L10n.presetDeleteTitle,
+                detail: L10n.presetDeleteDetail,
+                confirmTitle: L10n.delete,
+                cancelTitle: L10n.cancel
+            ) {
+                guard let pendingDeletion else { return }
+                Task { await model.deletePreset(pendingDeletion) }
+                self.pendingDeletion = nil
+            }
+        }
+    }
+
+    private var savePanel: some View {
+        ForgePixelSurface(level: .panel) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                ForgeSectionHeader(
+                    eyebrow: L10n.recipePresetEyebrow,
+                    title: L10n.recipePresetTitle,
+                    detail: L10n.recipePresetDetail
+                )
+                ForgeTextInput(label: L10n.recipePresetName, text: $presetName)
+                ForgeButton(
+                    title: L10n.recipePresetSave,
+                    icon: .plus,
+                    role: .primary
+                ) {
+                    Task {
+                        if await model.saveCurrentPreset(named: presetName) {
+                            presetName = ""
+                        }
+                    }
+                }
+                if let message = model.presetSuccessMessage {
+                    ForgeSuccessBanner(message: message)
+                }
+                if let message = model.presetErrorMessage {
+                    ForgeAlertBanner(message: message)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var savedPresetList: some View {
+        if model.savedPresets.isEmpty {
+            ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.section) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                    ForgeSectionHeader(
+                        eyebrow: L10n.recipePresetEyebrow,
+                        title: L10n.recipePresetEmptyTitle,
+                        detail: nil
+                    )
+                    ForgeEmptyState(icon: .pixelGrid, message: L10n.recipePresetEmptyDetail)
+                }
+            }
+        } else {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                ForEach(model.savedPresets) { preset in
+                    ForgeRecipePresetCard(
+                        title: preset.name,
+                        detail: summary(for: preset.settings),
+                        version: L10n.presetVersion(preset.algorithmVersion),
+                        colors: colors(for: preset.settings),
+                        isCompatible: preset.algorithmVersion == PixelCoreInfo.algorithmVersion,
+                        applyTitle: L10n.recipePresetApply,
+                        deleteAccessibilityLabel: L10n.delete,
+                        apply: {
+                            model.applyPreset(preset)
+                            close()
+                        },
+                        delete: {
+                            pendingDeletion = preset
+                        }
+                    )
+                }
+            }
+        }
+    }
+
+    private var deletionIsPresented: Binding<Bool> {
+        Binding(
+            get: { pendingDeletion != nil },
+            set: { isPresented in
+                if !isPresented {
+                    pendingDeletion = nil
+                }
+            }
+        )
+    }
+
+    private func summary(for settings: PixelConversionSettings) -> String {
+        L10n.presetSummary(
+            Int(settings.longSide),
+            Int(settings.upscale),
+            paletteTitle(for: settings)
+        )
+    }
+
+    private func paletteTitle(for settings: PixelConversionSettings) -> String {
+        switch settings.colorMode {
+        case .source:
+            L10n.paletteSource
+        case let .palette(palette, _):
+            ConversionSessionModel.palettePresets
+                .first(where: { $0.name == palette.name })?.displayName ?? palette.name
+        }
+    }
+
+    private func colors(for settings: PixelConversionSettings) -> [UInt32] {
+        guard case let .palette(palette, _) = settings.colorMode else { return [] }
+        return palette.colors.map {
+            UInt32($0.red) << 16 | UInt32($0.green) << 8 | UInt32($0.blue)
         }
     }
 }

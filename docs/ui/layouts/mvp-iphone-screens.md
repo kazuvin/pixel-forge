@@ -163,13 +163,14 @@ Home
 
 ## Review screenshots
 
-次の16枚をiPhone Simulatorの縦向きで保存する。
+次の18枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
 - `pixel-forge-delete-dialog--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
 - `pixel-forge-palette-picker--{dark,light}.png`
+- `pixel-forge-recipe-preset-library--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`
 - `pixel-forge-settings-developer--{dark,light}.png`

@@ -84,7 +84,8 @@ struct WorkbenchView: View {
         .fullScreenCover(item: $model.session) { session in
             ConversionModalView(
                 model: session,
-                opensPalettePicker: reviewScreen == .palettePicker
+                opensPalettePicker: reviewScreen == .palettePicker,
+                opensPresetLibrary: reviewScreen == .recipePresetLibrary
             ) {
                 model.session = nil
             }
@@ -164,6 +165,9 @@ struct WorkbenchView: View {
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
         case .palettePicker:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+        case .recipePresetLibrary:
+            model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+            model.session?.prepareReviewPresets()
         case .conversionResult:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.convert(saveMode: .newRecord)

@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import PixelCoreKit
 
 struct SourceAsset: Codable, Equatable, Identifiable, Sendable {
     var id: String { hash }
@@ -285,4 +286,133 @@ actor LocalLibraryStore {
 private struct ArtifactPaths {
     let png: String
     let recipe: String
+}
+
+struct SavedConversionPreset: Codable, Equatable, Identifiable, Sendable {
+    let id: UUID
+    let name: String
+    let settings: PixelConversionSettings
+    let algorithmVersion: String
+    let createdAt: Date
+    let updatedAt: Date
+}
+
+struct ConversionPresetSnapshot: Codable, Equatable, Sendable {
+    static let currentSchemaVersion = 1
+
+    var schemaVersion = currentSchemaVersion
+    var presets: [SavedConversionPreset] = []
+}
+
+enum ConversionPresetStoreError: Error, Equatable {
+    case emptyName
+    case presetNotFound
+    case unsupportedSchema(Int)
+}
+
+actor ConversionPresetStore {
+    private let rootURL: URL
+    private let fileManager: FileManager
+    private let encoder: JSONEncoder
+    private let decoder: JSONDecoder
+
+    init(
+        rootURL: URL = LocalLibraryStore.defaultRootURL(),
+        fileManager: FileManager = .default
+    ) {
+        self.rootURL = rootURL
+        self.fileManager = fileManager
+        encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+    }
+
+    func loadPresets() throws -> [SavedConversionPreset] {
+        try loadSnapshot().presets.sorted { $0.updatedAt > $1.updatedAt }
+    }
+
+    @discardableResult
+    func savePreset(
+        name: String,
+        settings: PixelConversionSettings,
+        algorithmVersion: String = PixelCoreInfo.algorithmVersion,
+        now: Date = Date()
+    ) throws -> SavedConversionPreset {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else {
+            throw ConversionPresetStoreError.emptyName
+        }
+
+        var snapshot = try loadSnapshot()
+        let normalizedName = Self.normalized(trimmedName)
+        let preset: SavedConversionPreset
+        if let index = snapshot.presets.firstIndex(where: {
+            Self.normalized($0.name) == normalizedName
+        }) {
+            let previous = snapshot.presets[index]
+            preset = SavedConversionPreset(
+                id: previous.id,
+                name: trimmedName,
+                settings: settings,
+                algorithmVersion: algorithmVersion,
+                createdAt: previous.createdAt,
+                updatedAt: now
+            )
+            snapshot.presets[index] = preset
+        } else {
+            preset = SavedConversionPreset(
+                id: UUID(),
+                name: trimmedName,
+                settings: settings,
+                algorithmVersion: algorithmVersion,
+                createdAt: now,
+                updatedAt: now
+            )
+            snapshot.presets.append(preset)
+        }
+        try save(snapshot)
+        return preset
+    }
+
+    func deletePreset(id: UUID) throws {
+        var snapshot = try loadSnapshot()
+        guard snapshot.presets.contains(where: { $0.id == id }) else {
+            throw ConversionPresetStoreError.presetNotFound
+        }
+        snapshot.presets.removeAll { $0.id == id }
+        try save(snapshot)
+    }
+
+    private func loadSnapshot() throws -> ConversionPresetSnapshot {
+        let manifestURL = rootURL.appendingPathComponent("conversion-presets.json")
+        guard fileManager.fileExists(atPath: manifestURL.path) else {
+            return ConversionPresetSnapshot()
+        }
+        let snapshot = try decoder.decode(
+            ConversionPresetSnapshot.self,
+            from: Data(contentsOf: manifestURL)
+        )
+        guard snapshot.schemaVersion == ConversionPresetSnapshot.currentSchemaVersion else {
+            throw ConversionPresetStoreError.unsupportedSchema(snapshot.schemaVersion)
+        }
+        return snapshot
+    }
+
+    private func save(_ snapshot: ConversionPresetSnapshot) throws {
+        try fileManager.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        let data = try encoder.encode(snapshot)
+        try data.write(
+            to: rootURL.appendingPathComponent("conversion-presets.json"),
+            options: .atomic
+        )
+    }
+
+    private static func normalized(_ name: String) -> String {
+        name.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
+    }
 }

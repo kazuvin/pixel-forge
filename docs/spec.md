@@ -37,6 +37,8 @@
 - 変換モーダルは`editing`、`rendering`、`result`、`failure`の状態を持つ。
 - 変換はUI thread外で実行し、開始後200msを超えた場合だけ不定進捗を表示する。MVPでは複数変換を並列実行しない。
 - 新規変換は成功時に新しい生成recordを作る。既存結果の調整では同じrecordのatomicな更新、または新しいrecordの作成を選べる。
+- `調整する`はrecordのrecipeを正本として全パラメータを復元する。保存時と現行のalgorithm versionが不一致なら旧値を適用せず、警告とともに`PixelConversionSettings`の初期値へフォールバックする。
+- 調整プリセットは名前、`PixelConversionSettings`、algorithm version、作成日時、更新日時をApplication Supportへ保存する。同名保存は既存presetを更新し、適用時もalgorithm versionの互換性を確認する。
 - SwiftUIのthemeは`ForgePalette`を環境値として注入し、system、dark、lightで同一layout/component treeを使う。
 - 無料版はsystem themeだけを選択でき、Proはdark/lightへ手動固定できる。
 - UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。

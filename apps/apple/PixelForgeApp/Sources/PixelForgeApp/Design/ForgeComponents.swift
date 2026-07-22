@@ -818,6 +818,111 @@ struct ForgePaletteSelectionButton: View {
     }
 }
 
+struct ForgeRecipePresetLibraryButton: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.regular) {
+                ZStack {
+                    ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                        .fill(palette.surfaceRaised)
+                    ForgeIcon(name: .pixelGrid, size: 24, colorRole: .accent)
+                }
+                .frame(width: 58, height: 58)
+                .overlay {
+                    ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+                }
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                    Text(title)
+                        .forgeTextStyle(.heading)
+                    Text(detail)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                ForgeIcon(name: .plus, colorRole: .accent)
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+        }
+    }
+}
+
+struct ForgeRecipePresetCard: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let version: String
+    let colors: [UInt32]
+    let isCompatible: Bool
+    let applyTitle: String
+    let deleteAccessibilityLabel: String
+    let apply: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        ForgePixelSurface(level: .surface) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+                HStack(spacing: ForgeDesign.Spacing.regular) {
+                    ForgePaletteReferencePreview(colors: colors)
+                        .frame(width: 92, height: 70)
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                        Text(title)
+                            .forgeTextStyle(.heading)
+                            .lineLimit(1)
+                        Text(detail)
+                            .forgeTextStyle(.caption)
+                            .foregroundStyle(palette.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: ForgeDesign.Spacing.tight) {
+                            Rectangle()
+                                .fill(isCompatible ? palette.success : palette.danger)
+                                .frame(
+                                    width: ForgeDesign.Size.statusLamp,
+                                    height: ForgeDesign.Size.statusLamp
+                                )
+                            Text(version)
+                                .forgeTextStyle(.micro)
+                                .foregroundStyle(palette.muted)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                ForgePaletteSwatches(colors: colors)
+                    .frame(height: 12)
+                HStack(spacing: ForgeDesign.Spacing.compact) {
+                    ForgeButton(
+                        title: applyTitle,
+                        icon: isCompatible ? .selected : .restore,
+                        role: .primary
+                    ) {
+                        apply()
+                    }
+                    ForgeIconButton(
+                        icon: .trash,
+                        accessibilityLabel: deleteAccessibilityLabel
+                    ) {
+                        delete()
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct ForgePaletteCard: View {
     @Environment(\.forgePalette) private var palette
     let title: String

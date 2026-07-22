@@ -125,6 +125,22 @@ enum L10n {
     static var palettePresetForest8: String { text("palette.preset.forest_8") }
     static var palettePresetCandy8: String { text("palette.preset.candy_8") }
     static var palettePresetSepia6: String { text("palette.preset.sepia_6") }
+    static var recipePresetEyebrow: String { text("recipe_preset.eyebrow") }
+    static var recipePresetTitle: String { text("recipe_preset.title") }
+    static var recipePresetDetail: String { text("recipe_preset.detail") }
+    static var recipePresetLibraryTitle: String { text("recipe_preset.library.title") }
+    static var recipePresetLibraryDetail: String { text("recipe_preset.library.detail") }
+    static var recipePresetName: String { text("recipe_preset.name") }
+    static var recipePresetSave: String { text("recipe_preset.save") }
+    static var recipePresetApply: String { text("recipe_preset.apply") }
+    static var recipePresetEmptyTitle: String { text("recipe_preset.empty.title") }
+    static var recipePresetEmptyDetail: String { text("recipe_preset.empty.detail") }
+    static var presetNameRequired: String { text("error.recipe_preset.name_required") }
+    static var presetReviewSoftPortrait: String { text("recipe_preset.review.soft_portrait") }
+    static var presetReviewGameSprite: String { text("recipe_preset.review.game_sprite") }
+    static var presetDeleteEyebrow: String { text("recipe_preset.delete.eyebrow") }
+    static var presetDeleteTitle: String { text("recipe_preset.delete.title") }
+    static var presetDeleteDetail: String { text("recipe_preset.delete.detail") }
     static var custom: String { text("setting.custom") }
     static var customPalette: String { text("setting.custom_palette") }
     static var preserveTone: String { text("setting.preserve_tone") }
@@ -223,6 +239,38 @@ enum L10n {
 
     static func photoSaveFailure(_ detail: String) -> String {
         format("error.photo_save_failed", detail)
+    }
+
+    static func recipePresetCount(_ value: Int) -> String {
+        format("recipe_preset.count", value)
+    }
+
+    static func presetSummary(_ longSide: Int, _ upscale: Int, _ palette: String) -> String {
+        format("recipe_preset.summary", longSide, upscale, palette)
+    }
+
+    static func presetVersion(_ version: String) -> String {
+        format("recipe_preset.version", version)
+    }
+
+    static func presetSaved(_ name: String) -> String {
+        format("recipe_preset.saved", name)
+    }
+
+    static func presetDeleted(_ name: String) -> String {
+        format("recipe_preset.deleted", name)
+    }
+
+    static func presetOperationFailed(_ detail: String) -> String {
+        format("error.recipe_preset.operation_failed", detail)
+    }
+
+    static func recipeVersionFallback(_ stored: String, _ current: String) -> String {
+        format("recipe.version_fallback", stored, current)
+    }
+
+    static func presetVersionFallback(_ name: String, _ stored: String, _ current: String) -> String {
+        format("recipe_preset.version_fallback", name, stored, current)
     }
 
     static func ditherName(_ mode: PixelDitherMode) -> String {

@@ -11,9 +11,14 @@ final class HomeModel: ObservableObject {
     @Published var errorMessage: String?
 
     private let store: LocalLibraryStore
+    private let presetStore: ConversionPresetStore
 
-    init(store: LocalLibraryStore = LocalLibraryStore()) {
+    init(
+        store: LocalLibraryStore = LocalLibraryStore(),
+        presetStore: ConversionPresetStore = ConversionPresetStore()
+    ) {
         self.store = store
+        self.presetStore = presetStore
     }
 
     func loadLibrary() async {
@@ -50,6 +55,7 @@ final class HomeModel: ObservableObject {
                 sourceData: data,
                 sourceFilename: url.lastPathComponent,
                 store: store,
+                presetStore: presetStore,
                 entitlement: entitlement,
                 onLibraryChange: { [weak self] in
                     await self?.loadLibrary()
@@ -71,6 +77,7 @@ final class HomeModel: ObservableObject {
                 sourceData: data,
                 sourceFilename: filename,
                 store: store,
+                presetStore: presetStore,
                 entitlement: entitlement,
                 onLibraryChange: { [weak self] in
                     await self?.loadLibrary()
@@ -120,6 +127,7 @@ final class HomeModel: ObservableObject {
                 pngData: png,
                 recipeJSON: recipe,
                 store: store,
+                presetStore: presetStore,
                 entitlement: entitlement,
                 onLibraryChange: { [weak self] in
                     await self?.loadLibrary()
@@ -204,6 +212,10 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
     @Published var photoSaveState: PhotoSaveState = .idle
+    @Published var settingsCompatibilityWarning: String?
+    @Published private(set) var savedPresets: [SavedConversionPreset] = []
+    @Published var presetSuccessMessage: String?
+    @Published var presetErrorMessage: String?
 
     @Published var longSide = 64
     @Published var upscale = 8
@@ -216,10 +228,13 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var outlineThreshold = 15
 
     private let store: LocalLibraryStore
+    private let presetStore: ConversionPresetStore
     private let entitlement: ProEntitlementService
     private let photoLibrarySaver: any PhotoLibrarySaving
     private let onLibraryChange: @MainActor () async -> Void
     private var latestPNGData: Data?
+    private var lastRenderedSettings: PixelConversionSettings?
+    private var lastRenderedAlgorithmVersion: String?
     private var conversionTask: Task<Void, Never>?
     private var loaderTask: Task<Void, Never>?
 
@@ -227,6 +242,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         sourceData: Data,
         sourceFilename: String,
         store: LocalLibraryStore,
+        presetStore: ConversionPresetStore = ConversionPresetStore(),
         entitlement: ProEntitlementService,
         photoLibrarySaver: any PhotoLibrarySaving = SystemPhotoLibrarySaver(),
         onLibraryChange: @escaping @MainActor () async -> Void
@@ -238,6 +254,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         sourceDimensions = processor.sourceDimensions
         state = .editing
         self.store = store
+        self.presetStore = presetStore
         self.entitlement = entitlement
         self.photoLibrarySaver = photoLibrarySaver
         self.onLibraryChange = onLibraryChange
@@ -249,6 +266,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         pngData: Data,
         recipeJSON: String,
         store: LocalLibraryStore,
+        presetStore: ConversionPresetStore = ConversionPresetStore(),
         entitlement: ProEntitlementService,
         photoLibrarySaver: any PhotoLibrarySaving = SystemPhotoLibrarySaver(),
         onLibraryChange: @escaping @MainActor () async -> Void
@@ -264,10 +282,15 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         currentRecord = record
         latestPNGData = pngData
         self.store = store
+        self.presetStore = presetStore
         self.entitlement = entitlement
         self.photoLibrarySaver = photoLibrarySaver
         self.onLibraryChange = onLibraryChange
-        apply(recipe.settings)
+        lastRenderedSettings = recipe.settings
+        lastRenderedAlgorithmVersion = recipe.metadata.algorithmVersion
+        if recipe.metadata.algorithmVersion == PixelCoreInfo.algorithmVersion {
+            apply(recipe.settings)
+        }
     }
 
     deinit {
@@ -329,6 +352,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         errorMessage = nil
         requiresPro = false
         photoSaveState = .idle
+        restoreLastRenderedSettings()
+        refreshProRequirement()
         state = .editing
     }
 
@@ -342,6 +367,109 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             return
         }
         requiresPro = !ProAccessPolicy.requiredFeatures(for: settings).isEmpty
+    }
+
+    func loadPresets() async {
+        presetSuccessMessage = nil
+        do {
+            savedPresets = try await presetStore.loadPresets()
+            presetErrorMessage = nil
+        } catch {
+            presetErrorMessage = L10n.presetOperationFailed(error.localizedDescription)
+        }
+    }
+
+    @discardableResult
+    func saveCurrentPreset(named name: String) async -> Bool {
+        do {
+            let settings = try makeSettings()
+            let preset = try await presetStore.savePreset(name: name, settings: settings)
+            savedPresets = try await presetStore.loadPresets()
+            presetSuccessMessage = L10n.presetSaved(preset.name)
+            presetErrorMessage = nil
+            return true
+        } catch ConversionPresetStoreError.emptyName {
+            presetSuccessMessage = nil
+            presetErrorMessage = L10n.presetNameRequired
+            return false
+        } catch {
+            presetSuccessMessage = nil
+            presetErrorMessage = L10n.presetOperationFailed(error.localizedDescription)
+            return false
+        }
+    }
+
+    func applyPreset(_ preset: SavedConversionPreset) {
+        presetSuccessMessage = nil
+        presetErrorMessage = nil
+        if preset.algorithmVersion == PixelCoreInfo.algorithmVersion {
+            apply(preset.settings)
+            settingsCompatibilityWarning = nil
+        } else {
+            apply(PixelConversionSettings())
+            settingsCompatibilityWarning = L10n.presetVersionFallback(
+                preset.name,
+                preset.algorithmVersion,
+                PixelCoreInfo.algorithmVersion
+            )
+        }
+        refreshProRequirement()
+    }
+
+    func deletePreset(_ preset: SavedConversionPreset) async {
+        do {
+            try await presetStore.deletePreset(id: preset.id)
+            savedPresets = try await presetStore.loadPresets()
+            presetSuccessMessage = L10n.presetDeleted(preset.name)
+            presetErrorMessage = nil
+        } catch {
+            presetSuccessMessage = nil
+            presetErrorMessage = L10n.presetOperationFailed(error.localizedDescription)
+        }
+    }
+
+    func prepareReviewPresets() {
+        let now = Date(timeIntervalSince1970: 1_751_328_000)
+        savedPresets = [
+            SavedConversionPreset(
+                id: UUID(),
+                name: L10n.presetReviewSoftPortrait,
+                settings: PixelConversionSettings(
+                    longSide: 64,
+                    upscale: 8,
+                    colorMode: .palette(
+                        PixelPalette(
+                            name: "Candy 8",
+                            colors: Self.palettePresets.first(where: { $0.id == "candy-8" })?.colors ?? []
+                        ),
+                        application: .preserveTone(saturation: 45, lightness: 58)
+                    ),
+                    outline: PixelOutlineSettings(mode: .adaptive, threshold: 20)
+                ),
+                algorithmVersion: PixelCoreInfo.algorithmVersion,
+                createdAt: now,
+                updatedAt: now
+            ),
+            SavedConversionPreset(
+                id: UUID(),
+                name: L10n.presetReviewGameSprite,
+                settings: PixelConversionSettings(
+                    longSide: 48,
+                    upscale: 10,
+                    colorMode: .palette(
+                        PixelPalette(
+                            name: "PICO-8",
+                            colors: Self.palettePresets.first(where: { $0.id == "pico-8" })?.colors ?? []
+                        ),
+                        application: .exact
+                    ),
+                    outline: PixelOutlineSettings(mode: .black, threshold: 15)
+                ),
+                algorithmVersion: PixelCoreInfo.algorithmVersion,
+                createdAt: now.addingTimeInterval(-60),
+                updatedAt: now.addingTimeInterval(-60)
+            ),
+        ]
     }
 
     func convert(saveMode: ConversionSaveMode) {
@@ -404,9 +532,12 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                         )
                     }
                     self.currentRecord = record
+                    self.lastRenderedSettings = recipe.settings
+                    self.lastRenderedAlgorithmVersion = recipe.metadata.algorithmVersion
                     self.latestPNGData = result.pngData
                     self.outputImage = UIImage(data: result.pngData)
                     self.showsLoader = false
+                    self.settingsCompatibilityWarning = nil
                     self.state = .result
                     await self.onLibraryChange()
                 } catch {
@@ -482,12 +613,18 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private func apply(_ settings: PixelConversionSettings) {
         longSide = Int(settings.longSide)
         upscale = Int(settings.upscale)
+        customPaletteText = "#000000, #FFFFFF"
+        preservesTone = false
+        saturation = 50
+        lightness = 50
         switch settings.colorMode {
         case .source:
             paletteSelection = .source
             preservesTone = false
         case let .palette(palette, application):
-            if let preset = Self.palettePresets.first(where: { $0.name == palette.name }) {
+            if let preset = Self.palettePresets.first(where: {
+                $0.name == palette.name && $0.colors == palette.colors
+            }) {
                 paletteSelection = .preset(preset.id)
             } else {
                 paletteSelection = .custom
@@ -504,6 +641,25 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
         outlineMode = settings.outline.mode
         outlineThreshold = Int(settings.outline.threshold)
+    }
+
+    private func restoreLastRenderedSettings() {
+        guard let settings = lastRenderedSettings,
+              let storedVersion = lastRenderedAlgorithmVersion
+        else {
+            settingsCompatibilityWarning = nil
+            return
+        }
+        guard storedVersion == PixelCoreInfo.algorithmVersion else {
+            apply(PixelConversionSettings())
+            settingsCompatibilityWarning = L10n.recipeVersionFallback(
+                storedVersion,
+                PixelCoreInfo.algorithmVersion
+            )
+            return
+        }
+        apply(settings)
+        settingsCompatibilityWarning = nil
     }
 
     private func fail(_ message: String) {
