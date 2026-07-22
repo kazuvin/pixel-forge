@@ -1,0 +1,6 @@
+[bindings.swift]
+module_name = "PixelForgeCore"
+ffi_module_name = "PixelForgeCoreFFI"
+generate_module_map = true
+generate_immutable_records = true
+

@@ -1,0 +1,10 @@
+.DS_Store
+.swiftpm/
+.build/
+target/
+build/apple/
+apps/apple/PixelForgeApp/.build/
+packages/PixelCoreKit/.build/
+packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework/
+packages/PixelCoreKit/Sources/PixelCoreKit/Generated/PixelForgeCore.swift
+

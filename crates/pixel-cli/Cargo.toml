@@ -1,0 +1,14 @@
+[package]
+name = "pixel-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+pixel-core = { path = "../pixel-core" }
+
+[lints]
+workspace = true
+

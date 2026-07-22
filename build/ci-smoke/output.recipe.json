@@ -1,0 +1,20 @@
+{
+  "algorithmVersion": "0.1.0",
+  "inputSha256": "1eb6fbaf41e1776ea24092c32a75f82439ee4fa68a8674e670026f4397257aa6",
+  "targetWidth": 16,
+  "targetHeight": 16,
+  "outputWidth": 64,
+  "outputHeight": 64,
+  "colorCount": 6,
+  "dither": "bayer4x4",
+  "upscale": 4,
+  "crop": "center-cover",
+  "palette": [
+    "#2A3F42",
+    "#644D59",
+    "#B2717B",
+    "#589576",
+    "#A6B999",
+    "#E1C7AE"
+  ]
+}
