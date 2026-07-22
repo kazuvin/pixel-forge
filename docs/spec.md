@@ -38,7 +38,9 @@
 - 変換はUI thread外で実行し、開始後200msを超えた場合だけ不定進捗を表示する。MVPでは複数変換を並列実行しない。
 - 新規変換は成功時に新しい生成recordを作る。既存結果の調整では同じrecordのatomicな更新、または新しいrecordの作成を選べる。
 - `調整する`はrecordのrecipeを正本として全パラメータを復元する。保存時と現行のalgorithm versionが不一致なら旧値を適用せず、警告とともに`PixelConversionSettings`の初期値へフォールバックする。
+- editingの第一選択は6種類の内蔵変換スタイルと保存済み調整プリセットを並べるfull-screen pickerとし、個別パラメータは折りたたみ式の`詳細調整`へ置く。詳細値が選択中presetと一致しなくなった場合は`カスタム調整`として扱う。
 - 調整プリセットは名前、`PixelConversionSettings`、algorithm version、作成日時、更新日時をApplication Supportへ保存する。同名保存は既存presetを更新し、適用時もalgorithm versionの互換性を確認する。
+- 生成recordはrecipeに加えて内蔵スタイルIDまたは保存済みpreset UUIDを任意の参照として保持する。`調整する`では参照とrecipeの編集可能値が一致する場合に選択状態も復元し、参照がない旧recordは設定値の一致から内蔵／保存済みpresetを推定する。
 - SwiftUIのthemeは`ForgePalette`を環境値として注入し、system、dark、lightで同一layout/component treeを使う。
 - 無料版はsystem themeだけを選択でき、Proはdark/lightへ手動固定できる。
 - UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。
@@ -49,6 +51,7 @@
 - iPhoneアプリは切り抜きUIを持たず、変換時のcropを常に画像全体へ設定する。coreと既存recipeのcrop互換性は維持する。
 - 数値設定は直接入力、増減buttonの長押し、水平scrubのすべてに対応する。
 - paletteは専用のfull-screen pickerに元画像色、8種類の組み込みpreset、customを2列のcard gridで表示し、各cardへpixel参考画像と色swatchを示す。
+- custom paletteはSwiftUI標準`ColorPicker`（opacityなし）を色ごとに表示し、追加・編集・削除で構成する。カンマ区切りやhex列挙の文字入力は提供しない。
 - paletteの適用方法と輪郭modeは文字だけのsegmented controlではなく、pixel preview付きの選択cardで示す。
 - カメラ権限は撮影操作時に要求し、拒否または制限時はiOS設定への導線を提示する。
 - 生成結果の外部保存はPNG画像だけを対象にし、Photosの追加専用権限を使って写真アプリへ保存する。recipeはローカルrecordの再生成用途に限る。
@@ -60,7 +63,7 @@
 
 - app sandbox内のApplication Supportへsource asset、生成PNG、recipe、metadataを保存する。
 - `SourceAsset`はcontent hashをidentityとし、同じ入力の複数バリエーションで一つのsource byte列を共有する。
-- `GeneratedImageRecord`はUUID、source hash、PNG path、recipe path、作成日時、更新日時、表示metadataを持つ。
+- `GeneratedImageRecord`はUUID、source hash、PNG path、recipe path、任意の変換preset参照、作成日時、更新日時、表示metadataを持つ。preset参照のないschema version 1 manifestも`nil`として読み込む。
 - record更新は一時出力へ変換した後、PNG、recipe、metadataを一つのcommitとして差し替える。失敗時は以前のrecordを変更しない。
 - record削除後にsource参照数が0になった場合だけ、対応するsource assetを削除する。
 - app内recordの削除は、写真アプリへ保存済みの画像へ影響させない。

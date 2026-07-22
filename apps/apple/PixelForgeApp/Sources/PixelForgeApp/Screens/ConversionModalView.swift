@@ -6,22 +6,68 @@ struct ConversionModalView: View {
     let close: () -> Void
     @State private var showsPalettePicker: Bool
     @State private var showsPresetLibrary: Bool
+    @State private var showsStylePicker: Bool
+    @State private var showsAdvancedSettings: Bool
     private let loadsPresetsOnAppear: Bool
 
     init(
         model: ConversionSessionModel,
         opensPalettePicker: Bool = false,
         opensPresetLibrary: Bool = false,
+        opensStylePicker: Bool = false,
+        opensAdvancedSettings: Bool = false,
         close: @escaping () -> Void
     ) {
         self.model = model
         self.close = close
-        loadsPresetsOnAppear = !opensPresetLibrary
+        loadsPresetsOnAppear = !opensPresetLibrary && !opensStylePicker
         _showsPalettePicker = State(initialValue: opensPalettePicker)
         _showsPresetLibrary = State(initialValue: opensPresetLibrary)
+        _showsStylePicker = State(initialValue: opensStylePicker)
+        _showsAdvancedSettings = State(initialValue: opensAdvancedSettings)
     }
 
     var body: some View {
+        Group {
+            if showsPalettePicker {
+                PalettePickerView(model: model) {
+                    showsPalettePicker = false
+                }
+            } else if showsPresetLibrary {
+                RecipePresetLibraryView(model: model) {
+                    showsPresetLibrary = false
+                }
+            } else if showsStylePicker {
+                ConversionPresetPickerView(
+                    model: model,
+                    close: { showsStylePicker = false },
+                    didSelect: {
+                        showsAdvancedSettings = false
+                        showsStylePicker = false
+                    },
+                    managePresets: {
+                        showsStylePicker = false
+                        showsPresetLibrary = true
+                    }
+                )
+            } else {
+                conversionScaffold
+            }
+        }
+        .interactiveDismissDisabled(model.state == .rendering)
+        .task {
+            if loadsPresetsOnAppear {
+                await model.loadPresets()
+            }
+        }
+        .onChange(of: model.state) { _, state in
+            if state == .editing, model.currentStyleIsCustom {
+                showsAdvancedSettings = true
+            }
+        }
+    }
+
+    private var conversionScaffold: some View {
         ForgeModalScaffold(
             eyebrow: modalEyebrow,
             title: model.sourceFilename,
@@ -29,22 +75,6 @@ struct ConversionModalView: View {
             close: close
         ) {
             modalContent
-        }
-        .interactiveDismissDisabled(model.state == .rendering)
-        .fullScreenCover(isPresented: $showsPalettePicker) {
-            PalettePickerView(model: model) {
-                showsPalettePicker = false
-            }
-        }
-        .fullScreenCover(isPresented: $showsPresetLibrary) {
-            RecipePresetLibraryView(model: model) {
-                showsPresetLibrary = false
-            }
-        }
-        .task {
-            if loadsPresetsOnAppear {
-                await model.loadPresets()
-            }
         }
     }
 
@@ -82,40 +112,33 @@ struct ConversionModalView: View {
                 ForgePixelSurface(level: .panel) {
                     VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
                         ForgeSectionHeader(
-                            eyebrow: L10n.recipeEyebrow,
-                            title: L10n.conversionOptions,
-                            detail: L10n.conversionOptionsDetail
+                            eyebrow: L10n.conversionStyleEyebrow,
+                            title: L10n.conversionStyleTitle,
+                            detail: L10n.conversionStyleDetail
                         )
                         if let warning = model.settingsCompatibilityWarning {
                             ForgeAlertBanner(message: warning)
                         }
-                        ForgeRecipePresetLibraryButton(
-                            title: L10n.recipePresetTitle,
-                            detail: L10n.recipePresetCount(model.savedPresets.count)
+                        ForgePaletteSelectionButton(
+                            title: model.selectedConversionStyleTitle,
+                            detail: model.selectedConversionStyleDetail,
+                            colors: model.selectedConversionStyleColorValues,
+                            isLocked: model.requiresPro
                         ) {
                             Task {
                                 await model.loadPresets()
-                                showsPresetLibrary = true
+                                showsStylePicker = true
                             }
                         }
-                        ForgeMetricStepper(
-                            title: L10n.longSide,
-                            value: $model.longSide,
-                            range: 1 ... 1024,
-                            step: 1,
-                            suffix: "px",
-                            isLocked: !model.isProActive
+                        ForgeAdvancedSettingsDisclosure(
+                            title: L10n.advancedSettingsTitle,
+                            detail: L10n.advancedSettingsDetail,
+                            isExpanded: $showsAdvancedSettings
                         )
-                        ForgeMetricStepper(
-                            title: L10n.upscale,
-                            value: $model.upscale,
-                            range: 1 ... 32,
-                            step: 1,
-                            suffix: "×",
-                            isLocked: !model.isProActive
-                        )
-                        paletteControl
-                        outlineControls
+                        if showsAdvancedSettings {
+                            advancedSettings
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                         if model.requiresPro {
                             ForgeAlertBanner(message: L10n.proRequired)
                         }
@@ -130,12 +153,50 @@ struct ConversionModalView: View {
                 .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
                 .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
                 .onChange(of: model.outlineMode) { _, _ in model.refreshProRequirement() }
+                .animation(.easeInOut(duration: 0.2), value: showsAdvancedSettings)
             }
             .padding(ForgeDesign.Spacing.regular)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         .scrollDismissesKeyboard(.interactively)
+    }
+
+    private var advancedSettings: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.advancedSettingsEyebrow,
+                title: L10n.advancedSettingsTitle,
+                detail: L10n.advancedSettingsPanelDetail
+            )
+            ForgeMetricStepper(
+                title: L10n.longSide,
+                value: $model.longSide,
+                range: 1 ... 1024,
+                step: 1,
+                suffix: "px",
+                isLocked: !model.isProActive
+            )
+            ForgeMetricStepper(
+                title: L10n.upscale,
+                value: $model.upscale,
+                range: 1 ... 32,
+                step: 1,
+                suffix: "×",
+                isLocked: !model.isProActive
+            )
+            paletteControl
+            outlineControls
+            ForgeRecipePresetLibraryButton(
+                title: L10n.recipePresetTitle,
+                detail: L10n.recipePresetCount(model.savedPresets.count)
+            ) {
+                Task {
+                    await model.loadPresets()
+                    showsPresetLibrary = true
+                }
+            }
+        }
     }
 
     private var paletteControl: some View {
@@ -303,6 +364,104 @@ struct ConversionModalView: View {
     }
 }
 
+private struct ConversionPresetPickerView: View {
+    @ObservedObject var model: ConversionSessionModel
+    let close: () -> Void
+    let didSelect: () -> Void
+    let managePresets: () -> Void
+
+    var body: some View {
+        ForgeModalScaffold(
+            eyebrow: L10n.conversionStyleEyebrow,
+            title: L10n.conversionStylePickerTitle,
+            detail: L10n.conversionStylePickerDetail,
+            close: close
+        ) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
+                    builtInStyles
+                    myPresets
+                    ForgeButton(title: L10n.done, icon: .selected, role: .primary) {
+                        close()
+                    }
+                }
+                .padding(ForgeDesign.Spacing.regular)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+        }
+    }
+
+    private var builtInStyles: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.conversionStyleBuiltInEyebrow,
+                title: L10n.conversionStyleBuiltInTitle,
+                detail: L10n.conversionStyleBuiltInDetail
+            )
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: ForgeDesign.Spacing.compact
+            ) {
+                ForEach(ConversionSessionModel.conversionStylePresets) { preset in
+                    ForgeConversionStyleCard(
+                        title: preset.displayName,
+                        detail: preset.displayDetail,
+                        summary: model.settingsSummary(preset.settings),
+                        colors: model.colorValues(for: preset.settings),
+                        isSelected: model.isConversionStyleSelected(preset),
+                        isLocked: !model.isProActive && model.conversionStyleRequiresPro(preset)
+                    ) {
+                        model.applyConversionStyle(preset)
+                        didSelect()
+                    }
+                }
+            }
+        }
+    }
+
+    private var myPresets: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.recipePresetEyebrow,
+                title: L10n.conversionStyleMyPresetsTitle,
+                detail: L10n.conversionStyleMyPresetsDetail
+            )
+            if model.savedPresets.isEmpty {
+                ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.section) {
+                    ForgeEmptyState(icon: .pixelGrid, message: L10n.recipePresetEmptyDetail)
+                }
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: ForgeDesign.Spacing.compact
+                ) {
+                    ForEach(model.savedPresets) { preset in
+                        ForgeConversionStyleCard(
+                            title: preset.name,
+                            detail: L10n.conversionStyleSavedDetail,
+                            summary: model.settingsSummary(preset.settings),
+                            colors: model.colorValues(for: preset.settings),
+                            isSelected: model.isSavedPresetSelected(preset),
+                            isLocked: preset.algorithmVersion != PixelCoreInfo.algorithmVersion
+                                || (!model.isProActive && model.savedPresetRequiresPro(preset))
+                        ) {
+                            model.applyPreset(preset)
+                            didSelect()
+                        }
+                    }
+                }
+            }
+            ForgeRecipePresetLibraryButton(
+                title: L10n.recipePresetLibraryTitle,
+                detail: L10n.recipePresetCount(model.savedPresets.count)
+            ) {
+                managePresets()
+            }
+        }
+    }
+}
+
 private struct RecipePresetLibraryView: View {
     @ObservedObject var model: ConversionSessionModel
     let close: () -> Void
@@ -391,9 +550,9 @@ private struct RecipePresetLibraryView: View {
                 ForEach(model.savedPresets) { preset in
                     ForgeRecipePresetCard(
                         title: preset.name,
-                        detail: summary(for: preset.settings),
+                        detail: model.settingsSummary(preset.settings),
                         version: L10n.presetVersion(preset.algorithmVersion),
-                        colors: colors(for: preset.settings),
+                        colors: model.colorValues(for: preset.settings),
                         isCompatible: preset.algorithmVersion == PixelCoreInfo.algorithmVersion,
                         applyTitle: L10n.recipePresetApply,
                         deleteAccessibilityLabel: L10n.delete,
@@ -421,30 +580,6 @@ private struct RecipePresetLibraryView: View {
         )
     }
 
-    private func summary(for settings: PixelConversionSettings) -> String {
-        L10n.presetSummary(
-            Int(settings.longSide),
-            Int(settings.upscale),
-            paletteTitle(for: settings)
-        )
-    }
-
-    private func paletteTitle(for settings: PixelConversionSettings) -> String {
-        switch settings.colorMode {
-        case .source:
-            L10n.paletteSource
-        case let .palette(palette, _):
-            ConversionSessionModel.palettePresets
-                .first(where: { $0.name == palette.name })?.displayName ?? palette.name
-        }
-    }
-
-    private func colors(for settings: PixelConversionSettings) -> [UInt32] {
-        guard case let .palette(palette, _) = settings.colorMode else { return [] }
-        return palette.colors.map {
-            UInt32($0.red) << 16 | UInt32($0.green) << 8 | UInt32($0.blue)
-        }
-    }
 }
 
 private struct PalettePickerView: View {
@@ -460,10 +595,16 @@ private struct PalettePickerView: View {
         ) {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
-                    paletteGrid
                     if model.paletteSelection == .custom {
-                        ForgeTextInput(label: L10n.customPalette, text: $model.customPaletteText)
+                        ForgeColorCollectionEditor(
+                            colors: $model.customPaletteColorValues,
+                            title: L10n.customPaletteColorsTitle,
+                            detail: L10n.customPaletteColorsDetail,
+                            addTitle: L10n.customPaletteAddColor,
+                            deleteAccessibilityLabel: L10n.customPaletteDeleteColor
+                        )
                     }
+                    paletteGrid
                     if model.paletteSelection != .source {
                         toneControls
                     }
@@ -481,7 +622,7 @@ private struct PalettePickerView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
-        .onChange(of: model.customPaletteText) { _, _ in model.refreshProRequirement() }
+        .onChange(of: model.customPaletteColorValues) { _, _ in model.refreshProRequirement() }
         .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
         .onChange(of: model.saturation) { _, _ in model.refreshProRequirement() }
         .onChange(of: model.lightness) { _, _ in model.refreshProRequirement() }

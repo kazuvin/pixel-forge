@@ -95,12 +95,12 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 4. Screen層では共通部品の組み合わせと状態接続だけを行う。
 5. `./scripts/verify-apple-design-system.sh`を実行する。
 6. system/dark/lightでHome empty、Home grid、editing、rendering、result、error、free/Pro settingsを確認する。
-7. Home、画像追加メニュー、削除確認、変換設定、パレット選択、調整プリセット、変換結果、通常設定、開発者設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
+7. Home、画像追加メニュー、削除確認、変換設定、詳細調整、変換スタイル選択、パレット選択、調整プリセット、変換結果、通常設定、開発者設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
 8. `./scripts/ci-local.sh`を実行する。
 
 `verify-apple-design-system.sh`はscreen層のstyle直書き、日英key不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。
 
-同じfixtureとiPhone Simulatorで4画面を両themeで再撮影する場合は次を使う。
+同じfixtureとiPhone Simulatorで全11 surfaceを両theme（22枚）で再撮影する場合は次を使う。
 
 ```bash
 ./scripts/capture-apple-review.sh

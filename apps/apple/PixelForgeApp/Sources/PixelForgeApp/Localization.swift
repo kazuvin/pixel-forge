@@ -101,6 +101,34 @@ enum L10n {
     static var unsupportedImage: String { text("error.unsupported_image") }
     static var conversionOptions: String { text("conversion.options") }
     static var conversionOptionsDetail: String { text("conversion.options.detail") }
+    static var conversionStyleEyebrow: String { text("conversion_style.eyebrow") }
+    static var conversionStyleTitle: String { text("conversion_style.title") }
+    static var conversionStyleDetail: String { text("conversion_style.detail") }
+    static var conversionStylePickerTitle: String { text("conversion_style.picker.title") }
+    static var conversionStylePickerDetail: String { text("conversion_style.picker.detail") }
+    static var conversionStyleBuiltInEyebrow: String { text("conversion_style.built_in.eyebrow") }
+    static var conversionStyleBuiltInTitle: String { text("conversion_style.built_in.title") }
+    static var conversionStyleBuiltInDetail: String { text("conversion_style.built_in.detail") }
+    static var conversionStyleMyPresetsTitle: String { text("conversion_style.my_presets.title") }
+    static var conversionStyleMyPresetsDetail: String { text("conversion_style.my_presets.detail") }
+    static var conversionStyleSavedDetail: String { text("conversion_style.saved.detail") }
+    static var conversionStyleCustom: String { text("conversion_style.custom") }
+    static var conversionStyleStandard: String { text("conversion_style.standard") }
+    static var conversionStyleStandardDetail: String { text("conversion_style.standard.detail") }
+    static var conversionStyleChunky: String { text("conversion_style.chunky") }
+    static var conversionStyleChunkyDetail: String { text("conversion_style.chunky.detail") }
+    static var conversionStyleFine: String { text("conversion_style.fine") }
+    static var conversionStyleFineDetail: String { text("conversion_style.fine.detail") }
+    static var conversionStyleGameSprite: String { text("conversion_style.game_sprite") }
+    static var conversionStyleGameSpriteDetail: String { text("conversion_style.game_sprite.detail") }
+    static var conversionStyleSoftPortrait: String { text("conversion_style.soft_portrait") }
+    static var conversionStyleSoftPortraitDetail: String { text("conversion_style.soft_portrait.detail") }
+    static var conversionStyleMonoInk: String { text("conversion_style.mono_ink") }
+    static var conversionStyleMonoInkDetail: String { text("conversion_style.mono_ink.detail") }
+    static var advancedSettingsEyebrow: String { text("advanced_settings.eyebrow") }
+    static var advancedSettingsTitle: String { text("advanced_settings.title") }
+    static var advancedSettingsDetail: String { text("advanced_settings.detail") }
+    static var advancedSettingsPanelDetail: String { text("advanced_settings.panel_detail") }
     static var longSide: String { text("setting.long_side") }
     static var palette: String { text("setting.palette") }
     static var paletteSource: String { text("setting.palette.source") }
@@ -143,6 +171,9 @@ enum L10n {
     static var presetDeleteDetail: String { text("recipe_preset.delete.detail") }
     static var custom: String { text("setting.custom") }
     static var customPalette: String { text("setting.custom_palette") }
+    static var customPaletteColorsTitle: String { text("custom_palette.colors.title") }
+    static var customPaletteColorsDetail: String { text("custom_palette.colors.detail") }
+    static var customPaletteAddColor: String { text("custom_palette.add_color") }
     static var preserveTone: String { text("setting.preserve_tone") }
     static var saturation: String { text("setting.saturation") }
     static var lightness: String { text("setting.lightness") }
@@ -271,6 +302,10 @@ enum L10n {
 
     static func presetVersionFallback(_ name: String, _ stored: String, _ current: String) -> String {
         format("recipe_preset.version_fallback", name, stored, current)
+    }
+
+    static func customPaletteDeleteColor(_ index: Int) -> String {
+        format("custom_palette.delete_color", index)
     }
 
     static func ditherName(_ mode: PixelDitherMode) -> String {

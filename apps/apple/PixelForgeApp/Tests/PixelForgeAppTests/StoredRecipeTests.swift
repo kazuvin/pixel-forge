@@ -69,7 +69,7 @@ func adjustRestoresLastRenderedSettings() throws {
     #expect(model.longSide == 96)
     #expect(model.upscale == 4)
     #expect(model.paletteSelection == .custom)
-    #expect(model.customPaletteText == "#000102")
+    #expect(model.customPaletteColorValues == [0x000102])
     #expect(model.preservesTone)
     #expect(model.saturation == 55)
     #expect(model.lightness == 65)
@@ -141,7 +141,7 @@ func appliesCompatiblePresetAndRejectsOldVersion() throws {
     #expect(model.longSide == 80)
     #expect(model.upscale == 6)
     #expect(model.paletteSelection == .custom)
-    #expect(model.customPaletteText == "#0C2238")
+    #expect(model.customPaletteColorValues == [0x0C2238])
     #expect(model.outlineMode == .black)
     #expect(model.outlineThreshold == 30)
     #expect(model.settingsCompatibilityWarning == nil)
@@ -161,7 +161,51 @@ func appliesCompatiblePresetAndRejectsOldVersion() throws {
     #expect(model.settingsCompatibilityWarning?.contains("0.0.1") == true)
 }
 
-private func record(algorithmVersion: String) -> GeneratedImageRecord {
+@MainActor
+@Test("adjust restores a saved preset as the selected conversion style")
+func adjustRestoresSavedPresetSelection() async throws {
+    let sourceData = try #require(ReviewConfiguration.sourceData)
+    let presetRoot = temporaryDirectory()
+    let presetStore = ConversionPresetStore(rootURL: presetRoot)
+    let settings = PixelConversionSettings(
+        longSide: 96,
+        upscale: 4,
+        colorMode: .palette(
+            PixelPalette(name: "Mono", colors: [.init(red: 0, green: 1, blue: 2)]),
+            application: .preserveTone(saturation: 55, lightness: 65)
+        ),
+        outline: .init(mode: .adaptive, threshold: 22)
+    )
+    let saved = try await presetStore.savePreset(
+        name: "Portrait Lab",
+        settings: settings,
+        algorithmVersion: PixelCoreInfo.algorithmVersion
+    )
+    let model = try ConversionSessionModel(
+        record: record(
+            algorithmVersion: PixelCoreInfo.algorithmVersion,
+            presetReference: .saved(saved.id)
+        ),
+        sourceData: sourceData,
+        pngData: sourceData,
+        recipeJSON: recipeJSON(algorithmVersion: PixelCoreInfo.algorithmVersion),
+        store: LocalLibraryStore(rootURL: temporaryDirectory()),
+        presetStore: presetStore,
+        entitlement: ProEntitlementService(),
+        onLibraryChange: {}
+    )
+
+    await model.loadPresets()
+    model.edit()
+
+    #expect(model.isSavedPresetSelected(saved))
+    #expect(model.selectedConversionStyleTitle == "Portrait Lab")
+}
+
+private func record(
+    algorithmVersion: String,
+    presetReference: ConversionPresetReference? = nil
+) -> GeneratedImageRecord {
     GeneratedImageRecord(
         id: UUID(),
         sourceHash: "test-source",
@@ -177,7 +221,8 @@ private func record(algorithmVersion: String) -> GeneratedImageRecord {
             outputHeight: 288,
             paletteName: "Mono",
             algorithmVersion: algorithmVersion
-        )
+        ),
+        presetReference: presetReference
     )
 }
 

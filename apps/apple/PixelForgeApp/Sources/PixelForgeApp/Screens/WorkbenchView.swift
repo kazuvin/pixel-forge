@@ -85,7 +85,9 @@ struct WorkbenchView: View {
             ConversionModalView(
                 model: session,
                 opensPalettePicker: reviewScreen == .palettePicker,
-                opensPresetLibrary: reviewScreen == .recipePresetLibrary
+                opensPresetLibrary: reviewScreen == .recipePresetLibrary,
+                opensStylePicker: reviewScreen == .conversionStylePicker,
+                opensAdvancedSettings: reviewScreen == .conversionAdvanced
             ) {
                 model.session = nil
             }
@@ -163,8 +165,14 @@ struct WorkbenchView: View {
             pendingDeletion = model.records.first
         case .conversionEditing:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+        case .conversionAdvanced:
+            model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+        case .conversionStylePicker:
+            model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+            model.session?.prepareReviewPresets()
         case .palettePicker:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+            model.session?.paletteSelection = .custom
         case .recipePresetLibrary:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.prepareReviewPresets()

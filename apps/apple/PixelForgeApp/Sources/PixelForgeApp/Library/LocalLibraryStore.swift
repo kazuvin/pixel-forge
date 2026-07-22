@@ -21,6 +21,29 @@ struct GeneratedImageMetadata: Codable, Equatable, Sendable {
     let algorithmVersion: String
 }
 
+struct ConversionPresetReference: Codable, Equatable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        case builtIn
+        case saved
+    }
+
+    let kind: Kind
+    let identifier: String
+
+    static func builtIn(_ identifier: String) -> ConversionPresetReference {
+        ConversionPresetReference(kind: .builtIn, identifier: identifier)
+    }
+
+    static func saved(_ identifier: UUID) -> ConversionPresetReference {
+        ConversionPresetReference(kind: .saved, identifier: identifier.uuidString)
+    }
+
+    var savedIdentifier: UUID? {
+        guard kind == .saved else { return nil }
+        return UUID(uuidString: identifier)
+    }
+}
+
 struct GeneratedImageRecord: Codable, Equatable, Identifiable, Sendable {
     let id: UUID
     let sourceHash: String
@@ -30,12 +53,26 @@ struct GeneratedImageRecord: Codable, Equatable, Identifiable, Sendable {
     let createdAt: Date
     let updatedAt: Date
     let metadata: GeneratedImageMetadata
+    var presetReference: ConversionPresetReference? = nil
 }
 
 struct GeneratedArtifact: Equatable, Sendable {
     let pngData: Data
     let recipeJSON: String
     let metadata: GeneratedImageMetadata
+    let presetReference: ConversionPresetReference?
+
+    init(
+        pngData: Data,
+        recipeJSON: String,
+        metadata: GeneratedImageMetadata,
+        presetReference: ConversionPresetReference? = nil
+    ) {
+        self.pngData = pngData
+        self.recipeJSON = recipeJSON
+        self.metadata = metadata
+        self.presetReference = presetReference
+    }
 }
 
 struct LibrarySnapshot: Codable, Equatable, Sendable {
@@ -120,7 +157,8 @@ actor LocalLibraryStore {
                 recipeRelativePath: paths.recipe,
                 createdAt: now,
                 updatedAt: now,
-                metadata: artifact.metadata
+                metadata: artifact.metadata,
+                presetReference: artifact.presetReference
             )
             snapshot.records.append(record)
             try save(snapshot)
@@ -157,7 +195,8 @@ actor LocalLibraryStore {
             recipeRelativePath: paths.recipe,
             createdAt: oldRecord.createdAt,
             updatedAt: now,
-            metadata: artifact.metadata
+            metadata: artifact.metadata,
+            presetReference: artifact.presetReference
         )
         snapshot.records[index] = updated
 

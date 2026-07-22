@@ -197,6 +197,35 @@ struct PalettePreset: Identifiable, Hashable {
     }
 }
 
+struct ConversionStylePreset: Identifiable, Hashable {
+    let id: String
+    let settings: PixelConversionSettings
+
+    var displayName: String {
+        switch id {
+        case "standard": L10n.conversionStyleStandard
+        case "chunky": L10n.conversionStyleChunky
+        case "fine": L10n.conversionStyleFine
+        case "game-sprite": L10n.conversionStyleGameSprite
+        case "soft-portrait": L10n.conversionStyleSoftPortrait
+        case "mono-ink": L10n.conversionStyleMonoInk
+        default: id
+        }
+    }
+
+    var displayDetail: String {
+        switch id {
+        case "standard": L10n.conversionStyleStandardDetail
+        case "chunky": L10n.conversionStyleChunkyDetail
+        case "fine": L10n.conversionStyleFineDetail
+        case "game-sprite": L10n.conversionStyleGameSpriteDetail
+        case "soft-portrait": L10n.conversionStyleSoftPortraitDetail
+        case "mono-ink": L10n.conversionStyleMonoInkDetail
+        default: ""
+        }
+    }
+}
+
 @MainActor
 final class ConversionSessionModel: ObservableObject, Identifiable {
     let id = UUID()
@@ -220,7 +249,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var longSide = 64
     @Published var upscale = 8
     @Published var paletteSelection: PaletteSelection = .source
-    @Published var customPaletteText = "#000000, #FFFFFF"
+    @Published var customPaletteColorValues: [UInt32] = [0x000000, 0xFFFFFF]
     @Published var preservesTone = false
     @Published var saturation = 50
     @Published var lightness = 50
@@ -235,6 +264,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private var latestPNGData: Data?
     private var lastRenderedSettings: PixelConversionSettings?
     private var lastRenderedAlgorithmVersion: String?
+    private var lastRenderedPresetReference: ConversionPresetReference?
+    private var preferredPresetReference: ConversionPresetReference? = .builtIn("standard")
     private var conversionTask: Task<Void, Never>?
     private var loaderTask: Task<Void, Never>?
 
@@ -288,6 +319,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         self.onLibraryChange = onLibraryChange
         lastRenderedSettings = recipe.settings
         lastRenderedAlgorithmVersion = recipe.metadata.algorithmVersion
+        lastRenderedPresetReference = record.presetReference
+        preferredPresetReference = record.presetReference
         if recipe.metadata.algorithmVersion == PixelCoreInfo.algorithmVersion {
             apply(recipe.settings)
         }
@@ -342,10 +375,79 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
     }
 
-    var customPaletteColorValues: [UInt32] {
-        customPaletteText
-            .split(separator: ",")
-            .compactMap { Self.parseHexValue(String($0)) }
+    var selectedConversionStyleTitle: String {
+        guard let reference = currentPresetReference() else { return L10n.conversionStyleCustom }
+        switch reference.kind {
+        case .builtIn:
+            return Self.conversionStylePresets
+                .first(where: { $0.id == reference.identifier })?.displayName
+                ?? L10n.conversionStyleCustom
+        case .saved:
+            return reference.savedIdentifier
+                .flatMap { identifier in savedPresets.first(where: { $0.id == identifier })?.name }
+                ?? L10n.conversionStyleCustom
+        }
+    }
+
+    var selectedConversionStyleDetail: String {
+        guard let settings = try? makeSettings() else { return L10n.invalidPalette }
+        return settingsSummary(settings)
+    }
+
+    var selectedConversionStyleColorValues: [UInt32] {
+        guard let settings = try? makeSettings() else { return [] }
+        return colorValues(for: settings)
+    }
+
+    var currentStyleIsCustom: Bool {
+        currentPresetReference() == nil
+    }
+
+    func isConversionStyleSelected(_ preset: ConversionStylePreset) -> Bool {
+        currentPresetReference() == .builtIn(preset.id)
+    }
+
+    func isSavedPresetSelected(_ preset: SavedConversionPreset) -> Bool {
+        currentPresetReference() == .saved(preset.id)
+    }
+
+    func conversionStyleRequiresPro(_ preset: ConversionStylePreset) -> Bool {
+        !ProAccessPolicy.requiredFeatures(for: preset.settings).isEmpty
+    }
+
+    func savedPresetRequiresPro(_ preset: SavedConversionPreset) -> Bool {
+        !ProAccessPolicy.requiredFeatures(for: preset.settings).isEmpty
+    }
+
+    func applyConversionStyle(_ preset: ConversionStylePreset) {
+        apply(preset.settings)
+        preferredPresetReference = .builtIn(preset.id)
+        settingsCompatibilityWarning = nil
+        refreshProRequirement()
+    }
+
+    func settingsSummary(_ settings: PixelConversionSettings) -> String {
+        L10n.presetSummary(
+            Int(settings.longSide),
+            Int(settings.upscale),
+            paletteTitle(for: settings)
+        )
+    }
+
+    func paletteTitle(for settings: PixelConversionSettings) -> String {
+        switch settings.colorMode {
+        case .source:
+            L10n.paletteSource
+        case let .palette(palette, _):
+            Self.palettePresets
+                .first(where: { $0.name == palette.name && $0.colors == palette.colors })?
+                .displayName ?? palette.name
+        }
+    }
+
+    func colorValues(for settings: PixelConversionSettings) -> [UInt32] {
+        guard case let .palette(palette, _) = settings.colorMode else { return [] }
+        return palette.colors.map(Self.colorValue)
     }
 
     func edit() {
@@ -385,6 +487,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             let settings = try makeSettings()
             let preset = try await presetStore.savePreset(name: name, settings: settings)
             savedPresets = try await presetStore.loadPresets()
+            preferredPresetReference = .saved(preset.id)
             presetSuccessMessage = L10n.presetSaved(preset.name)
             presetErrorMessage = nil
             return true
@@ -404,9 +507,11 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         presetErrorMessage = nil
         if preset.algorithmVersion == PixelCoreInfo.algorithmVersion {
             apply(preset.settings)
+            preferredPresetReference = .saved(preset.id)
             settingsCompatibilityWarning = nil
         } else {
             apply(PixelConversionSettings())
+            preferredPresetReference = .builtIn("standard")
             settingsCompatibilityWarning = L10n.presetVersionFallback(
                 preset.name,
                 preset.algorithmVersion,
@@ -419,6 +524,9 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     func deletePreset(_ preset: SavedConversionPreset) async {
         do {
             try await presetStore.deletePreset(id: preset.id)
+            if preferredPresetReference == .saved(preset.id) {
+                preferredPresetReference = nil
+            }
             savedPresets = try await presetStore.loadPresets()
             presetSuccessMessage = L10n.presetDeleted(preset.name)
             presetErrorMessage = nil
@@ -434,18 +542,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             SavedConversionPreset(
                 id: UUID(),
                 name: L10n.presetReviewSoftPortrait,
-                settings: PixelConversionSettings(
-                    longSide: 64,
-                    upscale: 8,
-                    colorMode: .palette(
-                        PixelPalette(
-                            name: "Candy 8",
-                            colors: Self.palettePresets.first(where: { $0.id == "candy-8" })?.colors ?? []
-                        ),
-                        application: .preserveTone(saturation: 45, lightness: 58)
-                    ),
-                    outline: PixelOutlineSettings(mode: .adaptive, threshold: 20)
-                ),
+                settings: Self.conversionStylePresets
+                    .first(where: { $0.id == "soft-portrait" })?.settings ?? PixelConversionSettings(),
                 algorithmVersion: PixelCoreInfo.algorithmVersion,
                 createdAt: now,
                 updatedAt: now
@@ -453,18 +551,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             SavedConversionPreset(
                 id: UUID(),
                 name: L10n.presetReviewGameSprite,
-                settings: PixelConversionSettings(
-                    longSide: 48,
-                    upscale: 10,
-                    colorMode: .palette(
-                        PixelPalette(
-                            name: "PICO-8",
-                            colors: Self.palettePresets.first(where: { $0.id == "pico-8" })?.colors ?? []
-                        ),
-                        application: .exact
-                    ),
-                    outline: PixelOutlineSettings(mode: .black, threshold: 15)
-                ),
+                settings: Self.conversionStylePresets
+                    .first(where: { $0.id == "game-sprite" })?.settings ?? PixelConversionSettings(),
                 algorithmVersion: PixelCoreInfo.algorithmVersion,
                 createdAt: now.addingTimeInterval(-60),
                 updatedAt: now.addingTimeInterval(-60)
@@ -502,6 +590,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         let sourceData = sourceData
         let sourceFilename = sourceFilename
         let existingID = currentRecord?.id
+        let presetReference = currentPresetReference(for: settings)
         conversionTask = Task { [weak self] in
             let outcome = await Task.detached(priority: .userInitiated) {
                 do {
@@ -519,7 +608,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                     let artifact = GeneratedArtifact(
                         pngData: result.pngData,
                         recipeJSON: result.recipeJSON,
-                        metadata: recipe.metadata
+                        metadata: recipe.metadata,
+                        presetReference: presetReference
                     )
                     let record: GeneratedImageRecord
                     if saveMode == .update, let existingID {
@@ -534,6 +624,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                     self.currentRecord = record
                     self.lastRenderedSettings = recipe.settings
                     self.lastRenderedAlgorithmVersion = recipe.metadata.algorithmVersion
+                    self.lastRenderedPresetReference = record.presetReference
+                    self.preferredPresetReference = record.presetReference
                     self.latestPNGData = result.pngData
                     self.outputImage = UIImage(data: result.pngData)
                     self.showsLoader = false
@@ -602,9 +694,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             }
             return PixelPalette(name: preset.name, colors: preset.colors)
         case .custom:
-            let colors = customPaletteText
-                .split(separator: ",")
-                .compactMap { Self.parseHex(String($0)) }
+            let colors = customPaletteColorValues.map(Self.rgbColor)
             guard !colors.isEmpty else { throw ConversionModelError.emptyPalette }
             return PixelPalette(name: "Custom", colors: colors)
         }
@@ -613,7 +703,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private func apply(_ settings: PixelConversionSettings) {
         longSide = Int(settings.longSide)
         upscale = Int(settings.upscale)
-        customPaletteText = "#000000, #FFFFFF"
+        customPaletteColorValues = [0x000000, 0xFFFFFF]
         preservesTone = false
         saturation = 50
         lightness = 50
@@ -628,7 +718,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                 paletteSelection = .preset(preset.id)
             } else {
                 paletteSelection = .custom
-                customPaletteText = palette.colors.map(Self.hex).joined(separator: ", ")
+                customPaletteColorValues = palette.colors.map(Self.colorValue)
             }
             switch application {
             case .exact:
@@ -652,6 +742,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
         guard storedVersion == PixelCoreInfo.algorithmVersion else {
             apply(PixelConversionSettings())
+            preferredPresetReference = .builtIn("standard")
             settingsCompatibilityWarning = L10n.recipeVersionFallback(
                 storedVersion,
                 PixelCoreInfo.algorithmVersion
@@ -659,7 +750,53 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             return
         }
         apply(settings)
+        preferredPresetReference = lastRenderedPresetReference
         settingsCompatibilityWarning = nil
+    }
+
+    private func currentPresetReference() -> ConversionPresetReference? {
+        guard let settings = try? makeSettings() else { return nil }
+        return currentPresetReference(for: settings)
+    }
+
+    private func currentPresetReference(
+        for settings: PixelConversionSettings
+    ) -> ConversionPresetReference? {
+        if let preferredPresetReference,
+           self.settings(for: preferredPresetReference).map({
+               Self.editorSettingsEqual($0, settings)
+           }) == true
+        {
+            return preferredPresetReference
+        }
+        if let builtIn = Self.conversionStylePresets.first(where: {
+            Self.editorSettingsEqual($0.settings, settings)
+        }) {
+            return .builtIn(builtIn.id)
+        }
+        if let saved = savedPresets.first(where: {
+            $0.algorithmVersion == PixelCoreInfo.algorithmVersion
+                && Self.editorSettingsEqual($0.settings, settings)
+        }) {
+            return .saved(saved.id)
+        }
+        return nil
+    }
+
+    private func settings(
+        for reference: ConversionPresetReference
+    ) -> PixelConversionSettings? {
+        switch reference.kind {
+        case .builtIn:
+            Self.conversionStylePresets
+                .first(where: { $0.id == reference.identifier })?.settings
+        case .saved:
+            reference.savedIdentifier.flatMap { identifier in
+                savedPresets.first(where: {
+                    $0.id == identifier && $0.algorithmVersion == PixelCoreInfo.algorithmVersion
+                })?.settings
+            }
+        }
     }
 
     private func fail(_ message: String) {
@@ -668,27 +805,40 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         state = .failure
     }
 
-    private static func parseHex(_ value: String) -> PixelRGBColor? {
-        guard let rgb = parseHexValue(value) else { return nil }
+    private static func rgbColor(_ value: UInt32) -> PixelRGBColor {
         return PixelRGBColor(
-            red: UInt8((rgb >> 16) & 0xFF),
-            green: UInt8((rgb >> 8) & 0xFF),
-            blue: UInt8(rgb & 0xFF)
+            red: UInt8((value >> 16) & 0xFF),
+            green: UInt8((value >> 8) & 0xFF),
+            blue: UInt8(value & 0xFF)
         )
     }
 
-    private static func hex(_ color: PixelRGBColor) -> String {
-        String(format: "#%02X%02X%02X", color.red, color.green, color.blue)
+    private static func colorValue(_ color: PixelRGBColor) -> UInt32 {
+        UInt32(color.red) << 16 | UInt32(color.green) << 8 | UInt32(color.blue)
     }
 
-    private static func parseHexValue(_ value: String) -> UInt32? {
-        let clean = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        guard clean.count == 6 else { return nil }
-        return UInt32(clean, radix: 16)
+    private static func editorSettingsEqual(
+        _ lhs: PixelConversionSettings,
+        _ rhs: PixelConversionSettings
+    ) -> Bool {
+        guard lhs.longSide == rhs.longSide,
+              lhs.upscale == rhs.upscale,
+              lhs.crop == rhs.crop,
+              lhs.outline == rhs.outline
+        else {
+            return false
+        }
+        switch (lhs.colorMode, rhs.colorMode) {
+        case (.source, .source):
+            return true
+        case let (.palette(lhsPalette, lhsApplication), .palette(rhsPalette, rhsApplication)):
+            return lhsPalette.colors == rhsPalette.colors && lhsApplication == rhsApplication
+        default:
+            return false
+        }
     }
 
-    static let palettePresets = [
+    nonisolated static let palettePresets = [
         PalettePreset(id: "game-boy", name: "Game Boy", colorValues: [
             0x0F380F, 0x306230, 0x8BAC0F, 0x9BBC0F,
         ]),
@@ -719,6 +869,58 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             0x241A14, 0x4D3427, 0x76523A, 0xA47A55, 0xD2AC7B, 0xF1DFC0,
         ]),
     ]
+
+    nonisolated static let conversionStylePresets: [ConversionStylePreset] = {
+        func palette(_ identifier: String) -> PixelPalette {
+            let preset = palettePresets.first(where: { $0.id == identifier })
+            return PixelPalette(name: preset?.name ?? identifier, colors: preset?.colors ?? [])
+        }
+
+        return [
+            ConversionStylePreset(
+                id: "standard",
+                settings: PixelConversionSettings()
+            ),
+            ConversionStylePreset(
+                id: "chunky",
+                settings: PixelConversionSettings(longSide: 32, upscale: 8)
+            ),
+            ConversionStylePreset(
+                id: "fine",
+                settings: PixelConversionSettings(longSide: 128, upscale: 8)
+            ),
+            ConversionStylePreset(
+                id: "game-sprite",
+                settings: PixelConversionSettings(
+                    longSide: 48,
+                    upscale: 10,
+                    colorMode: .palette(palette("pico-8"), application: .exact),
+                    outline: PixelOutlineSettings(mode: .black, threshold: 15)
+                )
+            ),
+            ConversionStylePreset(
+                id: "soft-portrait",
+                settings: PixelConversionSettings(
+                    longSide: 64,
+                    upscale: 8,
+                    colorMode: .palette(
+                        palette("candy-8"),
+                        application: .preserveTone(saturation: 45, lightness: 58)
+                    ),
+                    outline: PixelOutlineSettings(mode: .adaptive, threshold: 20)
+                )
+            ),
+            ConversionStylePreset(
+                id: "mono-ink",
+                settings: PixelConversionSettings(
+                    longSide: 64,
+                    upscale: 8,
+                    colorMode: .palette(palette("mono-ink"), application: .exact),
+                    outline: PixelOutlineSettings(mode: .black, threshold: 18)
+                )
+            ),
+        ]
+    }()
 }
 
 enum PhotoSaveState: Equatable {

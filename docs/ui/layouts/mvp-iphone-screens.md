@@ -11,6 +11,7 @@ Pixel ForgeのUIはiOS 17以降のiPhone縦向きだけを対象とする。iPad
 ```text
 Home
 ├─ New Conversion (full screen)
+│  ├─ Style Picker / Advanced Settings
 │  └─ editing -> rendering -> result / failure
 ├─ Existing Result (same full screen)
 │  └─ result -> editing -> update or save as new
@@ -76,17 +77,19 @@ Home
 │ └───────────────────────┘ │
 │                           │
 │ CONVERSION OPTIONS        │
-│ logical size / upscale    │
-│ palette card -> picker    │
-│ outline                   │
+│ style cartridge -> picker │
+│ [＋ 詳細調整]             │
 │ [      変換する       ]   │
 └───────────────────────────┘
 ```
 
-- preview、幾何、色、輪郭、主操作を縦一列で並べ、画面全体をscroll可能にする。
+- preview、変換スタイル、詳細調整、主操作を縦一列で並べ、画面全体をscroll可能にする。
+- 通常は6種類の内蔵変換スタイルと保存済みプリセットから選ぶだけで変換できる。pickerは2列card gridとし、pixel参考画像、概要、使用色、lock、選択状態を示す。
+- 論理解像度、拡大率、palette、輪郭は上級者向けの`詳細調整`内だけへ表示する。値を変更して選択presetと一致しなくなった場合は`カスタム調整`と表示する。
 - 切り抜き機能は置かず、入力画像全体を対象にする。
 - 数値は直接入力でき、増減buttonの長押しとtrackの水平scrubでも連続変更できる。
 - paletteは現在の選択を参考画像付きcardで示し、tapすると2列のpalette pickerを開く。pickerの各cardにはpixel参考画像と使用色swatchを表示する。
+- custom paletteではカンマ区切り入力を使わず、SwiftUI標準のカラーピッカーから色を1色ずつ追加、編集、削除する。
 - palette適用と輪郭modeはpixel preview付きcardで選択し、文言だけに依存しない。
 - 無料範囲外の設定も隠さずlockを表示する。選択時にProが必要であることを説明し、現在の入力と設定を失わない。
 - 新規変換の主操作は`変換する`とする。
@@ -122,7 +125,7 @@ Home
 - 新規変換完了後とHomeのcard tapで同じresultを表示する。
 - inputとoutputを縦に比較し、outputは補間なしで表示する。
 - 論理寸法、保存寸法、palette、algorithm versionを表示する。
-- `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeを初期値にする。
+- `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeの全パラメータと内蔵／保存済みプリセットの選択状態を復元する。
 - 保存はPNG画像だけをPhotosの追加専用権限で写真アプリへ追加し、成功または失敗を同じresult内に表示する。recipe JSONは外部へ渡さない。
 
 ## Settings
@@ -163,12 +166,14 @@ Home
 
 ## Review screenshots
 
-次の18枚をiPhone Simulatorの縦向きで保存する。
+次の22枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
 - `pixel-forge-delete-dialog--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
+- `pixel-forge-conversion-advanced--{dark,light}.png`
+- `pixel-forge-conversion-style-picker--{dark,light}.png`
 - `pixel-forge-palette-picker--{dark,light}.png`
 - `pixel-forge-recipe-preset-library--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`

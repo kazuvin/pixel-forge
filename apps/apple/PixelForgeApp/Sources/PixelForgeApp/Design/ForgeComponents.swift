@@ -97,7 +97,7 @@ struct ForgeCanvas<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             palette.canvas.ignoresSafeArea()
             content()
         }
@@ -818,6 +818,172 @@ struct ForgePaletteSelectionButton: View {
     }
 }
 
+struct ForgeAdvancedSettingsDisclosure: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    @Binding var isExpanded: Bool
+
+    var body: some View {
+        Button {
+            isExpanded.toggle()
+        } label: {
+            HStack(spacing: ForgeDesign.Spacing.regular) {
+                ForgeIcon(name: .sliders, size: 24, colorRole: .accent)
+                    .frame(width: 44, height: 44)
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                    Text(title)
+                        .forgeTextStyle(.heading)
+                    Text(detail)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+                ForgeIcon(
+                    name: isExpanded ? .minus : .plus,
+                    colorRole: isExpanded ? .accent : .muted
+                )
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(isExpanded ? palette.surfaceRaised : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: isExpanded ? palette.accent : palette.grid,
+                cut: ForgeDesign.Size.compactCornerCut
+            )
+        }
+        .accessibilityValue(isExpanded ? "1" : "0")
+    }
+}
+
+struct ForgeConversionStyleCard: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let summary: String
+    let colors: [UInt32]
+    let isSelected: Bool
+    var isLocked = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                ForgePaletteReferencePreview(colors: colors)
+                    .frame(height: 82)
+                Text(title)
+                    .forgeTextStyle(.heading)
+                    .lineLimit(1)
+                Text(detail)
+                    .forgeTextStyle(.caption)
+                    .foregroundStyle(palette.muted)
+                    .lineLimit(2)
+                Text(summary)
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.muted)
+                    .lineLimit(1)
+                ForgePaletteSwatches(colors: colors)
+                    .frame(height: 12)
+                HStack {
+                    Spacer()
+                    ForgeIcon(
+                        name: isLocked ? .lock : (isSelected ? .selected : .unselected),
+                        size: 12,
+                        colorRole: isSelected ? .accent : .muted
+                    )
+                }
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape()
+                .fill(isSelected ? palette.surfaceRaised : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: isSelected ? palette.accent : palette.grid,
+                lineWidth: isSelected ? ForgeDesign.Size.activeBorder : ForgeDesign.Size.border
+            )
+        }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+struct ForgeColorCollectionEditor: View {
+    @Environment(\.forgePalette) private var palette
+    @Binding var colors: [UInt32]
+    let title: String
+    let detail: String
+    let addTitle: String
+    let deleteAccessibilityLabel: (Int) -> String
+    var maximumColorCount = 256
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                Text(title.uppercased())
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.accent)
+                Text(detail)
+                    .forgeTextStyle(.caption)
+                    .foregroundStyle(palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            ForEach(Array(colors.indices), id: \.self) { index in
+                HStack(spacing: ForgeDesign.Spacing.compact) {
+                    ColorPicker(
+                        selection: colorBinding(at: index),
+                        supportsOpacity: false
+                    ) {
+                        Text(String(format: "#%06X", colors[index]))
+                            .forgeTextStyle(.data)
+                    }
+                    ForgeIconButton(
+                        icon: .trash,
+                        accessibilityLabel: deleteAccessibilityLabel(index + 1)
+                    ) {
+                        guard colors.count > 1 else { return }
+                        colors.remove(at: index)
+                    }
+                    .disabled(colors.count <= 1)
+                }
+                .padding(ForgeDesign.Spacing.compact)
+                .background {
+                    ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                        .fill(palette.surface)
+                }
+                .overlay {
+                    ForgePixelBorder(
+                        color: palette.grid,
+                        cut: ForgeDesign.Size.compactCornerCut
+                    )
+                }
+            }
+            ForgeButton(title: addTitle, icon: .plus) {
+                guard colors.count < maximumColorCount else { return }
+                colors.append(colors.last ?? 0x000000)
+            }
+            .disabled(colors.count >= maximumColorCount)
+        }
+    }
+
+    private func colorBinding(at index: Int) -> Binding<Color> {
+        Binding(
+            get: { forgePaletteColor(colors[index]) },
+            set: { colors[index] = forgeColorValue($0) }
+        )
+    }
+}
+
 struct ForgeRecipePresetLibraryButton: View {
     @Environment(\.forgePalette) private var palette
     let title: String
@@ -1043,6 +1209,20 @@ private func forgePaletteColor(_ hex: UInt32) -> Color {
         green: Double((hex >> 8) & 0xFF) / 255,
         blue: Double(hex & 0xFF) / 255
     )
+}
+
+private func forgeColorValue(_ color: Color) -> UInt32 {
+    let uiColor = UIColor(color)
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    guard uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+        return 0
+    }
+    return UInt32((red * 255).rounded()) << 16
+        | UInt32((green * 255).rounded()) << 8
+        | UInt32((blue * 255).rounded())
 }
 
 struct ForgeSidebar<Content: View>: View {
@@ -1358,18 +1538,25 @@ struct ForgeModalScaffold<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        ForgeCanvas {
-            VStack(spacing: 0) {
-                ForgeModalHeader(
-                    eyebrow: eyebrow,
-                    title: title,
-                    detail: detail,
-                    close: close
+        GeometryReader { geometry in
+            ForgeCanvas {
+                VStack(spacing: 0) {
+                    ForgeModalHeader(
+                        eyebrow: eyebrow,
+                        title: title,
+                        detail: detail,
+                        close: close
+                    )
+                    ForgeDivider()
+                    content()
+                }
+                .padding(.top, ForgeDesign.Spacing.regular)
+                .frame(
+                    width: geometry.size.width,
+                    height: geometry.size.height,
+                    alignment: .top
                 )
-                ForgeDivider()
-                content()
             }
-            .padding(.top, ForgeDesign.Spacing.regular)
         }
     }
 }

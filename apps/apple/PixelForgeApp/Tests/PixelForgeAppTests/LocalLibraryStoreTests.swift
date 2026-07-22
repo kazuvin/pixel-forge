@@ -30,6 +30,58 @@ struct LocalLibraryStoreTests {
         #expect(snapshot.records[0].sourceHash == snapshot.records[1].sourceHash)
     }
 
+    @Test("generated records preserve their selected conversion preset")
+    func preservesConversionPresetReference() async throws {
+        let root = try temporaryDirectory()
+        let store = LocalLibraryStore(rootURL: root)
+        let reference = ConversionPresetReference.builtIn("game-sprite")
+
+        let record = try await store.createRecord(
+            sourceData: Data("source".utf8),
+            sourceFilename: "photo.png",
+            artifact: artifact(seed: 1, presetReference: reference),
+            now: Date(timeIntervalSince1970: 10)
+        )
+
+        #expect(record.presetReference == reference)
+        #expect(try await store.loadSnapshot().records.first?.presetReference == reference)
+    }
+
+    @Test("legacy library manifests without a preset reference remain readable")
+    func loadsLegacyManifestWithoutPresetReference() async throws {
+        let root = try temporaryDirectory()
+        let recordID = UUID()
+        let manifest = """
+        {
+          "schemaVersion": 1,
+          "sources": [],
+          "records": [{
+            "id": "\(recordID.uuidString)",
+            "sourceHash": "legacy-source",
+            "sourceFilename": "legacy.png",
+            "pngRelativePath": "records/legacy/output.png",
+            "recipeRelativePath": "records/legacy/recipe.json",
+            "createdAt": "2026-07-23T00:00:00Z",
+            "updatedAt": "2026-07-23T00:00:00Z",
+            "metadata": {
+              "logicalWidth": 64,
+              "logicalHeight": 48,
+              "outputWidth": 512,
+              "outputHeight": 384,
+              "algorithmVersion": "1.2.0"
+            }
+          }]
+        }
+        """
+        try Data(manifest.utf8).write(to: root.appendingPathComponent("library.json"))
+
+        let snapshot = try await LocalLibraryStore(rootURL: root).loadSnapshot()
+
+        #expect(snapshot.records.count == 1)
+        #expect(snapshot.records.first?.id == recordID)
+        #expect(snapshot.records.first?.presetReference == nil)
+    }
+
     @Test("failed overwrite preserves the previous record and files")
     func failedOverwriteIsAtomic() async throws {
         let root = try temporaryDirectory()
@@ -138,7 +190,10 @@ struct LocalLibraryStoreTests {
         }
     }
 
-    private func artifact(seed: UInt8) -> GeneratedArtifact {
+    private func artifact(
+        seed: UInt8,
+        presetReference: ConversionPresetReference? = nil
+    ) -> GeneratedArtifact {
         GeneratedArtifact(
             pngData: Data([0x89, 0x50, 0x4E, 0x47, seed]),
             recipeJSON: "{\"schemaVersion\":2,\"seed\":\(seed)}",
@@ -149,7 +204,8 @@ struct LocalLibraryStoreTests {
                 outputHeight: 384,
                 paletteName: nil,
                 algorithmVersion: "1.2.0"
-            )
+            ),
+            presetReference: presetReference
         )
     }
 

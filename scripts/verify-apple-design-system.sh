@@ -9,7 +9,7 @@ screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
 project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
 developer_scheme="$root_dir/apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj/xcshareddata/xcschemes/PixelForgeApp-Developer.xcscheme"
-review_screens=(home image-source-menu delete-dialog conversion-editing palette-picker recipe-preset-library conversion-result settings settings-developer)
+review_screens=(home image-source-menu delete-dialog conversion-editing conversion-advanced conversion-style-picker palette-picker recipe-preset-library conversion-result settings settings-developer)
 review_themes=(dark light)
 
 required_files=(
