@@ -8,7 +8,8 @@ design_dir="$app_dir/Design"
 screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
 project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
-review_screens=(home image-source-menu conversion-editing conversion-result settings)
+developer_scheme="$root_dir/apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj/xcshareddata/xcschemes/PixelForgeApp-Developer.xcscheme"
+review_screens=(home image-source-menu delete-dialog conversion-editing conversion-result settings settings-developer)
 review_themes=(dark light)
 
 required_files=(
@@ -21,6 +22,7 @@ required_files=(
   "$resources_dir/ja.lproj/Localizable.strings"
   "$resources_dir/en.lproj/Localizable.strings"
   "$project_spec"
+  "$developer_scheme"
   "$root_dir/apps/apple/PixelForgeApp/Supporting/Info.plist"
 )
 
@@ -63,6 +65,12 @@ if ! rg -q 'TARGETED_DEVICE_FAMILY: "1"' "$project_spec"; then
 fi
 if ! rg -q 'SUPPORTS_MACCATALYST: NO' "$project_spec"; then
   echo "design-system check: Mac Catalyst must stay disabled" >&2
+  exit 1
+fi
+if ! rg -q 'Developer: debug' "$project_spec" ||
+  ! rg -q 'PIXEL_FORGE_DEVELOPER' "$project_spec" ||
+  ! rg -q 'buildConfiguration = "Developer"' "$developer_scheme"; then
+  echo "design-system check: the developer build configuration and shared scheme must stay available" >&2
   exit 1
 fi
 if rg -n 'UIInterfaceOrientationLandscape|platform:[[:space:]]*macOS|import AppKit' \

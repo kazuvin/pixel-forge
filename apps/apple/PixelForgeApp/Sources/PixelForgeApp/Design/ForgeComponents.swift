@@ -105,6 +105,17 @@ struct ForgeCanvas<Content: View>: View {
     }
 }
 
+extension View {
+    func forgeOverlay<Overlay: View>(
+        @ViewBuilder content: @escaping () -> Overlay
+    ) -> some View {
+        ZStack {
+            self
+            content()
+        }
+    }
+}
+
 struct ForgeDivider: View {
     @Environment(\.forgePalette) private var palette
     let axis: Axis
@@ -409,6 +420,31 @@ struct ForgeAlertBanner: View {
         .overlay {
             Rectangle()
                 .stroke(palette.danger.opacity(0.7), lineWidth: ForgeDesign.Size.border)
+        }
+    }
+}
+
+struct ForgeSuccessBanner: View {
+    @Environment(\.forgePalette) private var palette
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
+            Rectangle()
+                .fill(palette.success)
+                .frame(width: ForgeDesign.Size.statusLamp, height: ForgeDesign.Size.statusLamp)
+                .padding(.top, 3)
+            Text(message)
+                .forgeTextStyle(.caption)
+                .foregroundStyle(palette.success)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(ForgeDesign.Spacing.compact)
+        .background(palette.success.opacity(0.08))
+        .overlay {
+            Rectangle()
+                .stroke(palette.success.opacity(0.7), lineWidth: ForgeDesign.Size.border)
         }
     }
 }
@@ -748,39 +784,47 @@ struct ForgeGeneratedCard: View {
     var body: some View {
         ForgePixelSurface(level: .surface, padding: 0) {
             VStack(spacing: 0) {
-                ZStack {
-                    ForgePixelGridBackground()
-                    if let image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .interpolation(.none)
-                            .scaledToFit()
-                            .padding(ForgeDesign.Spacing.compact)
+                Button(action: open) {
+                    ZStack {
+                        ForgePixelGridBackground()
+                        if let image {
+                            Image(uiImage: image)
+                                .resizable()
+                                .interpolation(.none)
+                                .scaledToFit()
+                                .padding(ForgeDesign.Spacing.compact)
+                        }
                     }
+                    .frame(height: 136)
+                    .contentShape(Rectangle())
                 }
-                .frame(height: 136)
+                .buttonStyle(.plain)
                 ForgeDivider()
                 HStack(spacing: ForgeDesign.Spacing.compact) {
-                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
-                        Text(title)
-                            .forgeTextStyle(.heading)
-                            .lineLimit(1)
-                        Text(detail)
-                            .forgeTextStyle(.caption)
-                            .foregroundStyle(palette.muted)
-                        Text(updated)
-                            .forgeTextStyle(.micro)
-                            .foregroundStyle(palette.muted)
+                    Button(action: open) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                                Text(title)
+                                    .forgeTextStyle(.heading)
+                                    .lineLimit(1)
+                                Text(detail)
+                                    .forgeTextStyle(.caption)
+                                    .foregroundStyle(palette.muted)
+                                Text(updated)
+                                    .forgeTextStyle(.micro)
+                                    .foregroundStyle(palette.muted)
+                            }
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
                     }
-                    Spacer()
+                    .buttonStyle(.plain)
                     ForgeIconButton(icon: .trash, accessibilityLabel: L10n.delete) {
                         delete()
                     }
                 }
                 .padding(ForgeDesign.Spacing.compact)
             }
-            .contentShape(Rectangle())
-            .onTapGesture(perform: open)
         }
     }
 }
@@ -811,6 +855,199 @@ struct ForgeModalHeader: View {
         .padding(.horizontal, ForgeDesign.Spacing.regular)
         .frame(height: ForgeDesign.Size.toolbarHeight)
         .background(palette.panel)
+    }
+}
+
+struct ForgeActionMenuItem: Identifiable {
+    let id: String
+    let title: String
+    let icon: ForgeIconName
+    let action: () -> Void
+}
+
+struct ForgeActionMenu: View {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var isPresented: Bool
+    let eyebrow: String
+    let title: String
+    let items: [ForgeActionMenuItem]
+    let cancelTitle: String
+    @State private var isVisible = false
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            if isVisible {
+                palette.canvas
+                    .opacity(0.78)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+                    .transition(.opacity)
+
+                ForgePixelSurface(level: .raised) {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+                        ForgeSectionHeader(eyebrow: eyebrow, title: title)
+                        ForEach(items) { item in
+                            ForgeActionMenuRow(title: item.title, icon: item.icon) {
+                                dismiss(then: item.action)
+                            }
+                        }
+                        ForgeButton(title: cancelTitle, icon: .close) {
+                            dismiss()
+                        }
+                    }
+                }
+                .frame(maxWidth: 340)
+                .padding(.top, ForgeDesign.Size.toolbarHeight + ForgeDesign.Spacing.regular)
+                .padding(.horizontal, ForgeDesign.Spacing.regular)
+                .transition(
+                    reduceMotion
+                        ? .opacity
+                        : .scale(scale: 0.92, anchor: .topTrailing).combined(with: .opacity)
+                )
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .onAppear { setVisible(isPresented, animated: false) }
+        .onChange(of: isPresented) { _, newValue in
+            setVisible(newValue, animated: true)
+        }
+    }
+
+    private func dismiss(then action: (() -> Void)? = nil) {
+        setVisible(false, animated: true)
+        action?()
+        isPresented = false
+    }
+
+    private func setVisible(_ visible: Bool, animated: Bool) {
+        guard animated, !reduceMotion else {
+            isVisible = visible
+            return
+        }
+        withAnimation(.spring(duration: 0.24, bounce: 0.14)) {
+            isVisible = visible
+        }
+    }
+}
+
+struct ForgeConfirmationDialog: View {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var isPresented: Bool
+    let eyebrow: String
+    let title: String
+    let detail: String
+    let confirmTitle: String
+    let cancelTitle: String
+    let confirm: () -> Void
+    @State private var isVisible = false
+
+    var body: some View {
+        ZStack {
+            if isVisible {
+                palette.canvas
+                    .opacity(0.82)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+                    .transition(.opacity)
+
+                ForgePixelSurface(level: .raised) {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                        ForgeSectionHeader(eyebrow: eyebrow, title: title, detail: detail)
+                        HStack(spacing: ForgeDesign.Spacing.compact) {
+                            ForgeButton(title: cancelTitle, icon: .close) {
+                                dismiss()
+                            }
+                            ForgeDestructiveButton(title: confirmTitle, icon: .trash) {
+                                dismiss(then: confirm)
+                            }
+                        }
+                    }
+                }
+                .frame(maxWidth: 360)
+                .padding(ForgeDesign.Spacing.regular)
+                .transition(
+                    reduceMotion
+                        ? .opacity
+                        : .scale(scale: 0.9, anchor: .center).combined(with: .opacity)
+                )
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .onAppear { setVisible(isPresented, animated: false) }
+        .onChange(of: isPresented) { _, newValue in
+            setVisible(newValue, animated: true)
+        }
+    }
+
+    private func dismiss(then action: (() -> Void)? = nil) {
+        setVisible(false, animated: true)
+        action?()
+        isPresented = false
+    }
+
+    private func setVisible(_ visible: Bool, animated: Bool) {
+        guard animated, !reduceMotion else {
+            isVisible = visible
+            return
+        }
+        withAnimation(.spring(duration: 0.22, bounce: 0.1)) {
+            isVisible = visible
+        }
+    }
+}
+
+private struct ForgeActionMenuRow: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let icon: ForgeIconName
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                ForgeIcon(name: icon, colorRole: .accent)
+                Text(title)
+                    .forgeTextStyle(.body)
+                Spacer()
+                ForgeIcon(name: .plus, size: 12, colorRole: .muted)
+            }
+            .padding(.horizontal, ForgeDesign.Spacing.compact)
+            .frame(minHeight: ForgeDesign.Size.controlHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(palette.surface)
+        .overlay { ForgePixelBorder(color: palette.grid) }
+    }
+}
+
+private struct ForgeDestructiveButton: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let icon: ForgeIconName
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.tight) {
+                ForgeIcon(name: icon, colorRole: .accentInk)
+                Text(title)
+                    .forgeTextStyle(.body)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: ForgeDesign.Size.buttonHeight)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(palette.accentInk)
+        .background {
+            ForgePixelChamferShape()
+                .fill(palette.danger)
+        }
+        .overlay { ForgePixelBorder(color: palette.danger) }
     }
 }
 

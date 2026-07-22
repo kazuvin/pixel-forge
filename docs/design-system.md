@@ -25,6 +25,7 @@ Pixel ForgeのSwiftUI design systemは、pixel-art変換作業を行う「機材
 - Information: `ForgeSectionHeader`, `ForgeAlertBanner`, `ForgeStatusStrip`
 - Workbench: `ForgeTopBar`, `ForgePreviewPane`, `ForgeEmptyState`
 - Settings: `ForgeThemeCard`, `ForgeTypographySample`
+- Overlay: `ForgeActionMenu`, `ForgeConfirmationDialog`
 
 Screenはこれらを組み合わせ、再利用されるchromeをprivate viewとして複製しない。新規componentはtheme環境、keyboard/disabled state、accessibility label、日英の文字長を考慮する。
 

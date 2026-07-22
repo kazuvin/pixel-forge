@@ -33,7 +33,7 @@ SwiftUIアプリは次を担当する。
 - ホーム、変換モーダル、設定のnavigationと状態管理
 - source assetと生成recordのlocal persistence
 - background taskでの変換実行
-- PNGとrecipeの共有シート書き出し
+- PNG画像の写真アプリ保存
 - StoreKit 2 entitlementとPro capability判定
 - 日英localization、system/dark/light theme、accessibility
 

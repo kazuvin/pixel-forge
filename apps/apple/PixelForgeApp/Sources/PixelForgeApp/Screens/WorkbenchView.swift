@@ -80,25 +80,41 @@ struct WorkbenchView: View {
             )
             .ignoresSafeArea()
         }
-        .confirmationDialog(L10n.chooseImage, isPresented: $showsSourceMenu) {
-            ForEach(imageSourceOptions) { source in
-                Button(source.title) { select(source) }
-            }
-            Button(L10n.cancel, role: .cancel) {}
-        }
         .fullScreenCover(item: $model.session) { session in
             ConversionModalView(model: session) {
                 model.session = nil
             }
             .environmentObject(entitlement)
         }
-        .confirmationDialog(L10n.deleteConfirmation, isPresented: deletionIsPresented) {
-            Button(L10n.delete, role: .destructive) {
+        .forgeOverlay {
+            ForgeActionMenu(
+                isPresented: $showsSourceMenu,
+                eyebrow: L10n.imageSourceEyebrow,
+                title: L10n.chooseImage,
+                items: imageSourceOptions.map { source in
+                    ForgeActionMenuItem(
+                        id: String(describing: source),
+                        title: source.title,
+                        icon: source.icon,
+                        action: { select(source) }
+                    )
+                },
+                cancelTitle: L10n.cancel
+            )
+        }
+        .forgeOverlay {
+            ForgeConfirmationDialog(
+                isPresented: deletionIsPresented,
+                eyebrow: L10n.deleteEyebrow,
+                title: L10n.deleteTitle,
+                detail: L10n.deleteDetail,
+                confirmTitle: L10n.delete,
+                cancelTitle: L10n.cancel
+            ) {
                 guard let pendingDeletion else { return }
                 Task { await model.delete(pendingDeletion) }
                 self.pendingDeletion = nil
             }
-            Button(L10n.cancel, role: .cancel) { pendingDeletion = nil }
         }
         .alert(L10n.cameraPermissionTitle, isPresented: $showsCameraPermissionAlert) {
             Button(L10n.openSettings) {
@@ -137,12 +153,15 @@ struct WorkbenchView: View {
         case .imageSourceMenu:
             model.prepareReviewHome(imageData: sourceData)
             showsSourceMenu = true
+        case .deleteDialog:
+            model.prepareReviewHome(imageData: sourceData)
+            pendingDeletion = model.records.first
         case .conversionEditing:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
         case .conversionResult:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.convert(saveMode: .newRecord)
-        case .settings:
+        case .settings, .settingsDeveloper:
             showsSettings = true
         }
     }

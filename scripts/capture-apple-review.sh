@@ -25,9 +25,23 @@ xcodebuild \
   build \
   -quiet
 
+xcodebuild \
+  -project "$project" \
+  -scheme PixelForgeApp-Developer \
+  -destination "platform=iOS Simulator,id=$device_id" \
+  -derivedDataPath "$derived_data" \
+  CODE_SIGNING_ALLOWED=NO \
+  build \
+  -quiet
+
 app_path="$derived_data/Build/Products/Debug-iphonesimulator/PixelForgeApp.app"
+developer_app_path="$derived_data/Build/Products/Developer-iphonesimulator/PixelForgeApp.app"
 if [[ ! -d "$app_path" ]]; then
   echo "capture failed: app bundle was not built" >&2
+  exit 1
+fi
+if [[ ! -d "$developer_app_path" ]]; then
+  echo "capture failed: developer app bundle was not built" >&2
   exit 1
 fi
 
@@ -71,9 +85,18 @@ capture() {
 for theme in dark light; do
   capture home "$theme"
   capture image-source-menu "$theme"
+  capture delete-dialog "$theme"
   capture conversion-editing "$theme"
   capture conversion-result "$theme"
   capture settings "$theme"
+done
+
+if ! xcrun simctl uninstall "$device_id" "$bundle_id" >/dev/null 2>&1; then
+  true
+fi
+xcrun simctl install "$device_id" "$developer_app_path"
+for theme in dark light; do
+  capture settings-developer "$theme"
 done
 
 xcrun simctl status_bar "$device_id" clear

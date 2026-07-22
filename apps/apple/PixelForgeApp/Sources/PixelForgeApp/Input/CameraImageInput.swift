@@ -23,6 +23,17 @@ enum ImageSourceOption: Hashable, Identifiable {
             L10n.chooseFile
         }
     }
+
+    var icon: ForgeIconName {
+        switch self {
+        case .camera:
+            .camera
+        case .photoLibrary:
+            .photo
+        case .files:
+            .files
+        }
+    }
 }
 
 enum CameraAccessDecision: Equatable {

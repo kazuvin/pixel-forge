@@ -1,4 +1,5 @@
 import Foundation
+import Photos
 import PixelCoreKit
 import UIKit
 
@@ -182,6 +183,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var errorMessage: String?
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
+    @Published var photoSaveState: PhotoSaveState = .idle
 
     @Published var longSide = 64
     @Published var upscale = 8
@@ -200,9 +202,9 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     private let store: LocalLibraryStore
     private let entitlement: ProEntitlementService
+    private let photoLibrarySaver: any PhotoLibrarySaving
     private let onLibraryChange: @MainActor () async -> Void
     private var latestPNGData: Data?
-    private var latestRecipeJSON: String?
     private var conversionTask: Task<Void, Never>?
     private var loaderTask: Task<Void, Never>?
 
@@ -211,6 +213,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         sourceFilename: String,
         store: LocalLibraryStore,
         entitlement: ProEntitlementService,
+        photoLibrarySaver: any PhotoLibrarySaving = SystemPhotoLibrarySaver(),
         onLibraryChange: @escaping @MainActor () async -> Void
     ) throws {
         let processor = try PixelCoreProcessor(imageData: sourceData)
@@ -223,6 +226,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         state = .editing
         self.store = store
         self.entitlement = entitlement
+        self.photoLibrarySaver = photoLibrarySaver
         self.onLibraryChange = onLibraryChange
     }
 
@@ -233,6 +237,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         recipeJSON: String,
         store: LocalLibraryStore,
         entitlement: ProEntitlementService,
+        photoLibrarySaver: any PhotoLibrarySaving = SystemPhotoLibrarySaver(),
         onLibraryChange: @escaping @MainActor () async -> Void
     ) throws {
         let processor = try PixelCoreProcessor(imageData: sourceData)
@@ -245,9 +250,9 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         outputImage = UIImage(data: pngData)
         currentRecord = record
         latestPNGData = pngData
-        latestRecipeJSON = recipeJSON
         self.store = store
         self.entitlement = entitlement
+        self.photoLibrarySaver = photoLibrarySaver
         self.onLibraryChange = onLibraryChange
         apply(recipe.settings)
     }
@@ -282,6 +287,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     func edit() {
         errorMessage = nil
         requiresPro = false
+        photoSaveState = .idle
         state = .editing
     }
 
@@ -358,7 +364,6 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                     }
                     self.currentRecord = record
                     self.latestPNGData = result.pngData
-                    self.latestRecipeJSON = result.recipeJSON
                     self.outputImage = UIImage(data: result.pngData)
                     self.showsLoader = false
                     self.state = .result
@@ -372,33 +377,21 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
     }
 
-    func prepareExport() -> [URL]? {
-        guard let pngData = latestPNGData, let recipeJSON = latestRecipeJSON else { return nil }
+    func saveOutputToPhotos() async {
+        guard photoSaveState != .saving, let pngData = latestPNGData else { return }
+        photoSaveState = .saving
         do {
-            let directory = FileManager.default.temporaryDirectory
-                .appendingPathComponent("PixelForgeExport", isDirectory: true)
-                .appendingPathComponent(UUID().uuidString, isDirectory: true)
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            let pngURL = directory.appendingPathComponent(suggestedOutputName)
-            let recipeURL = directory.appendingPathComponent(suggestedRecipeName)
-            try pngData.write(to: pngURL, options: .atomic)
-            try recipeJSON.write(to: recipeURL, atomically: true, encoding: .utf8)
+            try await photoLibrarySaver.savePNG(pngData, filename: suggestedOutputName)
             errorMessage = nil
-            return [pngURL, recipeURL]
+            photoSaveState = .saved
         } catch {
-            errorMessage = L10n.exportFailure(error.localizedDescription)
-            return nil
+            photoSaveState = .failed(L10n.photoSaveFailure(error.localizedDescription))
         }
     }
 
     private var suggestedOutputName: String {
         let stem = (sourceFilename as NSString).deletingPathExtension
         return "\(stem)-pixel.png"
-    }
-
-    private var suggestedRecipeName: String {
-        let stem = (sourceFilename as NSString).deletingPathExtension
-        return "\(stem)-pixel.recipe.json"
     }
 
     private func makeSettings() throws -> PixelConversionSettings {
@@ -540,6 +533,47 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         PixelRGBColor(red: 255, green: 163, blue: 0),
         PixelRGBColor(red: 255, green: 236, blue: 39),
     ]
+}
+
+enum PhotoSaveState: Equatable {
+    case idle
+    case saving
+    case saved
+    case failed(String)
+}
+
+@MainActor
+protocol PhotoLibrarySaving {
+    func savePNG(_ data: Data, filename: String) async throws
+}
+
+struct SystemPhotoLibrarySaver: PhotoLibrarySaving {
+    func savePNG(_ data: Data, filename: String) async throws {
+        let authorization = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        guard PhotoLibraryAccessPolicy.canSave(status: authorization) else {
+            throw PhotoLibrarySaveError.accessDenied
+        }
+        let options = PHAssetResourceCreationOptions()
+        options.originalFilename = filename
+        try await PHPhotoLibrary.shared().performChanges {
+            let request = PHAssetCreationRequest.forAsset()
+            request.addResource(with: .photo, data: data, options: options)
+        }
+    }
+}
+
+enum PhotoLibraryAccessPolicy {
+    static func canSave(status: PHAuthorizationStatus) -> Bool {
+        status == .authorized || status == .limited
+    }
+}
+
+private enum PhotoLibrarySaveError: LocalizedError {
+    case accessDenied
+
+    var errorDescription: String? {
+        L10n.photosAccessDenied
+    }
 }
 
 private enum ConversionOutcome: Sendable {

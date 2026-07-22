@@ -8,7 +8,7 @@
 - `crates/pixel-cli`: ゲームアセットをバッチ生成するCLIです。
 - `crates/pixel-ffi`: UniFFIを使ってRust APIをSwiftへ公開します。
 - `packages/PixelCoreKit`: 生成されたSwift bindingとXCFrameworkを包むSwift Packageです。
-- `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG/recipe共有を行うiPhone縦向き専用のSwiftUIアプリです。
+- `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG画像の写真アプリ保存を行うiPhone縦向き専用のSwiftUIアプリです。
 - `apps/web`: 日英のsupport、privacy、termsを静的生成するAstroサイトです。
 
 SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothic16を使う共通design systemを持ちます。実装境界とUI変更手順は[`docs/design-system.md`](docs/design-system.md)と[`docs/ui-workflow.md`](docs/ui-workflow.md)を参照してください。
@@ -19,6 +19,8 @@ SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothi
 ./scripts/build-apple.sh
 open apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj
 ```
+
+StoreKitを使わずにFree / Pro表示を確認する場合は、Xcodeで`PixelForgeApp-Developer` schemeを選ぶ。専用の`Developer` build configurationでだけ、設定画面に切替スイッチが表示されます。
 
 サポートWebはNode 24.14.0（`.mise.toml`）とpnpmを使用します。
 

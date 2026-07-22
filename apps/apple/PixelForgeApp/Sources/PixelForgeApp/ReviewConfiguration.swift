@@ -3,9 +3,11 @@ import Foundation
 enum ReviewScreen: String {
     case home
     case imageSourceMenu = "image-source-menu"
+    case deleteDialog = "delete-dialog"
     case conversionEditing = "conversion-editing"
     case conversionResult = "conversion-result"
     case settings
+    case settingsDeveloper = "settings-developer"
 }
 
 struct ReviewConfiguration {

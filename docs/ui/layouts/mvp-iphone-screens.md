@@ -47,12 +47,13 @@ Home
 ```
 
 - safe area直下のtop barにはbrand、設定、画像追加だけを置く。
-- 画像追加はaction sheetを開き、利用可能な場合は`カメラで撮る`、`写真を選ぶ`、`ファイルから選ぶ`を分けてこの順に表示する。
+- 画像追加はpixel UIのメニューをアニメーション付きで開き、利用可能な場合は`カメラで撮る`、`写真を選ぶ`、`ファイルから選ぶ`を分けてこの順に表示する。
 - 撮影完了後は撮影画像を入力した共通変換フローのeditingを開く。撮影画像を写真ライブラリへ自動保存しない。
 - 初回の撮影操作でカメラ権限を要求する。拒否または制限時は理由とiOS設定への導線を表示し、カメラがない環境では撮影項目を表示しない。
 - 生成結果は新しい順で常に2列の`LazyVGrid`へ表示する。
 - preview領域の高さを揃え、画像はaspect fitかつ補間なしで表示する。
 - card全体のtapで共通変換フローのresultを開く。削除buttonはcard tapと競合させない。
+- 削除buttonは別メニューを挟まず、pixel UIの確認ダイアログをアニメーション付きで直接表示する。
 - 下端にはローカル保存であることと件数を短く表示する。
 
 ### Empty
@@ -111,7 +112,7 @@ Home
 │ │ pixel result          │ │
 │ └───────────────────────┘ │
 │ size / palette / version  │
-│ [調整する] [共有する]     │
+│ [調整する] [写真に保存]   │
 └───────────────────────────┘
 ```
 
@@ -119,7 +120,7 @@ Home
 - inputとoutputを縦に比較し、outputは補間なしで表示する。
 - 論理寸法、保存寸法、palette、algorithm versionを表示する。
 - `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeを初期値にする。
-- 書き出しはPNGとrecipe JSONを一時生成してiOS share sheetへ同時に渡す。
+- 保存はPNG画像だけをPhotosの追加専用権限で写真アプリへ追加し、成功または失敗を同じresult内に表示する。recipe JSONは外部へ渡さない。
 
 ## Settings
 
@@ -147,6 +148,7 @@ Home
 - 言語変更はその場で画面文言とsupport URLへ反映し、再起動後も保持する。
 - 無料版はiOS appearanceへの自動追従を利用でき、Proはdark/lightを手動固定できる。
 - Supportにはレビュー、シェア、Googleフォーム、privacy、termsを置き、Aboutにはversionとbuildを表示する。
+- `PixelForgeApp-Developer` schemeで起動した場合だけ、StoreKitへ影響しないFree / Pro切替を表示する。
 
 ## Portrait / accessibility contract
 
@@ -158,12 +160,14 @@ Home
 
 ## Review screenshots
 
-次の10枚をiPhone Simulatorの縦向きで保存する。
+次の14枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
+- `pixel-forge-delete-dialog--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`
+- `pixel-forge-settings-developer--{dark,light}.png`
 
 自動取得は`./scripts/capture-apple-review.sh`を使う。

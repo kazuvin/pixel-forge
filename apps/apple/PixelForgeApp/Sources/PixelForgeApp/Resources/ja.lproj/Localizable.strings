@@ -20,7 +20,8 @@
 "setting.dither" = "ディザリング";
 "action.render" = "変換する";
 "action.rendering" = "変換中…";
-"action.export" = "PNG＋レシピを書き出す";
+"action.save_to_photos" = "写真に保存";
+"action.saving_to_photos" = "保存中…";
 "source.none" = "写真が選択されていません";
 "status.ready" = "変換可能";
 "status.waiting" = "入力待ち";
@@ -29,8 +30,6 @@
 "status.deterministic" = "ローカル / 決定的処理";
 "error.select_first" = "先に写真を選んでください。";
 "error.unsupported_image" = "この画像を読み込めませんでした。PNGまたはJPEGを選んでください。";
-"error.export_failed" = "書き出せませんでした: %@";
-"export.panel_message" = "PNGと同じ場所に再生成用のrecipe JSONも保存します。";
 "value.pixels" = "%d px";
 "value.colors" = "%d 色";
 "value.scale" = "×%d";
@@ -52,6 +51,7 @@
 "home.empty.title" = "最初の画像を作りましょう";
 "home.empty.detail" = "カメラで撮るか、写真ライブラリまたはファイルから画像を選んでください。変換はiPhone内だけで行われます。";
 "home.choose_image" = "画像を選ぶ";
+"image_source.eyebrow" = "入力ソース";
 "home.library" = "ローカルライブラリ";
 "home.image_count" = "%d 枚";
 "action.convert" = "変換する";
@@ -92,11 +92,16 @@
 "error.camera_capture_failed" = "撮影した写真を読み込めませんでした。もう一度お試しください。";
 "camera.permission.title" = "カメラへのアクセスが必要です";
 "camera.permission.detail" = "撮影して変換するには、iPhoneの設定でPixel Forgeのカメラアクセスを許可してください。";
+"photos.save.success" = "PNG画像を写真アプリに保存しました。";
+"error.photos_access_denied" = "写真アプリへの追加が許可されていません。iPhoneの設定でPixel Forgeのアクセスを許可してください。";
+"error.photo_save_failed" = "写真アプリへ保存できませんでした: %@";
 "conversion.state.editing" = "設定";
 "conversion.state.rendering" = "変換中";
 "conversion.state.result" = "結果";
 "conversion.state.failure" = "エラー";
-"delete.confirmation" = "この生成画像を削除しますか？外部へ書き出したファイルは削除されません。";
+"delete.eyebrow" = "ローカルライブラリ";
+"delete.title" = "この画像を削除しますか？";
+"delete.detail" = "この操作は取り消せません。写真アプリへ保存済みの画像には影響しません。";
 "error.pro_required" = "この設定には買い切りのPixel Forge Proが必要です。設定画面から購入できます。";
 "error.invalid_palette" = "カスタムパレットへ有効な6桁の16進カラーを入力してください。";
 "settings.theme.system" = "iOSに合わせる";
@@ -127,5 +132,7 @@
 "settings.language.system" = "システムデフォルト";
 "settings.language.english" = "English";
 "settings.language.japanese" = "日本語";
-"export.recipe_overwrite.title" = "同名のrecipeが存在します";
-"export.recipe_overwrite.detail" = "PNGと一緒に既存のrecipe JSONも上書きしますか？";
+"settings.developer.eyebrow" = "開発者ビルド";
+"settings.developer.title" = "アクセス状態";
+"settings.developer.description" = "開発中の表示と機能制限を、購入処理を行わずに確認します。";
+"settings.developer.pro_toggle" = "Pixel Forge Proを有効にする";

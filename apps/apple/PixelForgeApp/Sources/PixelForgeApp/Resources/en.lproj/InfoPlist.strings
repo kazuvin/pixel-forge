@@ -1,1 +1,2 @@
 "NSCameraUsageDescription" = "Pixel Forge uses the camera to capture a photo and convert it into pixel art on your device.";
+"NSPhotoLibraryAddUsageDescription" = "Pixel Forge saves converted PNG images to Photos when you choose Save to Photos.";

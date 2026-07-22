@@ -23,3 +23,12 @@ xcodebuild \
   CODE_SIGNING_ALLOWED=NO \
   test \
   -quiet
+
+xcodebuild \
+  -project "$project" \
+  -scheme PixelForgeApp-Developer \
+  -destination "platform=iOS Simulator,id=$device_id" \
+  -derivedDataPath "$derived_data" \
+  CODE_SIGNING_ALLOWED=NO \
+  test \
+  -quiet

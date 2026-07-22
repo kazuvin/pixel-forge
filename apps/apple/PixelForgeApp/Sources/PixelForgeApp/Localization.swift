@@ -55,6 +55,7 @@ enum L10n {
     static var homeEmptyTitle: String { text("home.empty.title") }
     static var homeEmptyDetail: String { text("home.empty.detail") }
     static var chooseImage: String { text("home.choose_image") }
+    static var imageSourceEyebrow: String { text("image_source.eyebrow") }
     static var localLibrary: String { text("home.library") }
     static var workbenchEyebrow: String { text("workbench.eyebrow") }
     static var takePhoto: String { text("workbench.take_photo") }
@@ -77,7 +78,8 @@ enum L10n {
     static var dither: String { text("setting.dither") }
     static var render: String { text("action.render") }
     static var rendering: String { text("action.rendering") }
-    static var export: String { text("action.export") }
+    static var saveToPhotos: String { text("action.save_to_photos") }
+    static var savingToPhotos: String { text("action.saving_to_photos") }
     static var convert: String { text("action.convert") }
     static var adjust: String { text("action.adjust") }
     static var updateImage: String { text("action.update_image") }
@@ -96,9 +98,6 @@ enum L10n {
     static var deterministic: String { text("status.deterministic") }
     static var selectFirst: String { text("error.select_first") }
     static var unsupportedImage: String { text("error.unsupported_image") }
-    static var exportPanelMessage: String { text("export.panel_message") }
-    static var recipeOverwriteTitle: String { text("export.recipe_overwrite.title") }
-    static var recipeOverwriteDetail: String { text("export.recipe_overwrite.detail") }
     static var conversionOptions: String { text("conversion.options") }
     static var conversionOptionsDetail: String { text("conversion.options.detail") }
     static var longSide: String { text("setting.long_side") }
@@ -128,12 +127,16 @@ enum L10n {
     static var stateRendering: String { text("conversion.state.rendering") }
     static var stateResult: String { text("conversion.state.result") }
     static var stateFailure: String { text("conversion.state.failure") }
-    static var deleteConfirmation: String { text("delete.confirmation") }
+    static var deleteEyebrow: String { text("delete.eyebrow") }
+    static var deleteTitle: String { text("delete.title") }
+    static var deleteDetail: String { text("delete.detail") }
     static var proRequired: String { text("error.pro_required") }
     static var invalidPalette: String { text("error.invalid_palette") }
     static var cameraCaptureFailed: String { text("error.camera_capture_failed") }
     static var cameraPermissionTitle: String { text("camera.permission.title") }
     static var cameraPermissionDetail: String { text("camera.permission.detail") }
+    static var photoSaveSuccess: String { text("photos.save.success") }
+    static var photosAccessDenied: String { text("error.photos_access_denied") }
     static var appearanceTitle: String { text("settings.appearance.title") }
     static var appearanceEyebrow: String { text("settings.appearance.eyebrow") }
     static var appearanceDescription: String { text("settings.appearance.description") }
@@ -172,6 +175,10 @@ enum L10n {
     static var languageSystem: String { text("settings.language.system") }
     static var languageEnglish: String { text("settings.language.english") }
     static var languageJapanese: String { text("settings.language.japanese") }
+    static var developerEyebrow: String { text("settings.developer.eyebrow") }
+    static var developerTitle: String { text("settings.developer.title") }
+    static var developerDescription: String { text("settings.developer.description") }
+    static var developerProToggle: String { text("settings.developer.pro_toggle") }
     static var currentLanguageCode: String { AppLanguage.selected.resolvedLanguageCode() }
 
     static func pixels(_ value: Int) -> String {
@@ -190,8 +197,8 @@ enum L10n {
         format("home.image_count", value)
     }
 
-    static func exportFailure(_ detail: String) -> String {
-        format("error.export_failed", detail)
+    static func photoSaveFailure(_ detail: String) -> String {
+        format("error.photo_save_failed", detail)
     }
 
     static func ditherName(_ mode: PixelDitherMode) -> String {

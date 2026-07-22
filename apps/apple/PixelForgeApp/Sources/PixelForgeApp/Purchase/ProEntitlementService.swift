@@ -4,10 +4,12 @@ import StoreKit
 final class ProEntitlementService: ObservableObject {
     @Published private(set) var status: ProEntitlementStatus = .unknown
     @Published private(set) var product: Product?
+    @Published private(set) var developerProEnabled: Bool
 
     let productID: String
     private let reviewStatus: ProEntitlementStatus?
     private var updatesTask: Task<Void, Never>?
+    private static let developerProKey = "pixel-forge.developer-pro-enabled"
 
     init(
         productID: String = AppConfiguration.proProductID,
@@ -15,7 +17,13 @@ final class ProEntitlementService: ObservableObject {
     ) {
         self.productID = productID
         self.reviewStatus = reviewStatus
-        status = reviewStatus ?? .unknown
+        let developerProEnabled = AppConfiguration.isDeveloperBuild
+            && UserDefaults.standard.bool(forKey: Self.developerProKey)
+        self.developerProEnabled = developerProEnabled
+        status = reviewStatus
+            ?? (AppConfiguration.isDeveloperBuild
+                ? (developerProEnabled ? .purchased : .notPurchased)
+                : .unknown)
     }
 
     deinit {
@@ -29,6 +37,10 @@ final class ProEntitlementService: ObservableObject {
     func start() async {
         if let reviewStatus {
             status = reviewStatus
+            return
+        }
+        if AppConfiguration.isDeveloperBuild {
+            status = developerProEnabled ? .purchased : .notPurchased
             return
         }
         guard updatesTask == nil else { return }
@@ -72,6 +84,13 @@ final class ProEntitlementService: ObservableObject {
         } catch {
             status = .failed(error.localizedDescription)
         }
+    }
+
+    func setDeveloperProEnabled(_ isEnabled: Bool) {
+        guard AppConfiguration.isDeveloperBuild else { return }
+        developerProEnabled = isEnabled
+        UserDefaults.standard.set(isEnabled, forKey: Self.developerProKey)
+        status = isEnabled ? .purchased : .notPurchased
     }
 
     func refresh() async {

@@ -20,16 +20,21 @@ struct ThemeSettingsView: View {
                     close: { dismiss() }
                 )
                 ForgeDivider()
-                ScrollView {
+                ScrollView(.vertical, showsIndicators: false) {
                     VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
                         language
+                        if AppConfiguration.isDeveloperBuild {
+                            developerAccess
+                        }
                         appearance
                         pro
                         support
                         about
                     }
                     .padding(ForgeDesign.Spacing.regular)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .scrollBounceBehavior(.basedOnSize, axes: .vertical)
             }
         }
         .toolbar(.hidden, for: .navigationBar)
@@ -101,6 +106,23 @@ struct ThemeSettingsView: View {
             if showsProExplanation {
                 ForgeAlertBanner(message: L10n.proRequired)
             }
+        }
+    }
+
+    private var developerAccess: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.developerEyebrow,
+                title: L10n.developerTitle,
+                detail: L10n.developerDescription
+            )
+            ForgeToggleRow(
+                title: L10n.developerProToggle,
+                detail: entitlement.developerProEnabled
+                    ? L10n.proStatusPurchased
+                    : L10n.proStatusFree,
+                isOn: developerProSelection
+            )
         }
     }
 
@@ -183,6 +205,13 @@ struct ThemeSettingsView: View {
         Binding(
             get: { AppLanguage(rawValue: languageRawValue) ?? .system },
             set: { languageRawValue = $0.rawValue }
+        )
+    }
+
+    private var developerProSelection: Binding<Bool> {
+        Binding(
+            get: { entitlement.developerProEnabled },
+            set: { entitlement.setDeveloperProEnabled($0) }
         )
     }
 

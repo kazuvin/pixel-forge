@@ -24,6 +24,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Pixel Forge uses the camera to capture a photo and convert it into pixel art on your device.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Pixel Forge saves your converted PNG images to your photo library when you choose Save to Photos.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

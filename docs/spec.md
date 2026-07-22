@@ -42,8 +42,12 @@
 - UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。
 - UI文言は日本語と英語を持ち、設定画面でsystem、English、日本語を切り替える。system時はiOSの最優先言語が日本語なら日本語、英語なら英語、それ以外なら英語へ解決する。
 - 画像追加メニューは、利用可能な場合だけカメラ撮影を先頭に表示し、写真ライブラリ、Filesを続ける。撮影画像はJPEGへ正規化して既存の新規変換フローへ渡し、写真ライブラリへ自動保存しない。
+- 画像追加メニューと生成結果の削除確認はDesign層のpixel UI overlayを使い、Reduce Motionを尊重した表示アニメーションを持つ。
 - カメラ権限は撮影操作時に要求し、拒否または制限時はiOS設定への導線を提示する。
+- 生成結果の外部保存はPNG画像だけを対象にし、Photosの追加専用権限を使って写真アプリへ保存する。recipeはローカルrecordの再生成用途に限る。
 - 画面層は`Design/`のshared token/style/componentから組み立て、直接の色・font・control chrome指定をCIで拒否する。
+
+`Developer` build configurationと`PixelForgeApp-Developer` schemeは`PIXEL_FORGE_DEVELOPER`を定義する。この構成だけ設定にFree / Pro切替を表示し、実際のStoreKit transactionを変更せずcapability判定を切り替える。
 
 ### Local persistence
 
@@ -52,7 +56,7 @@
 - `GeneratedImageRecord`はUUID、source hash、PNG path、recipe path、作成日時、更新日時、表示metadataを持つ。
 - record更新は一時出力へ変換した後、PNG、recipe、metadataを一つのcommitとして差し替える。失敗時は以前のrecordを変更しない。
 - record削除後にsource参照数が0になった場合だけ、対応するsource assetを削除する。
-- app内recordの削除は、共有シートから外部へ保存したファイルへ影響させない。
+- app内recordの削除は、写真アプリへ保存済みの画像へ影響させない。
 - persistence schemaをversion管理し、migration前に参照中の画像ファイルを削除しない。
 
 ### StoreKit / Pro

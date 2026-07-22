@@ -1,6 +1,12 @@
 import Foundation
 
 enum AppConfiguration {
+    #if PIXEL_FORGE_DEVELOPER
+    static let isDeveloperBuild = true
+    #else
+    static let isDeveloperBuild = false
+    #endif
+
     static let proProductID = environmentValue("PIXEL_FORGE_PRO_PRODUCT_ID")
         ?? "com.kazuvin.pixelforge.pro"
 

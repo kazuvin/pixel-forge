@@ -84,7 +84,7 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 - `Screens/`では画面状態、data binding、layout compositionだけを扱う。
 - screenへ`Color(...)`、`.font(...)`、`.foregroundStyle(...)`、`.background(...)`、独自`ButtonStyle`を追加しない。
 - 新しい見た目が必要なら、既存の`Forge*` componentで表現できない理由を確認してからDesign層へ追加する。
-- 変換中は重複実行を防ぎ、exportはPNGとrecipeを同時に保存する。
+- 変換中は重複実行を防ぎ、外部保存はPNG画像だけを写真アプリへ追加する。recipeはアプリ内recordだけに保持する。
 - Pro lockは色だけで表現せず、icon、label、accessibility valueを共通componentで提供する。
 
 ## 変更手順
@@ -95,7 +95,7 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 4. Screen層では共通部品の組み合わせと状態接続だけを行う。
 5. `./scripts/verify-apple-design-system.sh`を実行する。
 6. system/dark/lightでHome empty、Home grid、editing、rendering、result、error、free/Pro settingsを確認する。
-7. Home、変換設定、変換結果、設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
+7. Home、画像追加メニュー、削除確認、変換設定、変換結果、通常設定、開発者設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
 8. `./scripts/ci-local.sh`を実行する。
 
 `verify-apple-design-system.sh`はscreen層のstyle直書き、日英key不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。

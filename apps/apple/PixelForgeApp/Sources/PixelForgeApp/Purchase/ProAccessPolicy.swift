@@ -25,7 +25,7 @@ enum ProEntitlementStatus: Equatable, Sendable {
 
 enum LibraryAction: Sendable {
     case view
-    case export
+    case saveToPhotos
     case delete
 }
 

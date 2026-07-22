@@ -3,10 +3,13 @@ import SwiftUI
 enum ForgeIconName {
     case sliders
     case addPhoto
+    case camera
+    case files
     case minus
     case plus
     case render
     case export
+    case savePhoto
     case photo
     case pixelGrid
     case selected
@@ -35,6 +38,19 @@ enum ForgeIconName {
                 pixel(9, 10, 1, 1), pixel(10, 11, 1, 1),
                 pixel(13, 1, 1, 5), pixel(11, 3, 5, 1),
             ]
+        case .camera:
+            [
+                pixel(2, 5, 12, 1), pixel(2, 6, 1, 7), pixel(13, 6, 1, 7),
+                pixel(2, 12, 12, 1), pixel(5, 3, 6, 2),
+                pixel(6, 7, 4, 1), pixel(5, 8, 1, 3), pixel(10, 8, 1, 3),
+                pixel(6, 11, 4, 1), pixel(7, 8, 2, 3),
+            ]
+        case .files:
+            [
+                pixel(3, 2, 6, 1), pixel(3, 3, 1, 11), pixel(3, 13, 10, 1),
+                pixel(12, 6, 1, 8), pixel(9, 3, 1, 4), pixel(10, 6, 3, 1),
+                pixel(6, 8, 5, 1), pixel(6, 10, 5, 1),
+            ]
         case .minus:
             [pixel(3, 7, 10, 2)]
         case .plus:
@@ -51,6 +67,15 @@ enum ForgeIconName {
                 pixel(4, 5, 1, 1), pixel(5, 6, 1, 1), pixel(6, 7, 1, 1),
                 pixel(9, 7, 1, 1), pixel(10, 6, 1, 1), pixel(11, 5, 1, 1),
                 pixel(2, 10, 1, 4), pixel(3, 13, 10, 1), pixel(13, 10, 1, 4),
+            ]
+        case .savePhoto:
+            [
+                pixel(2, 7, 12, 1), pixel(2, 8, 1, 6), pixel(13, 8, 1, 6),
+                pixel(2, 13, 12, 1), pixel(4, 9, 2, 2),
+                pixel(6, 12, 1, 1), pixel(7, 11, 1, 1), pixel(8, 10, 1, 1),
+                pixel(9, 11, 1, 1), pixel(10, 10, 1, 1), pixel(11, 11, 1, 1),
+                pixel(7, 1, 2, 6), pixel(5, 4, 1, 1), pixel(6, 5, 1, 1),
+                pixel(9, 5, 1, 1), pixel(10, 4, 1, 1),
             ]
         case .photo:
             [

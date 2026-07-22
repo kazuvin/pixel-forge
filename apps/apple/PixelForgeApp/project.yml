@@ -7,6 +7,11 @@ options:
   deploymentTarget:
     iOS: "17.0"
 
+configs:
+  Debug: debug
+  Developer: debug
+  Release: release
+
 packages:
   PixelCoreKit:
     path: ../../../packages/PixelCoreKit
@@ -15,6 +20,9 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
+  configs:
+    Developer:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) PIXEL_FORGE_DEVELOPER
 
 targets:
   PixelForgeApp:
@@ -32,6 +40,7 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
         NSCameraUsageDescription: Pixel Forge uses the camera to capture a photo and convert it into pixel art on your device.
+        NSPhotoLibraryAddUsageDescription: Pixel Forge saves your converted PNG images to your photo library when you choose Save to Photos.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
@@ -76,5 +85,16 @@ schemes:
       config: Debug
     test:
       config: Debug
+      targets:
+        - PixelForgeAppTests
+  PixelForgeApp-Developer:
+    build:
+      targets:
+        PixelForgeApp: all
+        PixelForgeAppTests: [test]
+    run:
+      config: Developer
+    test:
+      config: Developer
       targets:
         - PixelForgeAppTests

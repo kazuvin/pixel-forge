@@ -4,8 +4,6 @@ import SwiftUI
 struct ConversionModalView: View {
     @ObservedObject var model: ConversionSessionModel
     let close: () -> Void
-    @State private var exportItems: [URL] = []
-    @State private var showsShareSheet = false
 
     var body: some View {
         ForgeCanvas {
@@ -19,11 +17,9 @@ struct ConversionModalView: View {
                 ForgeDivider()
                 modalContent
             }
+            .safeAreaPadding(.top)
         }
         .interactiveDismissDisabled(model.state == .rendering)
-        .sheet(isPresented: $showsShareSheet) {
-            ActivitySheet(items: exportItems)
-        }
     }
 
     @ViewBuilder
@@ -259,16 +255,28 @@ struct ConversionModalView: View {
                     algorithm: model.currentRecord?.metadata.algorithmVersion ?? PixelCoreInfo.algorithmVersion,
                     paletteName: model.currentRecord?.metadata.paletteName ?? L10n.paletteSource
                 )
+                switch model.photoSaveState {
+                case .idle, .saving:
+                    EmptyView()
+                case .saved:
+                    ForgeSuccessBanner(message: L10n.photoSaveSuccess)
+                case let .failed(message):
+                    ForgeAlertBanner(message: message)
+                }
                 HStack(spacing: ForgeDesign.Spacing.compact) {
                     ForgeButton(title: L10n.adjust, icon: .edit) {
                         model.edit()
                     }
-                    ForgeButton(title: L10n.export, icon: .export, role: .primary) {
-                        if let items = model.prepareExport() {
-                            exportItems = items
-                            showsShareSheet = true
-                        }
+                    ForgeButton(
+                        title: model.photoSaveState == .saving
+                            ? L10n.savingToPhotos
+                            : L10n.saveToPhotos,
+                        icon: .savePhoto,
+                        role: .primary
+                    ) {
+                        Task { await model.saveOutputToPhotos() }
                     }
+                    .disabled(model.photoSaveState == .saving)
                 }
             }
             .padding(ForgeDesign.Spacing.regular)
