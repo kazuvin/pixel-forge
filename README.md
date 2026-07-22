@@ -36,5 +36,10 @@ cargo run -p pixel-cli -- \
 ./scripts/ci-local.sh
 ```
 
-要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。
+## Rust core API
 
+初版仕様の変換入口は`PixelSession::convert(RenderSettings)`です。`RenderSettings`へcrop、長辺解像度、明示paletteと色調保持、輪郭、整数倍拡大を値として渡し、PNGとschema v2 recipeを受け取ります。ファイルI/O、paletteの保存、UI状態はcoreに含めません。
+
+既存CLIとSwift adapterが利用している`PixelSession::render(PixelSettings)`は移行用の互換入口です。
+
+要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。

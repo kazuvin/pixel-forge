@@ -1,5 +1,6 @@
 {
-  "algorithmVersion": "0.1.0",
+  "schemaVersion": 1,
+  "algorithmVersion": "0.2.0",
   "inputSha256": "1eb6fbaf41e1776ea24092c32a75f82439ee4fa68a8674e670026f4397257aa6",
   "targetWidth": 16,
   "targetHeight": 16,

@@ -84,7 +84,7 @@ impl PixelEngine {
 #[uniffi::export]
 #[must_use]
 pub fn algorithm_version() -> String {
-    pixel_core::ALGORITHM_VERSION.into()
+    pixel_core::LEGACY_ALGORITHM_VERSION.into()
 }
 
 impl From<FfiDitherMode> for DitherMode {
