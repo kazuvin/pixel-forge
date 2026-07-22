@@ -2,6 +2,7 @@ import Foundation
 
 enum ReviewScreen: String {
     case home
+    case imageSourceMenu = "image-source-menu"
     case conversionEditing = "conversion-editing"
     case conversionResult = "conversion-result"
     case settings

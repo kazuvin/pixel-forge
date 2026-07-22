@@ -1,5 +1,6 @@
 "workbench.title" = "Pixel Forge";
 "workbench.eyebrow" = "Local image workbench";
+"workbench.take_photo" = "Take Photo";
 "workbench.choose_photo" = "Choose Photo";
 "workbench.choose_file" = "Choose from Files";
 "workbench.settings" = "Settings";
@@ -49,7 +50,7 @@
 "home.eyebrow" = "Local image library";
 "home.subtitle" = "Turn photos into reproducible pixel art.";
 "home.empty.title" = "Make your first image";
-"home.empty.detail" = "Choose a PNG, JPEG, or PPM from Photos or Files. Conversion stays entirely on your iPhone.";
+"home.empty.detail" = "Take a photo or choose an image from Photos or Files. Conversion stays entirely on your iPhone.";
 "home.choose_image" = "Choose Image";
 "home.library" = "Local library";
 "home.image_count" = "%d images";
@@ -62,6 +63,7 @@
 "action.close" = "Close";
 "action.return_to_settings" = "Back to Settings";
 "action.overwrite" = "Overwrite";
+"action.open_settings" = "Open Settings";
 "conversion.options" = "Conversion Options";
 "conversion.options.detail" = "Basic free controls and advanced buy-once Pro controls live in one place.";
 "setting.long_side" = "Logical Long Side";
@@ -87,6 +89,9 @@
 "result.algorithm" = "Algorithm";
 "conversion.failed" = "Conversion Failed";
 "conversion.previous_preserved" = "Your previous image is unchanged";
+"error.camera_capture_failed" = "The captured photo could not be loaded. Please try again.";
+"camera.permission.title" = "Camera Access Required";
+"camera.permission.detail" = "To take and convert a photo, allow Pixel Forge to access the camera in iPhone Settings.";
 "conversion.state.editing" = "Settings";
 "conversion.state.rendering" = "Converting";
 "conversion.state.result" = "Result";

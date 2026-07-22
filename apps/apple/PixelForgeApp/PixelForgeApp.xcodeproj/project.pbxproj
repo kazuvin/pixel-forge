@@ -10,8 +10,10 @@
 		015C02105881FA374A04DDD9 /* StoredRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62CB51D3EA4147E3DF72D58 /* StoredRecipe.swift */; };
 		0396AF71114627DD408D912D /* review-gradient.png in Resources */ = {isa = PBXBuildFile; fileRef = BC649120701191DD37C4BAB0 /* review-gradient.png */; };
 		0BE60107823C2711C1BA5640 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7DB54740F87B86E61C8D6EB2 /* Localizable.strings */; };
+		10EA8BEAEB71FEA13D4B9501 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 38FBFD94E4E12750C5F26C35 /* InfoPlist.strings */; };
 		0F10E1AA87DE8A85BCDFDC19 /* WorkbenchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EDE84AF1BB1A1DBF69EA5E /* WorkbenchView.swift */; };
 		1B7DB9A875ECA7D9580DD8EA /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1640F580FDDD647CAC3D0866 /* ActivitySheet.swift */; };
+		28D427AD64F26C3F1B93A4B9 /* CameraImageInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D4917B4806BE376F89DAE83 /* CameraImageInput.swift */; };
 		42251FDF4169276BD30742D3 /* LocalLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3576B67FD6F55C026BD441 /* LocalLibraryStore.swift */; };
 		49C47CE418B243DFB14A97BE /* AppLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452821937474DDD2F97E3525 /* AppLanguageTests.swift */; };
 		4A00FB360F8A9298B3389E82 /* StoredRecipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD76E720BAAA81446C0A3D6 /* StoredRecipeTests.swift */; };
@@ -49,6 +51,7 @@
 		04C65A575F20AD17E4410FEE /* ForgeIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeIcons.swift; sourceTree = "<group>"; };
 		1640F580FDDD647CAC3D0866 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
 		23EDE84AF1BB1A1DBF69EA5E /* WorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchView.swift; sourceTree = "<group>"; };
+		2D4917B4806BE376F89DAE83 /* CameraImageInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraImageInput.swift; sourceTree = "<group>"; };
 		35E0F7ACA34AD6B24EA04B23 /* PixelForgeApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PixelForgeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		396B7EB66C12E6A6AEA5DBB6 /* ProEntitlementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProEntitlementService.swift; sourceTree = "<group>"; };
 		452821937474DDD2F97E3525 /* AppLanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguageTests.swift; sourceTree = "<group>"; };
@@ -61,6 +64,7 @@
 		57896F91B6CA583FE23BF38B /* WorkbenchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchModel.swift; sourceTree = "<group>"; };
 		66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewConfiguration.swift; sourceTree = "<group>"; };
 		6A5F5AC2CCF6873B61593A67 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		6DA6CA0689237735602614E4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7F32269F63CB901A330C43BE /* PixelForgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelForgeApp.swift; sourceTree = "<group>"; };
 		88849A829235C65DAA8B2EF7 /* ConversionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionModalView.swift; sourceTree = "<group>"; };
 		9D15485300A32725BD372BF9 /* ForgeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeComponents.swift; sourceTree = "<group>"; };
@@ -69,6 +73,7 @@
 		D58F0E564B95BC2557260BB4 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		D62CB51D3EA4147E3DF72D58 /* StoredRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredRecipe.swift; sourceTree = "<group>"; };
 		E09B6D3D6230FBB5DB729DB8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E99DE51B78F67C90AD522E08 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		E4092236FF363F7830B932FB /* ProAccessPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProAccessPolicy.swift; sourceTree = "<group>"; };
 		EC49C35F86D77F12C9591D73 /* PixelCoreKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PixelCoreKit; path = ../../../packages/PixelCoreKit; sourceTree = SOURCE_ROOT; };
 		EE4D2616F7425773DD52C180 /* DotGothic16-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DotGothic16-Regular.ttf"; sourceTree = "<group>"; };
@@ -116,6 +121,14 @@
 			path = Screens;
 			sourceTree = "<group>";
 		};
+		53C02C2D9CA12361E83BEF46 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				2D4917B4806BE376F89DAE83 /* CameraImageInput.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
 		528FAC9EE0B18F5DF43B5040 /* Design */ = {
 			isa = PBXGroup;
 			children = (
@@ -137,6 +150,7 @@
 				66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */,
 				57896F91B6CA583FE23BF38B /* WorkbenchModel.swift */,
 				528FAC9EE0B18F5DF43B5040 /* Design */,
+				53C02C2D9CA12361E83BEF46 /* Input */,
 				141018DC95BBB74A6A3AC7E4 /* Library */,
 				7B61BF745B05E0B62241AB5F /* Purchase */,
 				9CD4B73D85E7D208AC5DFCB6 /* Resources */,
@@ -212,6 +226,7 @@
 			isa = PBXGroup;
 			children = (
 				F2C63D7BAD3BB44C7CB7F1BF /* Fonts */,
+				38FBFD94E4E12750C5F26C35 /* InfoPlist.strings */,
 				7DB54740F87B86E61C8D6EB2 /* Localizable.strings */,
 				5B0ED40EEE030F3069103275 /* ReviewAssets */,
 			);
@@ -309,6 +324,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E28AD883B6E981B35EE9158B /* DotGothic16-Regular.ttf in Resources */,
+				10EA8BEAEB71FEA13D4B9501 /* InfoPlist.strings in Resources */,
 				0BE60107823C2711C1BA5640 /* Localizable.strings in Resources */,
 				DEBBD0AFFECF7EC784C7981E /* OFL.txt in Resources */,
 				0396AF71114627DD408D912D /* review-gradient.png in Resources */,
@@ -335,6 +351,7 @@
 			files = (
 				1B7DB9A875ECA7D9580DD8EA /* ActivitySheet.swift in Sources */,
 				E471D45200B973D032CD5749 /* AppConfiguration.swift in Sources */,
+				28D427AD64F26C3F1B93A4B9 /* CameraImageInput.swift in Sources */,
 				7288DF0A7695821C9438767B /* ConversionModalView.swift in Sources */,
 				71775A99C6DCE853FA34E782 /* ForgeComponents.swift in Sources */,
 				857F73CA4289329CDF9288E9 /* ForgeDesignTokens.swift in Sources */,
@@ -364,6 +381,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		38FBFD94E4E12750C5F26C35 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6DA6CA0689237735602614E4 /* en */,
+				E99DE51B78F67C90AD522E08 /* ja */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		7DB54740F87B86E61C8D6EB2 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -381,8 +407,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9H63DY247J;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				INFOPLIST_FILE = Supporting/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -480,8 +508,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
 				COMPRESS_PNG_FILES = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9H63DY247J;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				INFOPLIST_FILE = Supporting/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -47,7 +47,9 @@ Home
 ```
 
 - safe area直下のtop barにはbrand、設定、画像追加だけを置く。
-- 画像追加はaction sheetを開き、`写真を選ぶ`と`ファイルから選ぶ`を分ける。
+- 画像追加はaction sheetを開き、利用可能な場合は`カメラで撮る`、`写真を選ぶ`、`ファイルから選ぶ`を分けてこの順に表示する。
+- 撮影完了後は撮影画像を入力した共通変換フローのeditingを開く。撮影画像を写真ライブラリへ自動保存しない。
+- 初回の撮影操作でカメラ権限を要求する。拒否または制限時は理由とiOS設定への導線を表示し、カメラがない環境では撮影項目を表示しない。
 - 生成結果は新しい順で常に2列の`LazyVGrid`へ表示する。
 - preview領域の高さを揃え、画像はaspect fitかつ補間なしで表示する。
 - card全体のtapで共通変換フローのresultを開く。削除buttonはcard tapと競合させない。
@@ -56,7 +58,7 @@ Home
 ### Empty
 
 - 見出し: `最初の画像を作りましょう`
-- 説明: 写真ライブラリまたはFilesから選べること、処理がiPhone内で完結することを示す。
+- 説明: カメラ撮影、写真ライブラリ、Filesを利用できること、処理がiPhone内で完結することを示す。
 - 主操作: `画像を選ぶ`
 - upload、account、cloudを想起させる表現を使わない。
 
@@ -156,9 +158,10 @@ Home
 
 ## Review screenshots
 
-次の8枚をiPhone Simulatorの縦向きで保存する。
+次の10枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
+- `pixel-forge-image-source-menu--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`

@@ -6,6 +6,7 @@ build/apple/
 build/apple-review-derived/
 build/ios-tests-derived/
 apps/apple/PixelForgeApp/.build/
+xcuserdata/
 packages/PixelCoreKit/.build/
 packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework/
 packages/PixelCoreKit/Sources/PixelCoreKit/Generated/PixelForgeCore.swift

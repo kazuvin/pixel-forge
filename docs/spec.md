@@ -41,6 +41,8 @@
 - 無料版はsystem themeだけを選択でき、Proはdark/lightへ手動固定できる。
 - UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。
 - UI文言は日本語と英語を持ち、設定画面でsystem、English、日本語を切り替える。system時はiOSの最優先言語が日本語なら日本語、英語なら英語、それ以外なら英語へ解決する。
+- 画像追加メニューは、利用可能な場合だけカメラ撮影を先頭に表示し、写真ライブラリ、Filesを続ける。撮影画像はJPEGへ正規化して既存の新規変換フローへ渡し、写真ライブラリへ自動保存しない。
+- カメラ権限は撮影操作時に要求し、拒否または制限時はiOS設定への導線を提示する。
 - 画面層は`Design/`のshared token/style/componentから組み立て、直接の色・font・control chrome指定をCIで拒否する。
 
 ### Local persistence

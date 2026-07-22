@@ -24,7 +24,7 @@ export const copy = {
     support: {
       title: "サポート",
       eyebrow: "PIXEL FORGE / HELP",
-      summary: "Pixel ForgeはmacOS 14以降で動作する、ローカル完結の画像変換アプリです。写真や生成画像をPixel Forgeのサーバーへ送信しません。",
+      summary: "Pixel ForgeはiOS 17以降のiPhoneで動作する、ローカル完結の画像変換アプリです。写真や生成画像をPixel Forgeのサーバーへ送信しません。",
       feedback: "ご意見・ご要望を送る",
       feedbackNote: "Google Formsが提供する外部ページへ移動します。フォームが未設定の場合は公開準備中と表示されます。",
       appStore: "App StoreでPixel Forgeを見る",
@@ -33,6 +33,10 @@ export const copy = {
         {
           heading: "画像を読み込めない場合",
           paragraphs: ["PNG、JPEG、PPM形式を利用できます。ファイルが破損していないか、別のアプリで開けるかを確認してください。"],
+        },
+        {
+          heading: "カメラで撮影できない場合",
+          paragraphs: ["iPhoneの設定でPixel Forgeのカメラアクセスを許可してください。撮影した画像はアプリ内の変換に使われ、写真ライブラリへ自動保存されません。"],
         },
         {
           heading: "変換や書き出しが失敗する場合",
@@ -56,26 +60,30 @@ export const copy = {
       sections: [
         {
           heading: "1. アプリ内の画像とレシピ",
-          paragraphs: ["入力画像、生成画像、再生成用recipeは利用者のMac内で処理・保存されます。Pixel Forgeが運営するサーバーへ送信されません。"],
+          paragraphs: ["入力画像、生成画像、再生成用recipeは利用者のiPhone内で処理・保存されます。Pixel Forgeが運営するサーバーへ送信されません。"],
         },
         {
-          heading: "2. 購入情報",
+          heading: "2. カメラ",
+          paragraphs: ["カメラは、利用者が「カメラで撮る」を選んだ時だけ撮影に使用します。撮影画像は端末内の変換フローへ渡され、写真ライブラリへ自動保存されません。"],
+        },
+        {
+          heading: "3. 購入情報",
           paragraphs: ["Pixel Forge Proの購入、復元、返金および購入状態の確認はAppleのStoreKitとApp Storeが処理します。Pixel Forgeは決済カード情報を取得しません。"],
         },
         {
-          heading: "3. アプリとWebによる直接収集",
+          heading: "4. アプリとWebによる直接収集",
           paragraphs: ["現行のアプリとWebサイトには、独自アカウント、広告、アクセス解析、トラッキングpixel、Cookieを使う機能はありません。"],
         },
         {
-          heading: "4. Google Formsで任意送信する情報",
+          heading: "5. Google Formsで任意送信する情報",
           paragraphs: ["ご意見・ご要望フォームはGoogle Formsを利用します。利用者が任意で入力した問い合わせ内容、返信先、アプリのバージョン等は、回答と品質改善のためGoogleへ送信されます。画像や機密情報を送らないでください。"],
         },
         {
-          heading: "5. 保持、削除、問い合わせ",
+          heading: "6. 保持、削除、問い合わせ",
           paragraphs: ["フォーム回答は対応に必要な期間だけ保持します。削除依頼や本ポリシーへの問い合わせはサポートページのフォームから行えます。Google側の処理にはGoogleのポリシーが適用されます。"],
         },
         {
-          heading: "6. 変更",
+          heading: "7. 変更",
           paragraphs: ["収集機能や第三者SDKを追加する場合は、本ポリシーとApp Storeのプライバシー申告を同じリリースで更新します。"],
         },
       ] satisfies Section[],
@@ -119,7 +127,7 @@ export const copy = {
     support: {
       title: "Support",
       eyebrow: "PIXEL FORGE / HELP",
-      summary: "Pixel Forge is a local image conversion app for macOS 14 and later. It does not upload your source or generated images to a Pixel Forge server.",
+      summary: "Pixel Forge is a local image conversion app for iPhone running iOS 17 or later. It does not upload your source or generated images to a Pixel Forge server.",
       feedback: "Send feedback or a request",
       feedbackNote: "This opens an external page provided by Google Forms. Until the form URL is configured, it is shown as unavailable.",
       appStore: "View Pixel Forge on the App Store",
@@ -128,6 +136,10 @@ export const copy = {
         {
           heading: "If an image will not open",
           paragraphs: ["Pixel Forge accepts PNG, JPEG, and PPM files. Check that the file is intact and opens in another application."],
+        },
+        {
+          heading: "If the camera will not open",
+          paragraphs: ["Allow Pixel Forge to access the camera in iPhone Settings. Captured images are used by the in-app conversion flow and are not saved to your Photos library automatically."],
         },
         {
           heading: "If conversion or export fails",
@@ -151,26 +163,30 @@ export const copy = {
       sections: [
         {
           heading: "1. Images and recipes in the app",
-          paragraphs: ["Source images, generated images, and reproducible recipes are processed and stored locally on your Mac. They are not sent to a server operated by Pixel Forge."],
+          paragraphs: ["Source images, generated images, and reproducible recipes are processed and stored locally on your iPhone. They are not sent to a server operated by Pixel Forge."],
         },
         {
-          heading: "2. Purchase information",
+          heading: "2. Camera",
+          paragraphs: ["The camera is used only when you choose Take Photo. The captured image is passed to the on-device conversion flow and is not saved to your Photos library automatically."],
+        },
+        {
+          heading: "3. Purchase information",
           paragraphs: ["Apple handles Pixel Forge Pro purchases, restoration, refunds, and entitlement status through StoreKit and the App Store. Pixel Forge does not receive payment card details."],
         },
         {
-          heading: "3. Information collected directly by the app and website",
+          heading: "4. Information collected directly by the app and website",
           paragraphs: ["The current app and website do not provide a Pixel Forge account and do not use ads, analytics, tracking pixels, or cookies."],
         },
         {
-          heading: "4. Information you voluntarily send through Google Forms",
+          heading: "5. Information you voluntarily send through Google Forms",
           paragraphs: ["The feedback form uses Google Forms. Feedback, optional reply details, and app version information you enter are sent to Google so we can respond and improve the product. Do not submit images or confidential information."],
         },
         {
-          heading: "5. Retention, deletion, and contact",
+          heading: "6. Retention, deletion, and contact",
           paragraphs: ["Form responses are kept only as long as needed to respond. Use the form linked from Support to request deletion or ask about this policy. Google's own policies govern its processing."],
         },
         {
-          heading: "6. Changes",
+          heading: "7. Changes",
           paragraphs: ["If collection features or third-party SDKs are added, this policy and the App Store privacy disclosure will be updated in the same release."],
         },
       ] satisfies Section[],

@@ -1,5 +1,7 @@
+import AVFoundation
 import PhotosUI
 import SwiftUI
+import UIKit
 import UniformTypeIdentifiers
 
 struct WorkbenchView: View {
@@ -8,6 +10,9 @@ struct WorkbenchView: View {
     let reviewScreen: ReviewScreen?
     @State private var pendingDeletion: GeneratedImageRecord?
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var pendingCameraCapture: CameraCapture?
+    @State private var showsCameraPicker = false
+    @State private var showsCameraPermissionAlert = false
     @State private var showsPhotoPicker = false
     @State private var showsFileImporter = false
     @State private var showsSourceMenu = false
@@ -64,9 +69,21 @@ struct WorkbenchView: View {
                 model.load(url: url, entitlement: entitlement)
             }
         }
+        .fullScreenCover(isPresented: $showsCameraPicker, onDismiss: finishCameraCapture) {
+            CameraImagePicker(
+                onCapture: receiveCameraImage,
+                onCancel: { showsCameraPicker = false },
+                onFailure: {
+                    model.errorMessage = L10n.cameraCaptureFailed
+                    showsCameraPicker = false
+                }
+            )
+            .ignoresSafeArea()
+        }
         .confirmationDialog(L10n.chooseImage, isPresented: $showsSourceMenu) {
-            Button(L10n.choosePhoto) { showsPhotoPicker = true }
-            Button(L10n.chooseFile) { showsFileImporter = true }
+            ForEach(imageSourceOptions) { source in
+                Button(source.title) { select(source) }
+            }
             Button(L10n.cancel, role: .cancel) {}
         }
         .fullScreenCover(item: $model.session) { session in
@@ -82,6 +99,15 @@ struct WorkbenchView: View {
                 self.pendingDeletion = nil
             }
             Button(L10n.cancel, role: .cancel) { pendingDeletion = nil }
+        }
+        .alert(L10n.cameraPermissionTitle, isPresented: $showsCameraPermissionAlert) {
+            Button(L10n.openSettings) {
+                guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                UIApplication.shared.open(url)
+            }
+            Button(L10n.cancel, role: .cancel) {}
+        } message: {
+            Text(L10n.cameraPermissionDetail)
         }
         .task {
             await prepareInitialState()
@@ -108,6 +134,9 @@ struct WorkbenchView: View {
         switch reviewScreen {
         case .home:
             model.prepareReviewHome(imageData: sourceData)
+        case .imageSourceMenu:
+            model.prepareReviewHome(imageData: sourceData)
+            showsSourceMenu = true
         case .conversionEditing:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
         case .conversionResult:
@@ -116,6 +145,56 @@ struct WorkbenchView: View {
         case .settings:
             showsSettings = true
         }
+    }
+
+    private var imageSourceOptions: [ImageSourceOption] {
+        ImageSourceOption.available(
+            cameraAvailable: reviewScreen == .imageSourceMenu || UIImagePickerController.isSourceTypeAvailable(.camera)
+        )
+    }
+
+    private func select(_ source: ImageSourceOption) {
+        switch source {
+        case .camera:
+            openCamera()
+        case .photoLibrary:
+            showsPhotoPicker = true
+        case .files:
+            showsFileImporter = true
+        }
+    }
+
+    private func openCamera() {
+        switch CameraAccessPolicy.decision(for: AVCaptureDevice.authorizationStatus(for: .video)) {
+        case .presentPicker:
+            showsCameraPicker = true
+        case .requestPermission:
+            Task {
+                if await AVCaptureDevice.requestAccess(for: .video) {
+                    showsCameraPicker = true
+                } else {
+                    showsCameraPermissionAlert = true
+                }
+            }
+        case .showSettings:
+            showsCameraPermissionAlert = true
+        }
+    }
+
+    private func receiveCameraImage(_ image: UIImage) {
+        guard let data = CameraCaptureEncoder.jpegData(from: image) else {
+            model.errorMessage = L10n.cameraCaptureFailed
+            showsCameraPicker = false
+            return
+        }
+        pendingCameraCapture = CameraCapture(data: data, filename: Self.cameraFilenameFormatter.string(from: Date()))
+        showsCameraPicker = false
+    }
+
+    private func finishCameraCapture() {
+        guard let capture = pendingCameraCapture else { return }
+        pendingCameraCapture = nil
+        model.load(data: capture.data, filename: capture.filename, entitlement: entitlement)
     }
 
     @ViewBuilder
@@ -166,6 +245,13 @@ struct WorkbenchView: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
         formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let cameraFilenameFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "'Camera-'yyyyMMdd-HHmmss'.jpg'"
         return formatter
     }()
 }

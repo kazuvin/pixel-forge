@@ -45,4 +45,6 @@ test("security headers and privacy disclosures cover the static support site", a
   assert.match(headers, /Referrer-Policy:/);
   assert.match(privacy, /Google Forms/);
   assert.match(privacy, /ローカル/);
+  assert.match(privacy, /カメラ/);
+  assert.match(privacy, /camera/);
 });

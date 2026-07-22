@@ -31,6 +31,7 @@ targets:
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
+        NSCameraUsageDescription: Pixel Forge uses the camera to capture a photo and convert it into pixel art on your device.
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UILaunchScreen: {}
@@ -39,6 +40,8 @@ targets:
           - UIInterfaceOrientationPortrait
     settings:
       base:
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: 9H63DY247J
         PRODUCT_BUNDLE_IDENTIFIER: com.kazuvin.pixelforge
         PRODUCT_NAME: PixelForgeApp
         PRODUCT_MODULE_NAME: PixelForgeApp

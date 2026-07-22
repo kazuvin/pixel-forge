@@ -70,6 +70,7 @@ capture() {
 
 for theme in dark light; do
   capture home "$theme"
+  capture image-source-menu "$theme"
   capture conversion-editing "$theme"
   capture conversion-result "$theme"
   capture settings "$theme"

@@ -1,5 +1,6 @@
 "workbench.title" = "Pixel Forge";
 "workbench.eyebrow" = "ローカル画像ワークベンチ";
+"workbench.take_photo" = "カメラで撮る";
 "workbench.choose_photo" = "写真を選ぶ";
 "workbench.choose_file" = "ファイルから選ぶ";
 "workbench.settings" = "設定";
@@ -49,7 +50,7 @@
 "home.eyebrow" = "ローカル画像ライブラリ";
 "home.subtitle" = "写真を、再現できるピクセルアートへ。";
 "home.empty.title" = "最初の画像を作りましょう";
-"home.empty.detail" = "写真ライブラリまたはファイルからPNG・JPEG・PPMを選んでください。変換はiPhone内だけで行われます。";
+"home.empty.detail" = "カメラで撮るか、写真ライブラリまたはファイルから画像を選んでください。変換はiPhone内だけで行われます。";
 "home.choose_image" = "画像を選ぶ";
 "home.library" = "ローカルライブラリ";
 "home.image_count" = "%d 枚";
@@ -62,6 +63,7 @@
 "action.close" = "閉じる";
 "action.return_to_settings" = "設定へ戻る";
 "action.overwrite" = "上書き";
+"action.open_settings" = "設定を開く";
 "conversion.options" = "変換オプション";
 "conversion.options.detail" = "無料の基本設定と、買い切りProの高度な設定を同じ場所で調整できます。";
 "setting.long_side" = "論理長辺";
@@ -87,6 +89,9 @@
 "result.algorithm" = "アルゴリズム";
 "conversion.failed" = "変換に失敗";
 "conversion.previous_preserved" = "以前の画像はそのまま残っています";
+"error.camera_capture_failed" = "撮影した写真を読み込めませんでした。もう一度お試しください。";
+"camera.permission.title" = "カメラへのアクセスが必要です";
+"camera.permission.detail" = "撮影して変換するには、iPhoneの設定でPixel Forgeのカメラアクセスを許可してください。";
 "conversion.state.editing" = "設定";
 "conversion.state.rendering" = "変換中";
 "conversion.state.result" = "結果";

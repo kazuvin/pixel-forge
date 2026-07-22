@@ -8,7 +8,7 @@ design_dir="$app_dir/Design"
 screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
 project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
-review_screens=(home conversion-editing conversion-result settings)
+review_screens=(home image-source-menu conversion-editing conversion-result settings)
 review_themes=(dark light)
 
 required_files=(

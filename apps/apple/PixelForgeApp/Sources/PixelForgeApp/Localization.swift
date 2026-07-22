@@ -57,6 +57,7 @@ enum L10n {
     static var chooseImage: String { text("home.choose_image") }
     static var localLibrary: String { text("home.library") }
     static var workbenchEyebrow: String { text("workbench.eyebrow") }
+    static var takePhoto: String { text("workbench.take_photo") }
     static var choosePhoto: String { text("workbench.choose_photo") }
     static var chooseFile: String { text("workbench.choose_file") }
     static var settings: String { text("workbench.settings") }
@@ -86,6 +87,7 @@ enum L10n {
     static var close: String { text("action.close") }
     static var returnToSettings: String { text("action.return_to_settings") }
     static var overwrite: String { text("action.overwrite") }
+    static var openSettings: String { text("action.open_settings") }
     static var sourceNone: String { text("source.none") }
     static var statusReady: String { text("status.ready") }
     static var statusWaiting: String { text("status.waiting") }
@@ -129,6 +131,9 @@ enum L10n {
     static var deleteConfirmation: String { text("delete.confirmation") }
     static var proRequired: String { text("error.pro_required") }
     static var invalidPalette: String { text("error.invalid_palette") }
+    static var cameraCaptureFailed: String { text("error.camera_capture_failed") }
+    static var cameraPermissionTitle: String { text("camera.permission.title") }
+    static var cameraPermissionDetail: String { text("camera.permission.detail") }
     static var appearanceTitle: String { text("settings.appearance.title") }
     static var appearanceEyebrow: String { text("settings.appearance.eyebrow") }
     static var appearanceDescription: String { text("settings.appearance.description") }
