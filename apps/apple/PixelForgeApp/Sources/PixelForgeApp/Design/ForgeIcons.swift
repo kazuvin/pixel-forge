@@ -11,6 +11,12 @@ enum ForgeIconName {
     case pixelGrid
     case selected
     case unselected
+    case trash
+    case edit
+    case close
+    case lock
+    case link
+    case restore
 
     fileprivate var pixels: [CGRect] {
         switch self {
@@ -70,6 +76,39 @@ enum ForgeIconName {
         case .unselected:
             [
                 pixel(2, 2, 12, 1), pixel(2, 13, 12, 1), pixel(2, 3, 1, 10), pixel(13, 3, 1, 10),
+            ]
+        case .trash:
+            [
+                pixel(4, 4, 8, 1), pixel(6, 2, 4, 2), pixel(5, 6, 1, 8),
+                pixel(8, 6, 1, 8), pixel(11, 6, 1, 8), pixel(5, 14, 7, 1),
+            ]
+        case .edit:
+            [
+                pixel(3, 12, 2, 2), pixel(5, 10, 2, 2), pixel(7, 8, 2, 2),
+                pixel(9, 6, 2, 2), pixel(11, 4, 2, 2), pixel(12, 3, 2, 2),
+                pixel(3, 14, 5, 1),
+            ]
+        case .close:
+            [
+                pixel(3, 3, 2, 2), pixel(5, 5, 2, 2), pixel(7, 7, 2, 2),
+                pixel(9, 9, 2, 2), pixel(11, 11, 2, 2), pixel(11, 3, 2, 2),
+                pixel(9, 5, 2, 2), pixel(5, 9, 2, 2), pixel(3, 11, 2, 2),
+            ]
+        case .lock:
+            [
+                pixel(5, 2, 6, 1), pixel(4, 3, 2, 5), pixel(10, 3, 2, 5),
+                pixel(3, 7, 10, 8), pixel(7, 9, 2, 4),
+            ]
+        case .link:
+            [
+                pixel(3, 8, 2, 4), pixel(4, 6, 5, 2), pixel(4, 12, 5, 2),
+                pixel(11, 4, 2, 4), pixel(7, 2, 5, 2), pixel(7, 8, 5, 2),
+                pixel(6, 7, 4, 2),
+            ]
+        case .restore:
+            [
+                pixel(3, 4, 8, 2), pixel(2, 5, 2, 5), pixel(4, 9, 2, 3),
+                pixel(6, 11, 6, 2), pixel(11, 7, 2, 5), pixel(2, 3, 4, 1),
             ]
         }
     }

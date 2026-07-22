@@ -371,13 +371,19 @@ struct ForgeSectionHeader: View {
 struct ForgeLabeledControl<Content: View>: View {
     @Environment(\.forgePalette) private var palette
     let label: String
+    var isLocked = false
     @ViewBuilder let content: () -> Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
-            Text(label.uppercased())
-                .forgeTextStyle(.micro)
-                .foregroundStyle(palette.muted)
+            HStack(spacing: ForgeDesign.Spacing.tight) {
+                Text(label.uppercased())
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.muted)
+                if isLocked {
+                    ForgeIcon(name: .lock, size: 12, colorRole: .accent)
+                }
+            }
             content()
         }
     }
@@ -415,6 +421,7 @@ struct ForgeMetricStepper: View {
     let range: ClosedRange<Int>
     let step: Int
     let valueLabel: String
+    var isLocked = false
 
     var body: some View {
         HStack(spacing: ForgeDesign.Spacing.compact) {
@@ -422,6 +429,9 @@ struct ForgeMetricStepper: View {
                 Text(title)
                     .forgeTextStyle(.caption)
                     .foregroundStyle(palette.muted)
+                if isLocked {
+                    ForgeIcon(name: .lock, size: 12, colorRole: .accent)
+                }
                 Text(valueLabel)
                     .forgeTextStyle(.data)
                     .foregroundStyle(palette.ink)
@@ -603,7 +613,7 @@ struct ForgePixelGridBackground: View {
     @Environment(\.forgePalette) private var palette
 
     var body: some View {
-        Canvas { context, size in
+        Canvas(rendersAsynchronously: false) { context, size in
             let cell: CGFloat = 18
             let columns = Int(ceil(size.width / cell))
             let rows = Int(ceil(size.height / cell))
@@ -661,6 +671,7 @@ struct ForgeThemeCard: View {
     let title: String
     let detail: String
     let isSelected: Bool
+    var isLocked = false
     let action: () -> Void
 
     var body: some View {
@@ -678,7 +689,7 @@ struct ForgeThemeCard: View {
                 }
                 Spacer()
                 ForgeIcon(
-                    name: isSelected ? .selected : .unselected,
+                    name: isLocked ? .lock : (isSelected ? .selected : .unselected),
                     colorRole: isSelected ? .accent : .muted
                 )
             }
@@ -696,6 +707,329 @@ struct ForgeThemeCard: View {
                 lineWidth: isSelected ? ForgeDesign.Size.activeBorder : ForgeDesign.Size.border
             )
         }
+    }
+}
+
+struct ForgeLibraryEmpty: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let actionTitle: String
+    let action: () -> Void
+
+    var body: some View {
+        ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.section) {
+            VStack(spacing: ForgeDesign.Spacing.regular) {
+                ForgeIcon(name: .addPhoto, size: 40, colorRole: .accent)
+                Text(title)
+                    .forgeTextStyle(.title)
+                Text(detail)
+                    .forgeTextStyle(.body)
+                    .foregroundStyle(palette.muted)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 420)
+                ForgeButton(title: actionTitle, icon: .addPhoto, role: .primary, fillsWidth: false) {
+                    action()
+                }
+            }
+        }
+        .frame(maxWidth: 580)
+    }
+}
+
+struct ForgeGeneratedCard: View {
+    @Environment(\.forgePalette) private var palette
+    let image: NSImage?
+    let title: String
+    let detail: String
+    let updated: String
+    let open: () -> Void
+    let delete: () -> Void
+
+    var body: some View {
+        ForgePixelSurface(level: .surface, padding: 0) {
+            VStack(spacing: 0) {
+                ZStack {
+                    ForgePixelGridBackground()
+                    if let image {
+                        Image(nsImage: image)
+                            .resizable()
+                            .interpolation(.none)
+                            .scaledToFit()
+                            .padding(ForgeDesign.Spacing.compact)
+                    }
+                }
+                .frame(minHeight: 190)
+                ForgeDivider()
+                HStack(spacing: ForgeDesign.Spacing.compact) {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                        Text(title)
+                            .forgeTextStyle(.heading)
+                            .lineLimit(1)
+                        Text(detail)
+                            .forgeTextStyle(.caption)
+                            .foregroundStyle(palette.muted)
+                        Text(updated)
+                            .forgeTextStyle(.micro)
+                            .foregroundStyle(palette.muted)
+                    }
+                    Spacer()
+                    ForgeIconButton(icon: .trash, accessibilityLabel: L10n.delete) {
+                        delete()
+                    }
+                }
+                .padding(ForgeDesign.Spacing.regular)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture(perform: open)
+        }
+    }
+}
+
+struct ForgeModalHeader: View {
+    @Environment(\.forgePalette) private var palette
+    let eyebrow: String
+    let title: String
+    let detail: String
+    let close: () -> Void
+
+    var body: some View {
+        HStack(spacing: ForgeDesign.Spacing.regular) {
+            ForgeBrandMark()
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                Text(eyebrow.uppercased())
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.accent)
+                Text(title)
+                    .forgeTextStyle(.title)
+                Text(detail)
+                    .forgeTextStyle(.caption)
+                    .foregroundStyle(palette.muted)
+            }
+            Spacer()
+            ForgeIconButton(icon: .close, accessibilityLabel: L10n.close, action: close)
+        }
+        .padding(.horizontal, ForgeDesign.Spacing.roomy)
+        .frame(height: ForgeDesign.Size.toolbarHeight)
+        .background(palette.panel)
+    }
+}
+
+struct ForgeToggleRow: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String?
+    @Binding var isOn: Bool
+    var isLocked = false
+    var onLockedTap: (() -> Void)?
+
+    var body: some View {
+        Button {
+            if isLocked {
+                onLockedTap?()
+            } else {
+                isOn.toggle()
+            }
+        } label: {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                    Text(title)
+                        .forgeTextStyle(.body)
+                    if let detail {
+                        Text(detail)
+                            .forgeTextStyle(.caption)
+                            .foregroundStyle(palette.muted)
+                    }
+                }
+                Spacer()
+                ForgeIcon(
+                    name: isLocked ? .lock : (isOn ? .selected : .unselected),
+                    colorRole: isOn ? .accent : .muted
+                )
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(palette.surface)
+        .overlay {
+            ForgePixelBorder(color: isOn ? palette.accent : palette.grid)
+        }
+    }
+}
+
+struct ForgeTextInput: View {
+    @Environment(\.forgePalette) private var palette
+    let label: String
+    @Binding var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+            Text(label.uppercased())
+                .forgeTextStyle(.micro)
+                .foregroundStyle(palette.muted)
+            TextField(label, text: $text)
+                .textFieldStyle(.plain)
+                .forgeTextStyle(.data)
+                .padding(ForgeDesign.Spacing.compact)
+                .background(palette.surface)
+                .overlay {
+                    ForgePixelBorder(color: palette.grid)
+                }
+        }
+    }
+}
+
+struct ForgeConversionLoading: View {
+    @Environment(\.forgePalette) private var palette
+    let isVisible: Bool
+    let title: String
+    let detail: String
+
+    var body: some View {
+        VStack(spacing: ForgeDesign.Spacing.regular) {
+            if isVisible {
+                ProgressView()
+                    .controlSize(.large)
+                    .tint(palette.accent)
+                Text(title)
+                    .forgeTextStyle(.title)
+                Text(detail)
+                    .forgeTextStyle(.body)
+                    .foregroundStyle(palette.muted)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct ForgeResultMetadata: View {
+    @Environment(\.forgePalette) private var palette
+    let logical: String
+    let output: String
+    let algorithm: String
+    let paletteName: String
+
+    var body: some View {
+        ForgePixelSurface(level: .raised, padding: ForgeDesign.Spacing.compact) {
+            HStack(spacing: ForgeDesign.Spacing.roomy) {
+                item(L10n.logicalSize, logical)
+                item(L10n.outputSize, output)
+                item(L10n.palette, paletteName)
+                item(L10n.algorithm, algorithm)
+            }
+        }
+    }
+
+    private func item(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+            Text(title.uppercased())
+                .forgeTextStyle(.micro)
+                .foregroundStyle(palette.muted)
+            Text(value)
+                .forgeTextStyle(.data)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct ForgeSettingsLinkRow: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String?
+    var isEnabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                    Text(title)
+                        .forgeTextStyle(.body)
+                    if let detail {
+                        Text(detail)
+                            .forgeTextStyle(.caption)
+                            .foregroundStyle(palette.muted)
+                    }
+                }
+                Spacer()
+                ForgeIcon(name: .link, colorRole: .muted)
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(palette.surface)
+        .overlay { ForgePixelBorder(color: palette.grid) }
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.42)
+    }
+}
+
+struct ForgeProPanel: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let status: String
+    let purchaseTitle: String
+    let restoreTitle: String
+    let canPurchase: Bool
+    let purchase: () -> Void
+    let restore: () -> Void
+
+    var body: some View {
+        ForgePixelSurface(level: .raised) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+                HStack {
+                    ForgeIcon(name: .lock, colorRole: .accent)
+                    Text(title)
+                        .forgeTextStyle(.heading)
+                    Spacer()
+                    Text(status.uppercased())
+                        .forgeTextStyle(.micro)
+                        .foregroundStyle(palette.accent)
+                }
+                Text(detail)
+                    .forgeTextStyle(.caption)
+                    .foregroundStyle(palette.muted)
+                HStack(spacing: ForgeDesign.Spacing.compact) {
+                    ForgeButton(
+                        title: purchaseTitle,
+                        icon: .lock,
+                        role: .primary,
+                        fillsWidth: false,
+                        action: purchase
+                    )
+                    .disabled(!canPurchase)
+                    ForgeButton(
+                        title: restoreTitle,
+                        icon: .restore,
+                        fillsWidth: false,
+                        action: restore
+                    )
+                }
+            }
+        }
+    }
+}
+
+struct ForgeAboutRow: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .forgeTextStyle(.body)
+            Spacer()
+            Text(value)
+                .forgeTextStyle(.data)
+                .foregroundStyle(palette.muted)
+        }
+        .padding(ForgeDesign.Spacing.compact)
+        .background(palette.surface)
+        .overlay { ForgePixelBorder(color: palette.grid) }
     }
 }
 

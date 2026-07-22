@@ -1,0 +1,10 @@
+{
+  "name": "pixel-forge-workspace",
+  "private": true,
+  "packageManager": "pnpm@11.15.1",
+  "scripts": {
+    "web:check": "pnpm --filter @pixel-forge/web check",
+    "web:test": "pnpm --filter @pixel-forge/web test",
+    "web:build": "pnpm --filter @pixel-forge/web build"
+  }
+}

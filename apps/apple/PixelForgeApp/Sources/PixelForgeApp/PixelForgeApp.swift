@@ -2,7 +2,8 @@ import SwiftUI
 
 @main
 struct PixelForgeApp: App {
-    @AppStorage(ForgeTheme.storageKey) private var storedTheme = ForgeTheme.dark.rawValue
+    @AppStorage(ForgeTheme.storageKey) private var storedTheme = ForgeTheme.system.rawValue
+    @StateObject private var entitlement = ProEntitlementService()
 
     init() {
         ForgeFont.registerBundledFonts()
@@ -16,6 +17,7 @@ struct PixelForgeApp: App {
             )
                 .frame(minWidth: 980, minHeight: 640)
                 .forgeTheme(activeTheme)
+                .environmentObject(entitlement)
         }
         .defaultSize(width: 1_180, height: 760)
         .windowStyle(.hiddenTitleBar)
@@ -23,12 +25,17 @@ struct PixelForgeApp: App {
         Settings {
             ThemeSettingsView()
                 .forgeTheme(activeTheme)
+                .environmentObject(entitlement)
         }
         .windowResizability(.contentSize)
     }
 
     private var activeTheme: ForgeTheme {
-        launchTheme ?? ForgeTheme(rawValue: storedTheme) ?? .dark
+        if let launchTheme {
+            return launchTheme
+        }
+        let selected = ForgeTheme(rawValue: storedTheme) ?? .system
+        return selected == .system || entitlement.status.isActive ? selected : .system
     }
 
     private var launchTheme: ForgeTheme? {

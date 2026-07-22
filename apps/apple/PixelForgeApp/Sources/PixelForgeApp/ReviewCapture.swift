@@ -4,7 +4,11 @@ enum ReviewCapture {
     @MainActor
     static func saveMainWindow(to url: URL) {
         guard
-            let window = NSApplication.shared.windows.first(where: { $0.canBecomeMain }),
+            let window = NSApplication.shared.windows.first(where: {
+                $0.isVisible && $0.sheetParent != nil
+            })
+                ?? NSApplication.shared.keyWindow
+                ?? NSApplication.shared.windows.first(where: { $0.canBecomeMain }),
             let contentView = window.contentView,
             let representation = contentView.bitmapImageRepForCachingDisplay(in: contentView.bounds)
         else {

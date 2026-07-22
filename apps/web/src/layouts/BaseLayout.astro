@@ -1,0 +1,45 @@
+---
+import "../styles/global.css";
+import { copy, type Locale } from "../content/copy";
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  alternatePath?: string;
+}
+
+const { locale, title, description, alternatePath = `/${locale === "ja" ? "en" : "ja"}/support/` } = Astro.props;
+const current = copy[locale];
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <title>{title} — Pixel Forge</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">{locale === "ja" ? "本文へ移動" : "Skip to content"}</a>
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Pixel Forge home">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span>PIXEL FORGE</span>
+      </a>
+      <nav aria-label={locale === "ja" ? "主要ナビゲーション" : "Primary navigation"}>
+        <a href={`/${locale}/support/`}>{current.nav.support}</a>
+        <a href={`/${locale}/privacy/`}>{current.nav.privacy}</a>
+        <a href={`/${locale}/terms/`}>{current.nav.terms}</a>
+        <a class="language" href={alternatePath}>{copy[locale === "ja" ? "en" : "ja"].languageName}</a>
+      </nav>
+    </header>
+    <main id="main"><slot /></main>
+    <footer>
+      <span>PIXEL FORGE</span>
+      <span>{locale === "ja" ? "ローカルで、決定的に。" : "Local and deterministic."}</span>
+    </footer>
+  </body>
+</html>

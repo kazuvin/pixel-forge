@@ -1,0 +1,10 @@
+packages:
+  - apps/web
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+confirmModulesPurge: false
+minimumReleaseAgeExclude:
+  - miniflare@4.20260721.0
+  - wrangler@4.113.0

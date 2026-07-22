@@ -9,6 +9,7 @@
 - `crates/pixel-ffi`: UniFFIを使ってRust APIをSwiftへ公開します。
 - `packages/PixelCoreKit`: 生成されたSwift bindingとXCFrameworkを包むSwift Packageです。
 - `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG/recipe書き出しを行うmacOS SwiftUIアプリです。
+- `apps/web`: 日英のsupport、privacy、termsを静的生成するAstroサイトです。
 
 SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothic16を使う共通design systemを持ちます。実装境界とUI変更手順は[`docs/design-system.md`](docs/design-system.md)と[`docs/ui-workflow.md`](docs/ui-workflow.md)を参照してください。
 
@@ -18,6 +19,27 @@ SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothi
 ./scripts/build-apple.sh
 swift run --package-path apps/apple/PixelForgeApp PixelForgeApp
 ```
+
+サポートWebはNode 24.14.0（`.mise.toml`）とpnpmを使用します。
+
+```bash
+corepack pnpm install
+corepack pnpm web:test
+corepack pnpm web:check
+corepack pnpm web:build
+corepack pnpm --filter @pixel-forge/web deploy:dry-run
+```
+
+公開前に、アプリ起動環境へ次を設定する。未設定の外部リンクは設定画面で無効表示になり、誤ったURLを開きません。
+
+```text
+PIXEL_FORGE_PRO_PRODUCT_ID
+PIXEL_FORGE_APP_STORE_URL
+PIXEL_FORGE_FEEDBACK_URL
+PIXEL_FORGE_WEB_BASE_URL
+```
+
+Astro build時は対応する`PUBLIC_FEEDBACK_URL`と`PUBLIC_APP_STORE_URL`を設定します。正式な商品identifier、custom domain、GoogleフォームURL、運営者表記はApp Store公開前の未決事項です。
 
 CLIはApple向け成果物を作らなくても利用できます。
 

@@ -7,4 +7,8 @@ apps/apple/PixelForgeApp/.build/
 packages/PixelCoreKit/.build/
 packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework/
 packages/PixelCoreKit/Sources/PixelCoreKit/Generated/PixelForgeCore.swift
-
+node_modules/
+.pnpm-store/
+apps/web/dist/
+apps/web/.astro/
+.wrangler/

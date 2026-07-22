@@ -83,9 +83,16 @@ for screen in "$screens_dir"/*.swift; do
   fi
 done
 
-for component in ForgeCanvas ForgeTopBar ForgePreviewPane ForgeSidebar ForgeButton; do
+for component in ForgeCanvas ForgeTopBar ForgeGeneratedCard ForgeLibraryEmpty ForgeButton; do
   if ! rg -q "\\b${component}\\b" "$screens_dir/WorkbenchView.swift"; then
     echo "design-system check: WorkbenchView must use shared component $component" >&2
+    exit 1
+  fi
+done
+
+for component in ForgeCanvas ForgeModalHeader ForgePreviewPane ForgeSidebar ForgeButton; do
+  if ! rg -q "\\b${component}\\b" "$screens_dir/ConversionModalView.swift"; then
+    echo "design-system check: ConversionModalView must use shared component $component" >&2
     exit 1
   fi
 done

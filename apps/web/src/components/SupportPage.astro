@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { copy, type Locale } from "../content/copy";
+
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const page = copy[locale].support;
+const opposite = locale === "ja" ? "en" : "ja";
+const feedbackURL = import.meta.env.PUBLIC_FEEDBACK_URL;
+const appStoreURL = import.meta.env.PUBLIC_APP_STORE_URL;
+---
+
+<BaseLayout locale={locale} title={page.title} description={page.summary} alternatePath={`/${opposite}/support/`}>
+  <article class="support-shell">
+    <header class="page-intro support-intro">
+      <p class="eyebrow">{page.eyebrow}</p>
+      <h1>{page.title}</h1>
+      <p class="lede">{page.summary}</p>
+    </header>
+    <div class="support-grid">
+      {page.sections.map((section, index) => (
+        <section class="support-card">
+          <span class="card-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        </section>
+      ))}
+    </div>
+    <section class="contact-panel">
+      <div>
+        <p class="eyebrow">{locale === "ja" ? "CONTACT / EXTERNAL" : "CONTACT / EXTERNAL"}</p>
+        <h2>{locale === "ja" ? "解決しない場合" : "Still need help?"}</h2>
+        <p>{page.feedbackNote}</p>
+      </div>
+      <div class="contact-actions">
+        {feedbackURL ? <a class="button" href={feedbackURL} target="_blank" rel="noreferrer">{page.feedback}</a> : <span class="button disabled">{page.feedback}</span>}
+        {appStoreURL ? <a class="text-link" href={appStoreURL} target="_blank" rel="noreferrer">{page.appStore}</a> : <span class="text-link disabled">{page.appStoreNote}</span>}
+      </div>
+    </section>
+  </article>
+</BaseLayout>

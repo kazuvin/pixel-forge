@@ -25,6 +25,11 @@ cargo run -p pixel-cli -- \
 
 "$root_dir/scripts/build-apple.sh"
 swift test --package-path "$root_dir/packages/PixelCoreKit"
-swift build --package-path "$root_dir/apps/apple/PixelForgeApp"
+swift test --package-path "$root_dir/apps/apple/PixelForgeApp"
+
+corepack pnpm --filter @pixel-forge/web test
+corepack pnpm --filter @pixel-forge/web check
+corepack pnpm --filter @pixel-forge/web build
+corepack pnpm --filter @pixel-forge/web deploy:dry-run
 
 echo "ci-local passed"

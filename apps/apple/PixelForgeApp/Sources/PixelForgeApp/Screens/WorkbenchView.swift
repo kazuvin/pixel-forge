@@ -1,191 +1,181 @@
-import PixelCoreKit
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct WorkbenchView: View {
-    @StateObject private var model = WorkbenchModel()
+    @EnvironmentObject private var entitlement: ProEntitlementService
+    @StateObject private var model: HomeModel
     @State private var didLoadInitialURL = false
+    @State private var pendingDeletion: GeneratedImageRecord?
     let initialURL: URL?
     let reviewCaptureURL: URL?
 
     init(initialURL: URL? = nil, reviewCaptureURL: URL? = nil) {
         self.initialURL = initialURL
         self.reviewCaptureURL = reviewCaptureURL
+        let store: LocalLibraryStore
+        if let reviewCaptureURL {
+            store = LocalLibraryStore(
+                rootURL: FileManager.default.temporaryDirectory
+                    .appendingPathComponent("PixelForgeReview", isDirectory: true)
+                    .appendingPathComponent(reviewCaptureURL.lastPathComponent, isDirectory: true)
+                    .appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier), isDirectory: true)
+            )
+        } else {
+            store = LocalLibraryStore()
+        }
+        _model = StateObject(wrappedValue: HomeModel(store: store))
     }
 
     var body: some View {
         ForgeCanvas {
-            HStack(spacing: 0) {
-                VStack(spacing: 0) {
-                    topBar
-                    ForgeDivider()
-                    previews
-                    ForgeDivider()
-                    ForgeStatusStrip(
-                        status: statusText,
-                        detail: model.sourceName,
-                        trailing: L10n.deterministic,
-                        isActive: model.sourceImage != nil
-                    )
+            VStack(spacing: 0) {
+                ForgeTopBar(
+                    eyebrow: L10n.homeEyebrow,
+                    title: L10n.workbenchTitle,
+                    subtitle: L10n.homeSubtitle
+                ) {
+                    HStack(spacing: ForgeDesign.Spacing.compact) {
+                        ForgeSettingsButton(label: L10n.settings)
+                        ForgeButton(
+                            title: L10n.choosePhoto,
+                            icon: .addPhoto,
+                            role: .primary,
+                            fillsWidth: false
+                        ) {
+                            model.isShowingImporter = true
+                        }
+                        .keyboardShortcut("o", modifiers: .command)
+                    }
                 }
-                recipePanel
+                ForgeDivider()
+                homeContent
+                ForgeDivider()
+                ForgeStatusStrip(
+                    status: L10n.localLibrary,
+                    detail: L10n.imageCount(model.records.count),
+                    trailing: L10n.deterministic,
+                    isActive: !model.records.isEmpty
+                )
             }
         }
         .fileImporter(
             isPresented: $model.isShowingImporter,
-            allowedContentTypes: [.png, .jpeg],
+            allowedContentTypes: [.png, .jpeg, .portablePixmap],
             allowsMultipleSelection: false
         ) { result in
             if case let .success(urls) = result, let url = urls.first {
-                model.load(url: url)
+                model.load(url: url, entitlement: entitlement)
             }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            guard let url = urls.first else { return false }
+            model.load(url: url, entitlement: entitlement)
+            return true
+        }
+        .sheet(item: $model.session) { session in
+            ConversionModalView(
+                model: session,
+                reviewCaptureURL: reviewCaptureURL,
+                close: { model.session = nil }
+            )
+            .interactiveDismissDisabled(session.state == .rendering)
+        }
+        .confirmationDialog(
+            L10n.deleteConfirmation,
+            isPresented: deletionIsPresented,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.delete, role: .destructive) {
+                guard let pendingDeletion else { return }
+                Task { await model.delete(pendingDeletion) }
+                self.pendingDeletion = nil
+            }
+            Button(L10n.cancel, role: .cancel) {
+                pendingDeletion = nil
+            }
+        }
+        .task {
+            await entitlement.start()
+            await model.loadLibrary()
         }
         .task(id: initialURL) {
             guard !didLoadInitialURL, let initialURL else { return }
             didLoadInitialURL = true
-            model.load(url: initialURL)
-        }
-        .onChange(of: model.outputImage != nil) { _, hasOutput in
-            guard hasOutput, let reviewCaptureURL else { return }
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(800))
-                ReviewCapture.saveMainWindow(to: reviewCaptureURL)
-            }
-        }
-    }
-
-    private var topBar: some View {
-        ForgeTopBar(
-            eyebrow: L10n.workbenchEyebrow,
-            title: L10n.workbenchTitle,
-            subtitle: model.sourceName
-        ) {
-            HStack(spacing: ForgeDesign.Spacing.compact) {
-                ForgeSettingsButton(label: L10n.settings)
-                ForgeButton(
-                    title: L10n.choosePhoto,
-                    icon: .addPhoto,
-                    fillsWidth: false
-                ) {
-                    model.isShowingImporter = true
-                }
-                .keyboardShortcut("o", modifiers: .command)
-            }
-        }
-    }
-
-    private var previews: some View {
-        HStack(spacing: ForgeDesign.Spacing.regular) {
-            ForgePreviewPane(
-                label: L10n.input,
-                metadata: model.sourceDimensions,
-                image: model.sourceImage,
-                pixelated: false,
-                emptyMessage: L10n.inputEmpty
-            )
-            ForgePreviewPane(
-                label: L10n.output,
-                metadata: model.outputDimensions,
-                image: model.outputImage,
-                pixelated: true,
-                emptyMessage: L10n.outputEmpty
+            model.load(
+                url: initialURL,
+                entitlement: entitlement,
+                autoConvert: reviewCaptureURL != nil
             )
         }
-        .padding(ForgeDesign.Spacing.regular)
     }
 
-    private var recipePanel: some View {
-        ForgeSidebar {
-            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.roomy) {
-                ForgeSectionHeader(
-                    eyebrow: "\(L10n.recipeEyebrow) / \(PixelCoreInfo.algorithmVersion)",
-                    title: L10n.recipeTitle,
-                    detail: L10n.recipeSubtitle
-                )
-
-                ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.compact) {
-                    VStack(spacing: ForgeDesign.Spacing.compact) {
-                        ForgeMetricStepper(
-                            title: L10n.width,
-                            value: $model.targetWidth,
-                            range: 8 ... 512,
-                            step: 8,
-                            valueLabel: L10n.pixels(model.targetWidth)
-                        )
-                        ForgeMetricStepper(
-                            title: L10n.height,
-                            value: $model.targetHeight,
-                            range: 8 ... 512,
-                            step: 8,
-                            valueLabel: L10n.pixels(model.targetHeight)
-                        )
-                        ForgeMetricStepper(
-                            title: L10n.colors,
-                            value: $model.colorCount,
-                            range: 2 ... 64,
-                            step: 1,
-                            valueLabel: L10n.colorCount(model.colorCount)
-                        )
-                        ForgeMetricStepper(
-                            title: L10n.upscale,
-                            value: $model.upscale,
-                            range: 1 ... 32,
-                            step: 1,
-                            valueLabel: L10n.scale(model.upscale)
-                        )
-                    }
-                }
-
-                ForgeLabeledControl(label: L10n.dither) {
-                    ForgeSegmentedControl(
-                        selection: $model.dither,
-                        options: PixelDitherMode.allCases.map { mode in
-                            ForgeSegmentOption(
-                                id: mode.rawValue,
-                                value: mode,
-                                title: L10n.ditherName(mode)
-                            )
-                        }
-                    )
-                }
-
+    @ViewBuilder
+    private var homeContent: some View {
+        if model.records.isEmpty {
+            VStack(spacing: ForgeDesign.Spacing.regular) {
                 if let errorMessage = model.errorMessage {
                     ForgeAlertBanner(message: errorMessage)
                 }
-
-                Spacer(minLength: ForgeDesign.Spacing.compact)
-
-                VStack(spacing: ForgeDesign.Spacing.compact) {
-                    ForgeButton(
-                        title: model.isRendering ? L10n.rendering : L10n.render,
-                        icon: .render,
-                        role: .primary
-                    ) {
-                        model.render()
-                    }
-                    .disabled(model.sourceImage == nil || model.isRendering)
-
-                    ForgeButton(
-                        title: L10n.export,
-                        icon: .export
-                    ) {
-                        model.export()
-                    }
-                    .disabled(model.outputImage == nil || model.isRendering)
+                ForgeLibraryEmpty(
+                    title: L10n.homeEmptyTitle,
+                    detail: L10n.homeEmptyDetail,
+                    actionTitle: L10n.chooseImage
+                ) {
+                    model.isShowingImporter = true
                 }
+            }
+            .padding(ForgeDesign.Spacing.roomy)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            GeometryReader { proxy in
+                ScrollView {
+                    if let errorMessage = model.errorMessage {
+                        ForgeAlertBanner(message: errorMessage)
+                            .padding(.bottom, ForgeDesign.Spacing.regular)
+                    }
+                    LazyVGrid(
+                        columns: Array(
+                            repeating: GridItem(.flexible(), spacing: ForgeDesign.Spacing.regular),
+                            count: proxy.size.width < 720 ? 1 : 2
+                        ),
+                        spacing: ForgeDesign.Spacing.regular
+                    ) {
+                        ForEach(model.records) { record in
+                            ForgeGeneratedCard(
+                                image: model.thumbnails[record.id],
+                                title: record.sourceFilename,
+                                detail: "\(record.metadata.logicalWidth) × \(record.metadata.logicalHeight) → \(record.metadata.outputWidth) × \(record.metadata.outputHeight)",
+                                updated: Self.dateFormatter.string(from: record.updatedAt),
+                                open: {
+                                    Task { await model.open(record, entitlement: entitlement) }
+                                },
+                                delete: {
+                                    pendingDeletion = record
+                                }
+                            )
+                        }
+                    }
+                }
+                .padding(ForgeDesign.Spacing.roomy)
             }
         }
     }
 
-    private var statusText: String {
-        if model.isRendering {
-            L10n.statusRendering
-        } else if model.outputImage != nil {
-            L10n.statusRendered
-        } else if model.sourceImage != nil {
-            L10n.statusReady
-        } else {
-            L10n.statusWaiting
-        }
+    private var deletionIsPresented: Binding<Bool> {
+        Binding(
+            get: { pendingDeletion != nil },
+            set: { if !$0 { pendingDeletion = nil } }
+        )
     }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+}
+
+private extension UTType {
+    static let portablePixmap = UTType(filenameExtension: "ppm") ?? .data
 }

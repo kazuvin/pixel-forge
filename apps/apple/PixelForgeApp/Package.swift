@@ -18,5 +18,9 @@ let package = Package(
                 .process("Resources"),
             ]
         ),
+        .testTarget(
+            name: "PixelForgeAppTests",
+            dependencies: ["PixelForgeApp"]
+        ),
     ]
 )

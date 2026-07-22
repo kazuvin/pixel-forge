@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import type { LegalDocument, Locale } from "../content/copy";
+
+interface Props {
+  locale: Locale;
+  document: LegalDocument;
+  alternatePath: string;
+}
+
+const { locale, document, alternatePath } = Astro.props;
+---
+
+<BaseLayout locale={locale} title={document.title} description={document.summary} alternatePath={alternatePath}>
+  <article class="legal-shell">
+    <header class="page-intro">
+      <p class="eyebrow">{document.eyebrow}</p>
+      <h1>{document.title}</h1>
+      <p class="lede">{document.summary}</p>
+      <p class="updated">{document.updated}</p>
+    </header>
+    <div class="legal-sections">
+      {document.sections.map((section) => (
+        <section>
+          <h2>{section.heading}</h2>
+          {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+          {section.items && <ul>{section.items.map((item) => <li>{item}</li>)}</ul>}
+        </section>
+      ))}
+    </div>
+  </article>
+</BaseLayout>

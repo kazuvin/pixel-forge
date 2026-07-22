@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum ForgeTheme: String, CaseIterable, Identifiable {
+    case system
     case dark
     case light
 
@@ -10,6 +11,8 @@ enum ForgeTheme: String, CaseIterable, Identifiable {
 
     var palette: ForgePalette {
         switch self {
+        case .system:
+            .dark
         case .dark:
             .dark
         case .light:
@@ -17,8 +20,21 @@ enum ForgeTheme: String, CaseIterable, Identifiable {
         }
     }
 
-    var colorScheme: ColorScheme {
+    var colorScheme: ColorScheme? {
         switch self {
+        case .system:
+            nil
+        case .dark:
+            ColorScheme.dark
+        case .light:
+            ColorScheme.light
+        }
+    }
+
+    func resolvedPalette(systemScheme: ColorScheme) -> ForgePalette {
+        switch self {
+        case .system:
+            systemScheme == .dark ? .dark : .light
         case .dark:
             .dark
         case .light:
@@ -105,13 +121,15 @@ extension EnvironmentValues {
 }
 
 private struct ForgeThemeModifier: ViewModifier {
+    @Environment(\.colorScheme) private var systemScheme
     let theme: ForgeTheme
 
     func body(content: Content) -> some View {
+        let palette = theme.resolvedPalette(systemScheme: systemScheme)
         content
-            .environment(\.forgePalette, theme.palette)
+            .environment(\.forgePalette, palette)
             .preferredColorScheme(theme.colorScheme)
-            .tint(theme.palette.accent)
+            .tint(palette.accent)
     }
 }
 

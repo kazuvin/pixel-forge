@@ -3,6 +3,12 @@ import PixelCoreKit
 
 enum L10n {
     static var workbenchTitle: String { text("workbench.title") }
+    static var homeEyebrow: String { text("home.eyebrow") }
+    static var homeSubtitle: String { text("home.subtitle") }
+    static var homeEmptyTitle: String { text("home.empty.title") }
+    static var homeEmptyDetail: String { text("home.empty.detail") }
+    static var chooseImage: String { text("home.choose_image") }
+    static var localLibrary: String { text("home.library") }
     static var workbenchEyebrow: String { text("workbench.eyebrow") }
     static var choosePhoto: String { text("workbench.choose_photo") }
     static var settings: String { text("workbench.settings") }
@@ -21,6 +27,15 @@ enum L10n {
     static var render: String { text("action.render") }
     static var rendering: String { text("action.rendering") }
     static var export: String { text("action.export") }
+    static var convert: String { text("action.convert") }
+    static var adjust: String { text("action.adjust") }
+    static var updateImage: String { text("action.update_image") }
+    static var saveAsNew: String { text("action.save_as_new") }
+    static var delete: String { text("action.delete") }
+    static var cancel: String { text("action.cancel") }
+    static var close: String { text("action.close") }
+    static var returnToSettings: String { text("action.return_to_settings") }
+    static var overwrite: String { text("action.overwrite") }
     static var sourceNone: String { text("source.none") }
     static var statusReady: String { text("status.ready") }
     static var statusWaiting: String { text("status.waiting") }
@@ -30,6 +45,40 @@ enum L10n {
     static var selectFirst: String { text("error.select_first") }
     static var unsupportedImage: String { text("error.unsupported_image") }
     static var exportPanelMessage: String { text("export.panel_message") }
+    static var recipeOverwriteTitle: String { text("export.recipe_overwrite.title") }
+    static var recipeOverwriteDetail: String { text("export.recipe_overwrite.detail") }
+    static var conversionOptions: String { text("conversion.options") }
+    static var conversionOptionsDetail: String { text("conversion.options.detail") }
+    static var longSide: String { text("setting.long_side") }
+    static var crop: String { text("setting.crop") }
+    static var cropFull: String { text("setting.crop.full") }
+    static var cropRectangle: String { text("setting.crop.rectangle") }
+    static var palette: String { text("setting.palette") }
+    static var paletteSource: String { text("setting.palette.source") }
+    static var custom: String { text("setting.custom") }
+    static var customPalette: String { text("setting.custom_palette") }
+    static var preserveTone: String { text("setting.preserve_tone") }
+    static var saturation: String { text("setting.saturation") }
+    static var lightness: String { text("setting.lightness") }
+    static var outline: String { text("setting.outline") }
+    static var none: String { text("setting.none") }
+    static var black: String { text("setting.black") }
+    static var adaptive: String { text("setting.adaptive") }
+    static var threshold: String { text("setting.threshold") }
+    static var proOption: String { text("setting.pro_option") }
+    static var renderingDetail: String { text("conversion.rendering.detail") }
+    static var logicalSize: String { text("result.logical_size") }
+    static var outputSize: String { text("result.output_size") }
+    static var algorithm: String { text("result.algorithm") }
+    static var conversionFailed: String { text("conversion.failed") }
+    static var previousImagePreserved: String { text("conversion.previous_preserved") }
+    static var stateEditing: String { text("conversion.state.editing") }
+    static var stateRendering: String { text("conversion.state.rendering") }
+    static var stateResult: String { text("conversion.state.result") }
+    static var stateFailure: String { text("conversion.state.failure") }
+    static var deleteConfirmation: String { text("delete.confirmation") }
+    static var proRequired: String { text("error.pro_required") }
+    static var invalidPalette: String { text("error.invalid_palette") }
     static var appearanceTitle: String { text("settings.appearance.title") }
     static var appearanceEyebrow: String { text("settings.appearance.eyebrow") }
     static var appearanceDescription: String { text("settings.appearance.description") }
@@ -37,6 +86,28 @@ enum L10n {
     static var darkThemeDescription: String { text("settings.theme.dark.description") }
     static var lightTheme: String { text("settings.theme.light") }
     static var lightThemeDescription: String { text("settings.theme.light.description") }
+    static var systemTheme: String { text("settings.theme.system") }
+    static var systemThemeDescription: String { text("settings.theme.system.description") }
+    static var proTitle: String { text("settings.pro.title") }
+    static var proDescription: String { text("settings.pro.description") }
+    static var purchase: String { text("settings.pro.purchase") }
+    static var restorePurchase: String { text("settings.pro.restore") }
+    static var supportTitle: String { text("settings.support.title") }
+    static var review: String { text("settings.support.review") }
+    static var share: String { text("settings.support.share") }
+    static var feedback: String { text("settings.support.feedback") }
+    static var privacy: String { text("settings.support.privacy") }
+    static var terms: String { text("settings.support.terms") }
+    static var unavailableUntilConfigured: String { text("settings.support.unavailable") }
+    static var aboutTitle: String { text("settings.about.title") }
+    static var version: String { text("settings.about.version") }
+    static var proStatusUnknown: String { text("settings.pro.status.unknown") }
+    static var proStatusLoading: String { text("settings.pro.status.loading") }
+    static var proStatusFree: String { text("settings.pro.status.free") }
+    static var proStatusPending: String { text("settings.pro.status.pending") }
+    static var proStatusPurchased: String { text("settings.pro.status.purchased") }
+    static var proStatusRevoked: String { text("settings.pro.status.revoked") }
+    static var proStatusFailed: String { text("settings.pro.status.failed") }
     static var typographyTitle: String { text("settings.typography.title") }
     static var typographyDescription: String { text("settings.typography.description") }
     static var typographySample: String { text("settings.typography.sample") }
@@ -51,6 +122,10 @@ enum L10n {
 
     static func scale(_ value: Int) -> String {
         format("value.scale", value)
+    }
+
+    static func imageCount(_ value: Int) -> String {
+        format("home.image_count", value)
     }
 
     static func exportFailure(_ detail: String) -> String {
