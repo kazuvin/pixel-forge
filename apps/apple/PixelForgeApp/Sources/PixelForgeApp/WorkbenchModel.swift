@@ -8,7 +8,7 @@ final class WorkbenchModel: ObservableObject {
     @Published var isRendering = false
     @Published var sourceImage: NSImage?
     @Published var outputImage: NSImage?
-    @Published var sourceName = "写真が選択されていません"
+    @Published var sourceName = L10n.sourceNone
     @Published var sourceDimensions = "—"
     @Published var outputDimensions = "—"
     @Published var targetWidth = 64
@@ -50,7 +50,7 @@ final class WorkbenchModel: ObservableObject {
 
     func render() {
         guard let processor else {
-            errorMessage = "先に写真を選んでください。"
+            errorMessage = L10n.selectFirst
             return
         }
         let settings = PixelRenderSettings(
@@ -91,7 +91,7 @@ final class WorkbenchModel: ObservableObject {
         panel.allowedContentTypes = [.png]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = Self.suggestedOutputName(from: sourceName)
-        panel.message = "PNGと同じ場所に再生成用のrecipe JSONも保存します。"
+        panel.message = L10n.exportPanelMessage
         guard panel.runModal() == .OK, let pngURL = panel.url else { return }
 
         do {
@@ -100,7 +100,7 @@ final class WorkbenchModel: ObservableObject {
             try result.recipeJSON.write(to: recipeURL, atomically: true, encoding: .utf8)
             errorMessage = nil
         } catch {
-            errorMessage = "書き出せませんでした: \(error.localizedDescription)"
+            errorMessage = L10n.exportFailure(error.localizedDescription)
         }
     }
 
@@ -124,7 +124,6 @@ private enum WorkbenchError: LocalizedError {
     case unsupportedImage
 
     var errorDescription: String? {
-        "この画像を読み込めませんでした。PNGまたはJPEGを選んでください。"
+        L10n.unsupportedImage
     }
 }
-

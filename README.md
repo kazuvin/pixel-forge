@@ -10,6 +10,8 @@
 - `packages/PixelCoreKit`: 生成されたSwift bindingとXCFrameworkを包むSwift Packageです。
 - `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG/recipe書き出しを行うmacOS SwiftUIアプリです。
 
+SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothic16を使う共通design systemを持ちます。実装境界とUI変更手順は[`docs/design-system.md`](docs/design-system.md)と[`docs/ui-workflow.md`](docs/ui-workflow.md)を参照してください。
+
 ## 最初の実行
 
 ```bash

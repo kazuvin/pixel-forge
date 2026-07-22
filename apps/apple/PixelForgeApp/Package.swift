@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "PixelForgeApp",
+    defaultLocalization: "ja",
     platforms: [
         .macOS(.v14),
     ],
@@ -12,8 +13,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "PixelForgeApp",
-            dependencies: ["PixelCoreKit"]
+            dependencies: ["PixelCoreKit"],
+            resources: [
+                .process("Resources"),
+            ]
         ),
     ]
 )
-

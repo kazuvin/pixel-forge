@@ -7,6 +7,8 @@ smoke_dir="$root_dir/build/ci-smoke"
 
 cd "$root_dir"
 
+"$root_dir/scripts/verify-apple-design-system.sh"
+
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
@@ -26,4 +28,3 @@ swift test --package-path "$root_dir/packages/PixelCoreKit"
 swift build --package-path "$root_dir/apps/apple/PixelForgeApp"
 
 echo "ci-local passed"
-

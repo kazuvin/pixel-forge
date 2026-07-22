@@ -23,10 +23,16 @@
 - 同じ入力、設定、algorithm versionから同じRGBA出力を得られる決定性を守る。
 - 生成されたSwift bindingとXCFrameworkを直接編集しない。`scripts/build-apple.sh`で再生成する。
 - UIはshared tokenを利用し、出力画像には補間をかけない。
+- UI画面は`apps/apple/PixelForgeApp/Sources/PixelForgeApp/Design/`のtoken、style、componentだけを組み合わせる。画面側へ色、font、button chrome、surface shapeを直書きしない。
+- 必要なUI部品はまず既存の`Forge*` componentで表現できるか確認し、再利用可能な見た目は`Screens/`ではなく`Design/`へ追加する。
+- theme固有値は`ForgePalette.dark`と`ForgePalette.light`だけに置き、画面やcomponentでtheme分岐しない。
+- UI iconは`ForgeIcon`と`ForgeIconName`へpixel gridとして定義し、SF Symbolsを画面・共通componentから直接利用しない。
+- 表示文言は日英`Localizable.strings`へ同じkeyで追加し、UI fontは同梱のDotGothic16を`ForgeTypography`経由で使う。
+- `Design/`または`Screens/`を変更したら、黒基調・白基調の両方で起動確認し、`designs/reviews/pixel-forge-workbench--diagonal-pixel-border-icons-v2--{dark,light}.png`を更新する。
+- `scripts/verify-apple-design-system.sh`は上記の直書き、翻訳key差分、font、review screenshotを検査する。回避する変更は行わない。
 - 完了前に`./scripts/ci-local.sh`を実行する。
 - 既存の未コミット変更はユーザーの作業として扱い、勝手に戻さない。
 
 ## Git
 
 初期Git設定は意図的に未実施。ユーザーが準備するときは`docs/git-setup.md`に従う。
-

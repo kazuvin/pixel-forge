@@ -7,6 +7,10 @@
 - Swift連携にはUniFFI 0.32を使う。
 - Apple向けRust成果物はstatic libraryをXCFrameworkに包む。
 - 最初のUI targetはmacOS 14以降とする。
+- SwiftUIのthemeは`ForgePalette`を環境値として注入し、黒基調と白基調で同一layout/component treeを使う。
+- UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。
+- UI文言は日本語をdefault localization、英語を追加localizationとし、macOSの優先言語へ追従する。
+- 画面層は`Design/`のshared token/style/componentから組み立て、直接の色・font・control chrome指定をCIで拒否する。
 - core APIは同期処理とし、呼び出し側がバックグラウンド実行する。
 - v1のcore APIは`PixelSession::convert(RenderSettings)`とする。
 - cropは元画像座標の矩形または画像全体で指定し、論理解像度の短辺はcropの縦横比から決定する。
