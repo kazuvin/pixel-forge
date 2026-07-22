@@ -2,6 +2,7 @@ import Foundation
 import Photos
 import PixelCoreKit
 import UIKit
+import UniformTypeIdentifiers
 
 @MainActor
 final class HomeModel: ObservableObject {
@@ -9,16 +10,21 @@ final class HomeModel: ObservableObject {
     @Published var thumbnails: [UUID: UIImage] = [:]
     @Published var session: ConversionSessionModel?
     @Published var errorMessage: String?
+    @Published var actionMessage: String?
+    @Published var isSavingRecord = false
 
     private let store: LocalLibraryStore
     private let presetStore: ConversionPresetStore
+    private let photoLibrarySaver: any PhotoLibrarySaving
 
     init(
         store: LocalLibraryStore = LocalLibraryStore(),
-        presetStore: ConversionPresetStore = ConversionPresetStore()
+        presetStore: ConversionPresetStore = ConversionPresetStore(),
+        photoLibrarySaver: any PhotoLibrarySaving = SystemPhotoLibrarySaver()
     ) {
         self.store = store
         self.presetStore = presetStore
+        self.photoLibrarySaver = photoLibrarySaver
     }
 
     func loadLibrary() async {
@@ -114,6 +120,7 @@ final class HomeModel: ObservableObject {
         }
         thumbnails = Dictionary(uniqueKeysWithValues: records.map { ($0.id, image) })
         errorMessage = nil
+        actionMessage = nil
     }
 
     func open(_ record: GeneratedImageRecord, entitlement: ProEntitlementService) async {
@@ -146,6 +153,43 @@ final class HomeModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func adjust(_ record: GeneratedImageRecord, entitlement: ProEntitlementService) async {
+        await open(record, entitlement: entitlement)
+        session?.edit()
+    }
+
+    func saveToPhotos(_ record: GeneratedImageRecord) async {
+        guard !isSavingRecord else { return }
+        isSavingRecord = true
+        defer { isSavingRecord = false }
+        do {
+            let data = try await store.pngData(for: record)
+            try await photoLibrarySaver.savePNG(data, filename: Self.outputName(for: record.sourceFilename))
+            errorMessage = nil
+            actionMessage = L10n.photoSaveSuccess
+        } catch {
+            actionMessage = nil
+            errorMessage = L10n.photoSaveFailure(error.localizedDescription)
+        }
+    }
+
+    func copy(_ record: GeneratedImageRecord) async {
+        do {
+            let data = try await store.pngData(for: record)
+            UIPasteboard.general.setData(data, forPasteboardType: UTType.png.identifier)
+            errorMessage = nil
+            actionMessage = L10n.copySuccess
+        } catch {
+            actionMessage = nil
+            errorMessage = L10n.copyFailure(error.localizedDescription)
+        }
+    }
+
+    private static func outputName(for sourceFilename: String) -> String {
+        let stem = (sourceFilename as NSString).deletingPathExtension
+        return "\(stem)-pixel.png"
     }
 }
 
@@ -241,6 +285,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
     @Published var photoSaveState: PhotoSaveState = .idle
+    @Published var copyMessage: String?
     @Published var settingsCompatibilityWarning: String?
     @Published private(set) var savedPresets: [SavedConversionPreset] = []
     @Published var presetSuccessMessage: String?
@@ -452,6 +497,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     func edit() {
         errorMessage = nil
+        copyMessage = nil
         requiresPro = false
         photoSaveState = .idle
         restoreLastRenderedSettings()
@@ -650,6 +696,26 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             photoSaveState = .saved
         } catch {
             photoSaveState = .failed(L10n.photoSaveFailure(error.localizedDescription))
+        }
+    }
+
+    func copyOutput() {
+        guard let pngData = latestPNGData else { return }
+        UIPasteboard.general.setData(pngData, forPasteboardType: UTType.png.identifier)
+        errorMessage = nil
+        copyMessage = L10n.copySuccess
+    }
+
+    @discardableResult
+    func deleteCurrentRecord() async -> Bool {
+        guard let currentRecord else { return false }
+        do {
+            try await store.deleteRecord(id: currentRecord.id)
+            await onLibraryChange()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
         }
     }
 

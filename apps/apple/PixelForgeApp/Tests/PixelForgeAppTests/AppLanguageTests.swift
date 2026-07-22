@@ -5,10 +5,13 @@ import UIKit
 
 @Suite("App language")
 struct AppLanguageTests {
-    @Test("system language uses Japanese or English and otherwise falls back to English")
+    @Test("system language resolves every supported locale and otherwise falls back to English")
     func resolvesSystemLanguage() {
         #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["ja-JP"]) == "ja")
         #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["en-US"]) == "en")
+        #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["ko-KR"]) == "ko")
+        #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["zh-Hant-TW"]) == "zh-Hant")
+        #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["zh-TW"]) == "zh-Hant")
         #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: ["fr-FR", "ja-JP"]) == "en")
         #expect(AppLanguage.system.resolvedLanguageCode(preferredLanguages: []) == "en")
     }
@@ -17,6 +20,8 @@ struct AppLanguageTests {
     func resolvesManualLanguage() {
         #expect(AppLanguage.english.resolvedLanguageCode(preferredLanguages: ["ja-JP"]) == "en")
         #expect(AppLanguage.japanese.resolvedLanguageCode(preferredLanguages: ["en-US"]) == "ja")
+        #expect(AppLanguage.korean.resolvedLanguageCode(preferredLanguages: ["en-US"]) == "ko")
+        #expect(AppLanguage.traditionalChinese.resolvedLanguageCode(preferredLanguages: ["en-US"]) == "zh-Hant")
     }
 }
 

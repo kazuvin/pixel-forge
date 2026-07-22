@@ -43,10 +43,11 @@
 - 生成recordはrecipeに加えて内蔵スタイルIDまたは保存済みpreset UUIDを任意の参照として保持する。`調整する`では参照とrecipeの編集可能値が一致する場合に選択状態も復元し、参照がない旧recordは設定値の一致から内蔵／保存済みpresetを推定する。
 - SwiftUIのthemeは`ForgePalette`を環境値として注入し、system、dark、lightで同一layout/component treeを使う。
 - 無料版はsystem themeだけを選択でき、Proはdark/lightへ手動固定できる。
-- UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、日英で共通利用する。
-- UI文言は日本語と英語を持ち、設定画面でsystem、English、日本語を切り替える。system時はiOSの最優先言語が日本語なら日本語、英語なら英語、それ以外なら英語へ解決する。
+- UI fontはSIL Open Font License 1.1のDotGothic16をapp resourceとして同梱し、全対応言語で共通利用する。
+- UI文言は日本語、英語、韓国語、繁体字中国語を持ち、設定画面のpixel selectorでsystemと各言語を切り替える。system時はiOSの最優先言語が対応言語ならその言語、それ以外なら英語へ解決する。
+- ホームの生成結果cardは固定高とし、選択言語のlocaleで更新日時を表示する。tapでresult、長押しと振動で調整・写真保存・コピー・削除のpixel action dialogを開く。
 - 画像追加メニューは、利用可能な場合だけカメラ撮影を先頭に表示し、写真ライブラリ、Filesを続ける。撮影画像はJPEGへ正規化して既存の新規変換フローへ渡し、写真ライブラリへ自動保存しない。
-- 画像追加メニューと生成結果の削除確認はDesign層のpixel UI overlayを使い、Reduce Motionを尊重した表示アニメーションを持つ。
+- 画像追加メニュー、生成結果の操作dialog、削除確認、言語selectorはDesign層のpixel UI overlayを使い、Reduce Motionを尊重した表示アニメーションを持つ。
 - 設定と変換はDesign層の共通modal scaffoldを使い、iPhoneの上部safe areaと共通paddingを常に確保する。
 - iPhoneアプリは切り抜きUIを持たず、変換時のcropを常に画像全体へ設定する。coreと既存recipeのcrop互換性は維持する。
 - 数値設定は直接入力、増減buttonの長押し、水平scrubのすべてに対応する。

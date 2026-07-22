@@ -9,7 +9,7 @@ screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
 project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
 developer_scheme="$root_dir/apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj/xcshareddata/xcschemes/PixelForgeApp-Developer.xcscheme"
-review_screens=(home image-source-menu delete-dialog conversion-editing conversion-advanced conversion-style-picker palette-picker recipe-preset-library conversion-result settings settings-developer)
+review_screens=(home image-source-menu record-action-dialog delete-dialog conversion-editing conversion-advanced conversion-style-picker palette-picker recipe-preset-library conversion-result settings settings-language-selector settings-developer)
 review_themes=(dark light)
 
 required_files=(
@@ -21,6 +21,8 @@ required_files=(
   "$resources_dir/Fonts/OFL.txt"
   "$resources_dir/ja.lproj/Localizable.strings"
   "$resources_dir/en.lproj/Localizable.strings"
+  "$resources_dir/ko.lproj/Localizable.strings"
+  "$resources_dir/zh-Hant.lproj/Localizable.strings"
   "$project_spec"
   "$developer_scheme"
   "$root_dir/apps/apple/PixelForgeApp/Supporting/Info.plist"
@@ -81,7 +83,9 @@ fi
 
 for localization in \
   "$resources_dir/ja.lproj/Localizable.strings" \
-  "$resources_dir/en.lproj/Localizable.strings"; do
+  "$resources_dir/en.lproj/Localizable.strings" \
+  "$resources_dir/ko.lproj/Localizable.strings" \
+  "$resources_dir/zh-Hant.lproj/Localizable.strings"; do
   plutil -lint "$localization" >/dev/null
 done
 
@@ -89,11 +93,13 @@ temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/pixel-forge-design-check.XXXXXX")"
 trap 'rm -rf "$temporary_dir"' EXIT
 
 sed -nE 's/^"([^"]+)".*/\1/p' "$resources_dir/ja.lproj/Localizable.strings" | sort > "$temporary_dir/ja-keys"
-sed -nE 's/^"([^"]+)".*/\1/p' "$resources_dir/en.lproj/Localizable.strings" | sort > "$temporary_dir/en-keys"
-if ! diff -u "$temporary_dir/ja-keys" "$temporary_dir/en-keys"; then
-  echo "design-system check: Japanese and English localization keys differ" >&2
-  exit 1
-fi
+for language in en ko zh-Hant; do
+  sed -nE 's/^"([^"]+)".*/\1/p' "$resources_dir/$language.lproj/Localizable.strings" | sort > "$temporary_dir/$language-keys"
+  if ! diff -u "$temporary_dir/ja-keys" "$temporary_dir/$language-keys"; then
+    echo "design-system check: Japanese and $language localization keys differ" >&2
+    exit 1
+  fi
+done
 
 expected_font_sha="3ad9af88726d42b40f7f365f0dcac785af73cf20ea6f1d5b44e57cc21150b8f1"
 actual_font_sha="$(shasum -a 256 "$resources_dir/Fonts/DotGothic16-Regular.ttf" | awk '{print $1}')"

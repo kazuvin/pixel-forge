@@ -65,6 +65,10 @@
 		66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewConfiguration.swift; sourceTree = "<group>"; };
 		6A5F5AC2CCF6873B61593A67 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		6DA6CA0689237735602614E4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		70A11B22C33D44E55F660001 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Localizable.strings; sourceTree = "<group>"; };
+		70A11B22C33D44E55F660002 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		70A11B22C33D44E55F660003 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		70A11B22C33D44E55F660004 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		7F32269F63CB901A330C43BE /* PixelForgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelForgeApp.swift; sourceTree = "<group>"; };
 		88849A829235C65DAA8B2EF7 /* ConversionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionModalView.swift; sourceTree = "<group>"; };
 		9D15485300A32725BD372BF9 /* ForgeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeComponents.swift; sourceTree = "<group>"; };
@@ -301,6 +305,8 @@
 				Base,
 				en,
 				ja,
+				ko,
+				"zh-Hant",
 			);
 			mainGroup = 89E9FDD5C6BCD1986B118DB5;
 			minimizedProjectReferenceProxies = 1;
@@ -386,6 +392,8 @@
 			children = (
 				6DA6CA0689237735602614E4 /* en */,
 				E99DE51B78F67C90AD522E08 /* ja */,
+				70A11B22C33D44E55F660002 /* ko */,
+				70A11B22C33D44E55F660004 /* zh-Hant */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -395,6 +403,8 @@
 			children = (
 				6A5F5AC2CCF6873B61593A67 /* en */,
 				E09B6D3D6230FBB5DB729DB8 /* ja */,
+				70A11B22C33D44E55F660001 /* ko */,
+				70A11B22C33D44E55F660003 /* zh-Hant */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

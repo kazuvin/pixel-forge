@@ -52,9 +52,10 @@ Home
 - 撮影完了後は撮影画像を入力した共通変換フローのeditingを開く。撮影画像を写真ライブラリへ自動保存しない。
 - 初回の撮影操作でカメラ権限を要求する。拒否または制限時は理由とiOS設定への導線を表示し、カメラがない環境では撮影項目を表示しない。
 - 生成結果は新しい順で常に2列の`LazyVGrid`へ表示する。
-- preview領域の高さを揃え、画像はaspect fitかつ補間なしで表示する。
-- card全体のtapで共通変換フローのresultを開く。削除buttonはcard tapと競合させない。
-- 削除buttonは別メニューを挟まず、pixel UIの確認ダイアログをアニメーション付きで直接表示する。
+- previewとmetadata領域の高さを揃え、文字量が異なってもcard全体の高さを統一する。画像はaspect fitかつ補間なしで表示する。
+- card全体のtapで共通変換フローのresultを開く。card内に削除buttonを置かない。
+- cardを長押しすると振動後にpixel UIの操作dialogをアニメーション付きで表示し、`調整する`、`写真に保存`、`コピーする`、`削除する`を選べる。削除選択時は続けて確認dialogを表示する。
+- cardの更新日時は選択中の言語と地域に合わせて表示する。
 - 下端にはローカル保存であることと件数を短く表示する。
 
 ### Empty
@@ -119,6 +120,7 @@ Home
 │ └───────────────────────┘ │
 │ size / palette / version  │
 │ [調整する] [写真に保存]   │
+│ [コピー]   [削除]         │
 └───────────────────────────┘
 ```
 
@@ -127,6 +129,7 @@ Home
 - 論理寸法、保存寸法、palette、algorithm versionを表示する。
 - `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeの全パラメータと内蔵／保存済みプリセットの選択状態を復元する。
 - 保存はPNG画像だけをPhotosの追加専用権限で写真アプリへ追加し、成功または失敗を同じresult内に表示する。recipe JSONは外部へ渡さない。
+- Homeの長押しdialogと同じく、result内から調整、写真保存、コピー、削除を実行できる。
 
 ## Settings
 
@@ -135,7 +138,7 @@ Home
 │ [PF] 設定              [×]│
 ├───────────────────────────┤
 │ LANGUAGE                  │
-│ [System] [English] [日本語]│
+│ [現在の言語         ▣]    │
 │                           │
 │ APPEARANCE                │
 │ iOSに合わせる             │
@@ -149,8 +152,8 @@ Home
 └───────────────────────────┘
 ```
 
-- 言語の初期値は`システムデフォルト`とし、`English`、`日本語`へ手動固定できる。
-- system時はiOSの最優先言語だけを評価し、日本語なら日本語、英語なら英語、それ以外なら英語へfallbackする。
+- 言語の初期値は`システムデフォルト`とし、pixel selectorから`English`、`日本語`、`한국어`、`繁體中文（台灣）`へ手動固定できる。
+- system時はiOSの最優先言語だけを評価し、対応言語ならその言語、それ以外なら英語へfallbackする。
 - 言語変更はその場で画面文言とsupport URLへ反映し、再起動後も保持する。
 - 無料版はiOS appearanceへの自動追従を利用でき、Proはdark/lightを手動固定できる。
 - Supportにはレビュー、シェア、Googleフォーム、privacy、termsを置き、Aboutにはversionとbuildを表示する。
@@ -160,16 +163,17 @@ Home
 
 - app targetは`TARGETED_DEVICE_FAMILY = 1`、`SUPPORTS_MACCATALYST = NO`とする。
 - `UISupportedInterfaceOrientations`は`UIInterfaceOrientationPortrait`だけを含める。
-- すべてのicon buttonに日英のaccessibility labelを付ける。
+- すべてのicon buttonに4言語のaccessibility labelを付ける。
 - Dynamic Typeによる極端な崩れ、VoiceOver順序、dark/light contrast、Reduce Motionをrelease前に実機確認する。
 - 小さいiPhoneでも2列gridを維持し、card名は省略、重要metadataは複数行で表示する。
 
 ## Review screenshots
 
-次の22枚をiPhone Simulatorの縦向きで保存する。
+次の26枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
+- `pixel-forge-record-action-dialog--{dark,light}.png`
 - `pixel-forge-delete-dialog--{dark,light}.png`
 - `pixel-forge-conversion-editing--{dark,light}.png`
 - `pixel-forge-conversion-advanced--{dark,light}.png`
@@ -178,6 +182,7 @@ Home
 - `pixel-forge-recipe-preset-library--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`
+- `pixel-forge-settings-language-selector--{dark,light}.png`
 - `pixel-forge-settings-developer--{dark,light}.png`
 
 自動取得は`./scripts/capture-apple-review.sh`を使う。

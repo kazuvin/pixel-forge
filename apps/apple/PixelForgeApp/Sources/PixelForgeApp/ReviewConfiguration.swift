@@ -4,6 +4,7 @@ enum ReviewScreen: String {
     case home
     case imageSourceMenu = "image-source-menu"
     case deleteDialog = "delete-dialog"
+    case recordActionDialog = "record-action-dialog"
     case conversionEditing = "conversion-editing"
     case conversionAdvanced = "conversion-advanced"
     case conversionStylePicker = "conversion-style-picker"
@@ -12,6 +13,7 @@ enum ReviewScreen: String {
     case conversionResult = "conversion-result"
     case settings
     case settingsDeveloper = "settings-developer"
+    case settingsLanguageSelector = "settings-language-selector"
 }
 
 struct ReviewConfiguration {

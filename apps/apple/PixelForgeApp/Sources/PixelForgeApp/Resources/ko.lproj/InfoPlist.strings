@@ -1,0 +1,2 @@
+"NSCameraUsageDescription" = "촬영한 사진을 기기 안에서 픽셀 아트로 변환하기 위해 카메라를 사용합니다.";
+"NSPhotoLibraryAddUsageDescription" = "사용자가 저장을 선택하면 변환한 PNG 이미지를 사진 앱에 추가합니다.";

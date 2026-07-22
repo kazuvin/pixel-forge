@@ -5,6 +5,8 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     case system
     case english = "en"
     case japanese = "ja"
+    case korean = "ko"
+    case traditionalChinese = "zh-Hant"
 
     static let storageKey = "pixel-forge.language"
     var id: Self { self }
@@ -20,15 +22,36 @@ enum AppLanguage: String, CaseIterable, Identifiable {
             return "en"
         case .japanese:
             return "ja"
+        case .korean:
+            return "ko"
+        case .traditionalChinese:
+            return "zh-Hant"
         case .system:
             guard let preferred = preferredLanguages.first else { return "en" }
-            let code = Locale(identifier: preferred).language.languageCode?.identifier
-            return code == "ja" ? "ja" : "en"
+            let identifier = preferred.replacingOccurrences(of: "_", with: "-").lowercased()
+            if identifier.hasPrefix("ja") { return "ja" }
+            if identifier.hasPrefix("ko") { return "ko" }
+            if identifier.hasPrefix("zh-hant")
+                || identifier.hasPrefix("zh-tw")
+                || identifier.hasPrefix("zh-hk")
+                || identifier.hasPrefix("zh-mo") {
+                return "zh-Hant"
+            }
+            return "en"
         }
     }
 
     var locale: Locale {
-        Locale(identifier: resolvedLanguageCode())
+        let code = resolvedLanguageCode()
+        return Locale(identifier: code == "zh-Hant" ? "zh_Hant_TW" : code)
+    }
+
+    func formattedLibraryDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 
@@ -55,6 +78,7 @@ enum L10n {
     static var homeEmptyTitle: String { text("home.empty.title") }
     static var homeEmptyDetail: String { text("home.empty.detail") }
     static var chooseImage: String { text("home.choose_image") }
+    static var openImage: String { text("home.open_image") }
     static var imageSourceEyebrow: String { text("image_source.eyebrow") }
     static var localLibrary: String { text("home.library") }
     static var workbenchEyebrow: String { text("workbench.eyebrow") }
@@ -84,6 +108,7 @@ enum L10n {
     static var adjust: String { text("action.adjust") }
     static var updateImage: String { text("action.update_image") }
     static var saveAsNew: String { text("action.save_as_new") }
+    static var copy: String { text("action.copy") }
     static var delete: String { text("action.delete") }
     static var cancel: String { text("action.cancel") }
     static var done: String { text("action.done") }
@@ -196,12 +221,16 @@ enum L10n {
     static var deleteEyebrow: String { text("delete.eyebrow") }
     static var deleteTitle: String { text("delete.title") }
     static var deleteDetail: String { text("delete.detail") }
+    static var recordActionsEyebrow: String { text("record_actions.eyebrow") }
+    static var recordActionsTitle: String { text("record_actions.title") }
+    static var recordActionsDetail: String { text("record_actions.detail") }
     static var proRequired: String { text("error.pro_required") }
     static var invalidPalette: String { text("error.invalid_palette") }
     static var cameraCaptureFailed: String { text("error.camera_capture_failed") }
     static var cameraPermissionTitle: String { text("camera.permission.title") }
     static var cameraPermissionDetail: String { text("camera.permission.detail") }
     static var photoSaveSuccess: String { text("photos.save.success") }
+    static var copySuccess: String { text("copy.success") }
     static var photosAccessDenied: String { text("error.photos_access_denied") }
     static var invalidPhotoImage: String { text("error.photo_image_invalid") }
     static var appearanceTitle: String { text("settings.appearance.title") }
@@ -242,6 +271,8 @@ enum L10n {
     static var languageSystem: String { text("settings.language.system") }
     static var languageEnglish: String { text("settings.language.english") }
     static var languageJapanese: String { text("settings.language.japanese") }
+    static var languageKorean: String { text("settings.language.korean") }
+    static var languageTraditionalChinese: String { text("settings.language.traditional_chinese") }
     static var developerEyebrow: String { text("settings.developer.eyebrow") }
     static var developerTitle: String { text("settings.developer.title") }
     static var developerDescription: String { text("settings.developer.description") }
@@ -270,6 +301,10 @@ enum L10n {
 
     static func photoSaveFailure(_ detail: String) -> String {
         format("error.photo_save_failed", detail)
+    }
+
+    static func copyFailure(_ detail: String) -> String {
+        format("error.copy_failed", detail)
     }
 
     static func recipePresetCount(_ value: Int) -> String {

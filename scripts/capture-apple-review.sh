@@ -85,6 +85,7 @@ capture() {
 for theme in dark light; do
   capture home "$theme"
   capture image-source-menu "$theme"
+  capture record-action-dialog "$theme"
   capture delete-dialog "$theme"
   capture conversion-editing "$theme"
   capture conversion-advanced "$theme"
@@ -93,6 +94,7 @@ for theme in dark light; do
   capture recipe-preset-library "$theme"
   capture conversion-result "$theme"
   capture settings "$theme"
+  capture settings-language-selector "$theme"
 done
 
 if ! xcrun simctl uninstall "$device_id" "$bundle_id" >/dev/null 2>&1; then

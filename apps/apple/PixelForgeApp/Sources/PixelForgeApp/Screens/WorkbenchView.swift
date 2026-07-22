@@ -9,6 +9,7 @@ struct WorkbenchView: View {
     @StateObject private var model = HomeModel()
     let reviewScreen: ReviewScreen?
     @State private var pendingDeletion: GeneratedImageRecord?
+    @State private var selectedRecordForActions: GeneratedImageRecord?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var pendingCameraCapture: CameraCapture?
     @State private var showsCameraPicker = false
@@ -52,7 +53,7 @@ struct WorkbenchView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .fullScreenCover(isPresented: $showsSettings) {
-            ThemeSettingsView()
+            ThemeSettingsView(opensLanguageSelector: reviewScreen == .settingsLanguageSelector)
                 .environmentObject(entitlement)
         }
         .photosPicker(
@@ -110,6 +111,16 @@ struct WorkbenchView: View {
             )
         }
         .forgeOverlay {
+            ForgeContextActionDialog(
+                isPresented: recordActionIsPresented,
+                eyebrow: L10n.recordActionsEyebrow,
+                title: selectedRecordForActions?.sourceFilename ?? L10n.recordActionsTitle,
+                detail: L10n.recordActionsDetail,
+                items: recordActionItems,
+                cancelTitle: L10n.cancel
+            )
+        }
+        .forgeOverlay {
             ForgeConfirmationDialog(
                 isPresented: deletionIsPresented,
                 eyebrow: L10n.deleteEyebrow,
@@ -163,6 +174,9 @@ struct WorkbenchView: View {
         case .deleteDialog:
             model.prepareReviewHome(imageData: sourceData)
             pendingDeletion = model.records.first
+        case .recordActionDialog:
+            model.prepareReviewHome(imageData: sourceData)
+            selectedRecordForActions = model.records.first
         case .conversionEditing:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
         case .conversionAdvanced:
@@ -179,7 +193,7 @@ struct WorkbenchView: View {
         case .conversionResult:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.convert(saveMode: .newRecord)
-        case .settings, .settingsDeveloper:
+        case .settings, .settingsDeveloper, .settingsLanguageSelector:
             showsSettings = true
         }
     }
@@ -241,36 +255,49 @@ struct WorkbenchView: View {
                 if let errorMessage = model.errorMessage {
                     ForgeAlertBanner(message: errorMessage)
                 }
+                if let actionMessage = model.actionMessage {
+                    ForgeSuccessBanner(message: actionMessage)
+                }
                 ForgeLibraryEmpty(
                     title: L10n.homeEmptyTitle,
                     detail: L10n.homeEmptyDetail,
                     actionTitle: L10n.chooseImage
                 ) { showsSourceMenu = true }
             }
-            .padding(ForgeDesign.Spacing.regular)
+            .padding(.horizontal, ForgeDesign.Spacing.regular)
+            .padding(.top, ForgeDesign.Spacing.regular)
+            .padding(.bottom, ForgeDesign.Spacing.regular)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollView {
-                if let errorMessage = model.errorMessage {
-                    ForgeAlertBanner(message: errorMessage)
-                }
-                LazyVGrid(
-                    columns: [GridItem(.flexible()), GridItem(.flexible())],
-                    spacing: ForgeDesign.Spacing.compact
-                ) {
-                    ForEach(model.records) { record in
-                        ForgeGeneratedCard(
-                            image: model.thumbnails[record.id],
-                            title: record.sourceFilename,
-                            detail: "\(record.metadata.logicalWidth)×\(record.metadata.logicalHeight) → \(record.metadata.outputWidth)×\(record.metadata.outputHeight)",
-                            updated: Self.dateFormatter.string(from: record.updatedAt),
-                            open: { Task { await model.open(record, entitlement: entitlement) } },
-                            delete: { pendingDeletion = record }
-                        )
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: ForgeDesign.Spacing.compact) {
+                    if let errorMessage = model.errorMessage {
+                        ForgeAlertBanner(message: errorMessage)
+                    }
+                    if let actionMessage = model.actionMessage {
+                        ForgeSuccessBanner(message: actionMessage)
+                    }
+                    LazyVGrid(
+                        columns: [GridItem(.flexible()), GridItem(.flexible())],
+                        spacing: ForgeDesign.Spacing.compact
+                    ) {
+                        ForEach(model.records) { record in
+                            ForgeGeneratedCard(
+                                image: model.thumbnails[record.id],
+                                title: record.sourceFilename,
+                                detail: "\(record.metadata.logicalWidth)×\(record.metadata.logicalHeight) → \(record.metadata.outputWidth)×\(record.metadata.outputHeight)",
+                                updated: AppLanguage.selected.formattedLibraryDate(record.updatedAt),
+                                open: { Task { await model.open(record, entitlement: entitlement) } },
+                                showActions: { selectedRecordForActions = record }
+                            )
+                        }
                     }
                 }
+                .padding(.horizontal, ForgeDesign.Spacing.compact)
+                .padding(.top, ForgeDesign.Spacing.regular)
+                .padding(.bottom, ForgeDesign.Spacing.compact)
             }
-            .padding(ForgeDesign.Spacing.compact)
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical)
         }
     }
 
@@ -278,12 +305,35 @@ struct WorkbenchView: View {
         Binding(get: { pendingDeletion != nil }, set: { if !$0 { pendingDeletion = nil } })
     }
 
-    private static let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter
-    }()
+    private var recordActionIsPresented: Binding<Bool> {
+        Binding(
+            get: { selectedRecordForActions != nil },
+            set: { if !$0 { selectedRecordForActions = nil } }
+        )
+    }
+
+    private var recordActionItems: [ForgeDialogActionItem] {
+        guard let record = selectedRecordForActions else { return [] }
+        return [
+            ForgeDialogActionItem(id: "adjust", title: L10n.adjust, icon: .edit) {
+                Task { await model.adjust(record, entitlement: entitlement) }
+            },
+            ForgeDialogActionItem(id: "save", title: L10n.saveToPhotos, icon: .savePhoto) {
+                Task { await model.saveToPhotos(record) }
+            },
+            ForgeDialogActionItem(id: "copy", title: L10n.copy, icon: .copy) {
+                Task { await model.copy(record) }
+            },
+            ForgeDialogActionItem(
+                id: "delete",
+                title: L10n.delete,
+                icon: .trash,
+                role: .destructive
+            ) {
+                pendingDeletion = record
+            },
+        ]
+    }
 
     private static let cameraFilenameFormatter: DateFormatter = {
         let formatter = DateFormatter()

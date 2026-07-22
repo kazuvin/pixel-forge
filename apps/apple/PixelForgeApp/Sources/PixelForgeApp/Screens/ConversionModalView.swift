@@ -8,6 +8,7 @@ struct ConversionModalView: View {
     @State private var showsPresetLibrary: Bool
     @State private var showsStylePicker: Bool
     @State private var showsAdvancedSettings: Bool
+    @State private var showsResultDeleteConfirmation = false
     private let loadsPresetsOnAppear: Bool
 
     init(
@@ -63,6 +64,22 @@ struct ConversionModalView: View {
         .onChange(of: model.state) { _, state in
             if state == .editing, model.currentStyleIsCustom {
                 showsAdvancedSettings = true
+            }
+        }
+        .forgeOverlay {
+            ForgeConfirmationDialog(
+                isPresented: $showsResultDeleteConfirmation,
+                eyebrow: L10n.deleteEyebrow,
+                title: L10n.deleteTitle,
+                detail: L10n.deleteDetail,
+                confirmTitle: L10n.delete,
+                cancelTitle: L10n.cancel
+            ) {
+                Task {
+                    if await model.deleteCurrentRecord() {
+                        close()
+                    }
+                }
             }
         }
     }
@@ -306,21 +323,19 @@ struct ConversionModalView: View {
                 case let .failed(message):
                     ForgeAlertBanner(message: message)
                 }
-                HStack(spacing: ForgeDesign.Spacing.compact) {
-                    ForgeButton(title: L10n.adjust, icon: .edit) {
-                        model.edit()
-                    }
-                    ForgeButton(
-                        title: model.photoSaveState == .saving
-                            ? L10n.savingToPhotos
-                            : L10n.saveToPhotos,
-                        icon: .savePhoto,
-                        role: .primary
-                    ) {
-                        Task { await model.saveOutputToPhotos() }
-                    }
-                    .disabled(model.photoSaveState == .saving)
+                if let copyMessage = model.copyMessage {
+                    ForgeSuccessBanner(message: copyMessage)
                 }
+                if let errorMessage = model.errorMessage {
+                    ForgeAlertBanner(message: errorMessage)
+                }
+                ForgeRecordActionPanel(
+                    adjust: { model.edit() },
+                    save: { Task { await model.saveOutputToPhotos() } },
+                    copy: { model.copyOutput() },
+                    delete: { showsResultDeleteConfirmation = true },
+                    isSaving: model.photoSaveState == .saving
+                )
             }
             .padding(ForgeDesign.Spacing.regular)
             .frame(maxWidth: .infinity)

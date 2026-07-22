@@ -8,7 +8,7 @@ Pixel ForgeのSwiftUI design systemは、pixel-art変換作業を行う「機材
 - Font/type scale: `Design/ForgeTypography.swift`
 - Pixel icon set: `Design/ForgeIcons.swift`
 - Shared style/components: `Design/ForgeComponents.swift`
-- Japanese/English copy: `Resources/{ja,en}.lproj/Localizable.strings`
+- Localized copy: `Resources/{ja,en,ko,zh-Hant}.lproj/Localizable.strings`
 - Screen composition: `Screens/*.swift`
 
 ## Theme contract
@@ -25,7 +25,7 @@ Pixel ForgeのSwiftUI design systemは、pixel-art変換作業を行う「機材
 - Information: `ForgeSectionHeader`, `ForgeAlertBanner`, `ForgeStatusStrip`
 - Workbench: `ForgeTopBar`, `ForgePreviewPane`, `ForgeEmptyState`
 - Settings: `ForgeThemeCard`, `ForgeTypographySample`
-- Overlay: `ForgeActionMenu`, `ForgeConfirmationDialog`
+- Overlay: `ForgeActionMenu`, `ForgeContextActionDialog`, `ForgeConfirmationDialog`, `ForgeSelectionDialog`
 
 Screenはこれらを組み合わせ、再利用されるchromeをprivate viewとして複製しない。新規componentはtheme環境、keyboard/disabled state、accessibility label、日英の文字長を考慮する。
 

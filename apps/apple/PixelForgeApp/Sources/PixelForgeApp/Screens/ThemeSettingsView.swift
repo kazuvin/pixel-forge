@@ -9,6 +9,11 @@ struct ThemeSettingsView: View {
     @State private var showsProExplanation = false
     @State private var shareItems: [Any] = []
     @State private var showsShareSheet = false
+    @State private var showsLanguageSelector: Bool
+
+    init(opensLanguageSelector: Bool = false) {
+        _showsLanguageSelector = State(initialValue: opensLanguageSelector)
+    }
 
     var body: some View {
         ForgeModalScaffold(
@@ -43,6 +48,16 @@ struct ThemeSettingsView: View {
         .onChange(of: entitlement.status) { _, _ in
             enforceAvailableTheme()
         }
+        .forgeOverlay {
+            ForgeSelectionDialog(
+                isPresented: $showsLanguageSelector,
+                selection: languageSelection,
+                eyebrow: L10n.languageEyebrow,
+                title: L10n.languageTitle,
+                options: languageOptions,
+                cancelTitle: L10n.cancel
+            )
+        }
     }
 
     private var language: some View {
@@ -52,14 +67,12 @@ struct ThemeSettingsView: View {
                 title: L10n.languageTitle,
                 detail: L10n.languageDescription
             )
-            ForgeSegmentedControl(
-                selection: languageSelection,
-                options: [
-                    ForgeSegmentOption(id: "system", value: .system, title: L10n.languageSystem),
-                    ForgeSegmentOption(id: "en", value: .english, title: L10n.languageEnglish),
-                    ForgeSegmentOption(id: "ja", value: .japanese, title: L10n.languageJapanese),
-                ]
-            )
+            ForgePixelSelectorButton(
+                label: L10n.languageTitle,
+                value: selectedLanguageTitle
+            ) {
+                showsLanguageSelector = true
+            }
         }
     }
 
@@ -201,6 +214,35 @@ struct ThemeSettingsView: View {
             get: { AppLanguage(rawValue: languageRawValue) ?? .system },
             set: { languageRawValue = $0.rawValue }
         )
+    }
+
+    private var languageOptions: [ForgeSelectionOption<AppLanguage>] {
+        [
+            ForgeSelectionOption(id: "system", value: .system, title: L10n.languageSystem),
+            ForgeSelectionOption(id: "en", value: .english, title: L10n.languageEnglish),
+            ForgeSelectionOption(id: "ja", value: .japanese, title: L10n.languageJapanese),
+            ForgeSelectionOption(id: "ko", value: .korean, title: L10n.languageKorean),
+            ForgeSelectionOption(
+                id: "zh-Hant",
+                value: .traditionalChinese,
+                title: L10n.languageTraditionalChinese
+            ),
+        ]
+    }
+
+    private var selectedLanguageTitle: String {
+        switch languageSelection.wrappedValue {
+        case .system:
+            L10n.languageSystem
+        case .english:
+            L10n.languageEnglish
+        case .japanese:
+            L10n.languageJapanese
+        case .korean:
+            L10n.languageKorean
+        case .traditionalChinese:
+            L10n.languageTraditionalChinese
+        }
     }
 
     private var developerProSelection: Binding<Bool> {

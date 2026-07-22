@@ -195,7 +195,8 @@ struct ForgeTopBar<Trailing: View>: View {
             trailing()
         }
         .padding(.horizontal, ForgeDesign.Spacing.regular)
-        .frame(height: ForgeDesign.Size.toolbarHeight)
+        .padding(.top, ForgeDesign.Spacing.regular)
+        .frame(height: ForgeDesign.Size.toolbarHeight, alignment: .bottom)
         .background(palette.panel)
     }
 }
@@ -1146,10 +1147,9 @@ private struct ForgePaletteReferencePreview: View {
     var body: some View {
         Canvas(rendersAsynchronously: false) { context, size in
             let sample = colors.isEmpty ? [palette.muted, palette.surfaceRaised, palette.accent] : colors.map(forgePaletteColor)
-            let columns = 8
-            let rows = 6
-            let cellWidth = size.width / CGFloat(columns)
-            let cellHeight = size.height / CGFloat(rows)
+            let cellSize = max(1, floor(size.height / 6))
+            let columns = max(1, Int(ceil(size.width / cellSize)))
+            let rows = max(1, Int(ceil(size.height / cellSize)))
             for row in 0 ..< rows {
                 for column in 0 ..< columns {
                     let horizon = row < 2
@@ -1166,10 +1166,10 @@ private struct ForgePaletteReferencePreview: View {
                         index = (row + column) % sample.count
                     }
                     let rect = CGRect(
-                        x: CGFloat(column) * cellWidth,
-                        y: CGFloat(row) * cellHeight,
-                        width: ceil(cellWidth),
-                        height: ceil(cellHeight)
+                        x: CGFloat(column) * cellSize,
+                        y: CGFloat(row) * cellSize,
+                        width: cellSize,
+                        height: cellSize
                     )
                     context.fill(Path(rect), with: .color(sample[index]))
                 }
@@ -1444,53 +1444,335 @@ struct ForgeGeneratedCard: View {
     let detail: String
     let updated: String
     let open: () -> Void
-    let delete: () -> Void
+    let showActions: () -> Void
 
     var body: some View {
         ForgePixelSurface(level: .surface, padding: 0) {
             VStack(spacing: 0) {
-                Button(action: open) {
-                    ZStack {
-                        ForgePixelGridBackground()
-                        if let image {
-                            Image(uiImage: image)
-                                .resizable()
-                                .interpolation(.none)
-                                .scaledToFit()
-                                .padding(ForgeDesign.Spacing.compact)
-                        }
+                ZStack {
+                    ForgePixelGridBackground()
+                    if let image {
+                        Image(uiImage: image)
+                            .resizable()
+                            .interpolation(.none)
+                            .scaledToFit()
+                            .padding(ForgeDesign.Spacing.compact)
                     }
-                    .frame(height: 136)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .frame(height: 128)
                 ForgeDivider()
-                HStack(spacing: ForgeDesign.Spacing.compact) {
-                    Button(action: open) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
-                                Text(title)
-                                    .forgeTextStyle(.heading)
-                                    .lineLimit(1)
-                                Text(detail)
-                                    .forgeTextStyle(.caption)
-                                    .foregroundStyle(palette.muted)
-                                Text(updated)
-                                    .forgeTextStyle(.micro)
-                                    .foregroundStyle(palette.muted)
-                            }
-                            Spacer()
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    ForgeIconButton(icon: .trash, accessibilityLabel: L10n.delete) {
-                        delete()
-                    }
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                    Text(title)
+                        .forgeTextStyle(.heading)
+                        .lineLimit(1)
+                    Text(detail)
+                        .forgeTextStyle(.caption)
+                        .foregroundStyle(palette.muted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Text(updated)
+                        .forgeTextStyle(.micro)
+                        .foregroundStyle(palette.muted)
+                        .lineLimit(1)
                 }
                 .padding(ForgeDesign.Spacing.compact)
+                .frame(maxWidth: .infinity, minHeight: 76, maxHeight: 76, alignment: .topLeading)
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: open)
+        .onLongPressGesture(minimumDuration: 0.45, maximumDistance: 18) {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            showActions()
+        }
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: Text(L10n.openImage), open)
+        .accessibilityAction(named: Text(L10n.recordActionsTitle), showActions)
+    }
+}
+
+enum ForgeDialogActionRole {
+    case standard
+    case destructive
+}
+
+struct ForgeDialogActionItem: Identifiable {
+    let id: String
+    let title: String
+    let icon: ForgeIconName
+    var role: ForgeDialogActionRole = .standard
+    let action: () -> Void
+}
+
+struct ForgeContextActionDialog: View {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var isPresented: Bool
+    let eyebrow: String
+    let title: String
+    let detail: String
+    let items: [ForgeDialogActionItem]
+    let cancelTitle: String
+    @State private var isVisible = false
+
+    var body: some View {
+        ZStack {
+            if isVisible {
+                palette.canvas
+                    .opacity(0.82)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+                    .transition(.opacity)
+
+                ForgePixelSurface(level: .raised) {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+                        ForgeSectionHeader(eyebrow: eyebrow, title: title, detail: detail)
+                        ForEach(items) { item in
+                            ForgeContextActionRow(item: item) {
+                                dismiss(then: item.action)
+                            }
+                        }
+                        ForgeButton(title: cancelTitle, icon: .close) {
+                            dismiss()
+                        }
+                    }
+                }
+                .frame(maxWidth: 360)
+                .padding(ForgeDesign.Spacing.regular)
+                .transition(
+                    reduceMotion
+                        ? .opacity
+                        : .scale(scale: 0.9, anchor: .center).combined(with: .opacity)
+                )
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .onAppear { setVisible(isPresented, animated: false) }
+        .onChange(of: isPresented) { _, newValue in
+            setVisible(newValue, animated: true)
+        }
+    }
+
+    private func dismiss(then action: (() -> Void)? = nil) {
+        setVisible(false, animated: true)
+        action?()
+        isPresented = false
+    }
+
+    private func setVisible(_ visible: Bool, animated: Bool) {
+        guard animated, !reduceMotion else {
+            isVisible = visible
+            return
+        }
+        withAnimation(.spring(duration: 0.24, bounce: 0.12)) {
+            isVisible = visible
+        }
+    }
+}
+
+private struct ForgeContextActionRow: View {
+    @Environment(\.forgePalette) private var palette
+    let item: ForgeDialogActionItem
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                ForgeIcon(
+                    name: item.icon,
+                    colorRole: item.role == .destructive ? .accentInk : .accent
+                )
+                Text(item.title)
+                    .forgeTextStyle(.body)
+                Spacer()
+            }
+            .padding(.horizontal, ForgeDesign.Spacing.compact)
+            .frame(minHeight: ForgeDesign.Size.controlHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(item.role == .destructive ? palette.accentInk : palette.ink)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(item.role == .destructive ? palette.danger : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: item.role == .destructive ? palette.danger : palette.grid,
+                cut: ForgeDesign.Size.compactCornerCut
+            )
+        }
+    }
+}
+
+struct ForgeRecordActionPanel: View {
+    let adjust: () -> Void
+    let save: () -> Void
+    let copy: () -> Void
+    let delete: () -> Void
+    let isSaving: Bool
+
+    var body: some View {
+        LazyVGrid(
+            columns: [GridItem(.flexible()), GridItem(.flexible())],
+            spacing: ForgeDesign.Spacing.compact
+        ) {
+            ForgeButton(title: L10n.adjust, icon: .edit, action: adjust)
+            ForgeButton(
+                title: isSaving ? L10n.savingToPhotos : L10n.saveToPhotos,
+                icon: .savePhoto,
+                role: .primary,
+                action: save
+            )
+            .disabled(isSaving)
+            ForgeButton(title: L10n.copy, icon: .copy, action: copy)
+            ForgeDestructiveButton(title: L10n.delete, icon: .trash, action: delete)
+        }
+    }
+}
+
+struct ForgeSelectionOption<Value: Hashable>: Identifiable {
+    let id: String
+    let value: Value
+    let title: String
+}
+
+struct ForgePixelSelectorButton: View {
+    @Environment(\.forgePalette) private var palette
+    let label: String
+    let value: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                    Text(label)
+                        .forgeTextStyle(.micro)
+                        .foregroundStyle(palette.muted)
+                    Text(value)
+                        .forgeTextStyle(.body)
+                }
+                Spacer()
+                ForgeIcon(name: .selected, colorRole: .accent)
+            }
+            .padding(.horizontal, ForgeDesign.Spacing.regular)
+            .frame(minHeight: ForgeDesign.Size.buttonHeight + ForgeDesign.Spacing.compact)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape()
+                .fill(palette.surfaceRaised)
+        }
+        .overlay {
+            ForgePixelBorder(color: palette.grid)
+        }
+    }
+}
+
+struct ForgeSelectionDialog<Value: Hashable>: View {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Binding var isPresented: Bool
+    @Binding var selection: Value
+    let eyebrow: String
+    let title: String
+    let options: [ForgeSelectionOption<Value>]
+    let cancelTitle: String
+    @State private var isVisible = false
+
+    var body: some View {
+        ZStack {
+            if isVisible {
+                palette.canvas
+                    .opacity(0.82)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { dismiss() }
+                    .transition(.opacity)
+
+                ForgePixelSurface(level: .raised) {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+                        ForgeSectionHeader(eyebrow: eyebrow, title: title)
+                        ForEach(options) { option in
+                            ForgeSelectionRow(
+                                title: option.title,
+                                isSelected: selection == option.value
+                            ) {
+                                selection = option.value
+                                dismiss()
+                            }
+                        }
+                        ForgeButton(title: cancelTitle, icon: .close) {
+                            dismiss()
+                        }
+                    }
+                }
+                .frame(maxWidth: 360)
+                .padding(ForgeDesign.Spacing.regular)
+                .transition(
+                    reduceMotion
+                        ? .opacity
+                        : .scale(scale: 0.9, anchor: .center).combined(with: .opacity)
+                )
+                .accessibilityAddTraits(.isModal)
+            }
+        }
+        .onAppear { setVisible(isPresented, animated: false) }
+        .onChange(of: isPresented) { _, newValue in
+            setVisible(newValue, animated: true)
+        }
+    }
+
+    private func dismiss() {
+        setVisible(false, animated: true)
+        isPresented = false
+    }
+
+    private func setVisible(_ visible: Bool, animated: Bool) {
+        guard animated, !reduceMotion else {
+            isVisible = visible
+            return
+        }
+        withAnimation(.spring(duration: 0.24, bounce: 0.12)) {
+            isVisible = visible
+        }
+    }
+}
+
+private struct ForgeSelectionRow: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.compact) {
+                ForgeIcon(name: isSelected ? .selected : .unselected, colorRole: isSelected ? .accent : .muted)
+                Text(title)
+                    .forgeTextStyle(.body)
+                Spacer()
+            }
+            .padding(.horizontal, ForgeDesign.Spacing.compact)
+            .frame(minHeight: ForgeDesign.Size.controlHeight)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(isSelected ? palette.surfaceRaised : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: isSelected ? palette.accent : palette.grid,
+                cut: ForgeDesign.Size.compactCornerCut,
+                lineWidth: isSelected ? ForgeDesign.Size.activeBorder : ForgeDesign.Size.border
+            )
+        }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

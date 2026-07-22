@@ -27,7 +27,7 @@ enum AppConfiguration {
     }
 
     private static func localizedWebURL(path: String, languageCode: String) -> URL? {
-        let locale = languageCode == "en" ? "en" : "ja"
+        let locale = languageCode == "ja" ? "ja" : "en"
         return webBaseURL?.appendingPathComponent(locale).appendingPathComponent(path)
     }
 

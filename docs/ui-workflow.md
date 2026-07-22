@@ -33,7 +33,7 @@
 - DotGothic16は日本語・Latinを収録し、ライセンスは`Resources/Fonts/OFL.txt`を同梱する。
 - font size、trackingは`ForgeTypography.swift`の`ForgeTextStyle`だけを使う。
 - 文言は`Resources/ja.lproj/Localizable.strings`と`en.lproj/Localizable.strings`へ同じkeyで追加する。
-- system、English、日本語の選択を設定画面へ一つだけ置く。systemで日本語・英語以外の最優先言語は英語へフォールバックする。
+- system、English、日本語、한국어、繁體中文（台灣）の選択をpixel selectorへ一つだけ置く。systemでは対応言語以外の最優先言語を英語へフォールバックする。
 
 ## Layout source of truth
 
@@ -95,12 +95,12 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 4. Screen層では共通部品の組み合わせと状態接続だけを行う。
 5. `./scripts/verify-apple-design-system.sh`を実行する。
 6. system/dark/lightでHome empty、Home grid、editing、rendering、result、error、free/Pro settingsを確認する。
-7. Home、画像追加メニュー、削除確認、変換設定、詳細調整、変換スタイル選択、パレット選択、調整プリセット、変換結果、通常設定、開発者設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
+7. Home、画像追加メニュー、生成画像操作、削除確認、変換設定、詳細調整、変換スタイル選択、パレット選択、調整プリセット、変換結果、通常設定、言語選択、開発者設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
 8. `./scripts/ci-local.sh`を実行する。
 
-`verify-apple-design-system.sh`はscreen層のstyle直書き、日英key不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。
+`verify-apple-design-system.sh`はscreen層のstyle直書き、4言語のkey不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。
 
-同じfixtureとiPhone Simulatorで全11 surfaceを両theme（22枚）で再撮影する場合は次を使う。
+同じfixtureとiPhone Simulatorで全13 surfaceを両theme（26枚）で再撮影する場合は次を使う。
 
 ```bash
 ./scripts/capture-apple-review.sh
