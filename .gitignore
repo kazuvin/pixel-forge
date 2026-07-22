@@ -3,6 +3,8 @@
 .build/
 target/
 build/apple/
+build/apple-review-derived/
+build/ios-tests-derived/
 apps/apple/PixelForgeApp/.build/
 packages/PixelCoreKit/.build/
 packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework/

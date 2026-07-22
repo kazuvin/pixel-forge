@@ -1,6 +1,53 @@
 import Foundation
 import PixelCoreKit
 
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
+    case english = "en"
+    case japanese = "ja"
+
+    static let storageKey = "pixel-forge.language"
+    var id: Self { self }
+
+    static var selected: AppLanguage {
+        let stored = UserDefaults.standard.string(forKey: storageKey) ?? ""
+        return AppLanguage(rawValue: stored) ?? .system
+    }
+
+    func resolvedLanguageCode(preferredLanguages: [String] = Locale.preferredLanguages) -> String {
+        switch self {
+        case .english:
+            return "en"
+        case .japanese:
+            return "ja"
+        case .system:
+            guard let preferred = preferredLanguages.first else { return "en" }
+            let code = Locale(identifier: preferred).language.languageCode?.identifier
+            return code == "ja" ? "ja" : "en"
+        }
+    }
+
+    var locale: Locale {
+        Locale(identifier: resolvedLanguageCode())
+    }
+}
+
+enum AppLocalization {
+    static func text(_ key: String, language: AppLanguage = .selected) -> String {
+        let code = language.resolvedLanguageCode()
+        let rootBundle = Bundle(for: AppBundleToken.self)
+        guard
+            let path = rootBundle.path(forResource: code, ofType: "lproj"),
+            let bundle = Bundle(path: path)
+        else {
+            return rootBundle.localizedString(forKey: key, value: key, table: nil)
+        }
+        return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+}
+
+private final class AppBundleToken {}
+
 enum L10n {
     static var workbenchTitle: String { text("workbench.title") }
     static var homeEyebrow: String { text("home.eyebrow") }
@@ -11,7 +58,10 @@ enum L10n {
     static var localLibrary: String { text("home.library") }
     static var workbenchEyebrow: String { text("workbench.eyebrow") }
     static var choosePhoto: String { text("workbench.choose_photo") }
+    static var chooseFile: String { text("workbench.choose_file") }
     static var settings: String { text("workbench.settings") }
+    static var settingsEyebrow: String { text("settings.eyebrow") }
+    static var settingsSubtitle: String { text("settings.subtitle") }
     static var input: String { text("preview.input") }
     static var output: String { text("preview.output") }
     static var inputEmpty: String { text("preview.input.empty") }
@@ -111,6 +161,13 @@ enum L10n {
     static var typographyTitle: String { text("settings.typography.title") }
     static var typographyDescription: String { text("settings.typography.description") }
     static var typographySample: String { text("settings.typography.sample") }
+    static var languageTitle: String { text("settings.language.title") }
+    static var languageEyebrow: String { text("settings.language.eyebrow") }
+    static var languageDescription: String { text("settings.language.description") }
+    static var languageSystem: String { text("settings.language.system") }
+    static var languageEnglish: String { text("settings.language.english") }
+    static var languageJapanese: String { text("settings.language.japanese") }
+    static var currentLanguageCode: String { AppLanguage.selected.resolvedLanguageCode() }
 
     static func pixels(_ value: Int) -> String {
         format("value.pixels", value)
@@ -144,10 +201,10 @@ enum L10n {
     }
 
     private static func text(_ key: String) -> String {
-        NSLocalizedString(key, bundle: .module, comment: "")
+        AppLocalization.text(key)
     }
 
     private static func format(_ key: String, _ arguments: CVarArg...) -> String {
-        String(format: text(key), locale: .current, arguments: arguments)
+        String(format: text(key), locale: AppLanguage.selected.locale, arguments: arguments)
     }
 }

@@ -1,6 +1,6 @@
 # Pixel Forge
 
-写真を決定的な手順でピクセルアートへ変換する、Rust製エンジンとmacOS SwiftUIアプリのワークスペースです。
+写真を決定的な手順でピクセルアートへ変換する、Rust製エンジンとiPhone SwiftUIアプリのワークスペースです。
 
 ## 構成
 
@@ -8,7 +8,7 @@
 - `crates/pixel-cli`: ゲームアセットをバッチ生成するCLIです。
 - `crates/pixel-ffi`: UniFFIを使ってRust APIをSwiftへ公開します。
 - `packages/PixelCoreKit`: 生成されたSwift bindingとXCFrameworkを包むSwift Packageです。
-- `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG/recipe書き出しを行うmacOS SwiftUIアプリです。
+- `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG/recipe共有を行うiPhone縦向き専用のSwiftUIアプリです。
 - `apps/web`: 日英のsupport、privacy、termsを静的生成するAstroサイトです。
 
 SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothic16を使う共通design systemを持ちます。実装境界とUI変更手順は[`docs/design-system.md`](docs/design-system.md)と[`docs/ui-workflow.md`](docs/ui-workflow.md)を参照してください。
@@ -17,7 +17,7 @@ SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothi
 
 ```bash
 ./scripts/build-apple.sh
-swift run --package-path apps/apple/PixelForgeApp PixelForgeApp
+open apps/apple/PixelForgeApp/PixelForgeApp.xcodeproj
 ```
 
 サポートWebはNode 24.14.0（`.mise.toml`）とpnpmを使用します。
@@ -66,4 +66,4 @@ cargo run -p pixel-cli -- \
 
 既存CLIとSwift adapterが利用している`PixelSession::render(PixelSettings)`は移行用の互換入口です。
 
-要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、macOS画面は [`docs/ui/layouts/mvp-macos-screens.md`](docs/ui/layouts/mvp-macos-screens.md)、Astro/CloudflareのサポートWebは [`docs/web-spec.md`](docs/web-spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。
+要件と設計判断は [`docs/requirements.md`](docs/requirements.md) と [`docs/spec.md`](docs/spec.md)、iPhone画面は [`docs/ui/layouts/mvp-iphone-screens.md`](docs/ui/layouts/mvp-iphone-screens.md)、Astro/CloudflareのサポートWebは [`docs/web-spec.md`](docs/web-spec.md)、Git導入は [`docs/git-setup.md`](docs/git-setup.md) を参照してください。

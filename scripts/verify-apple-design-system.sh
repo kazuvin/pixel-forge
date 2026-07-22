@@ -7,8 +7,9 @@ app_dir="$root_dir/apps/apple/PixelForgeApp/Sources/PixelForgeApp"
 design_dir="$app_dir/Design"
 screens_dir="$app_dir/Screens"
 resources_dir="$app_dir/Resources"
-dark_screenshot="designs/reviews/pixel-forge-workbench--diagonal-pixel-border-icons-v2--dark.png"
-light_screenshot="designs/reviews/pixel-forge-workbench--diagonal-pixel-border-icons-v2--light.png"
+project_spec="$root_dir/apps/apple/PixelForgeApp/project.yml"
+review_screens=(home conversion-editing conversion-result settings)
+review_themes=(dark light)
 
 required_files=(
   "$design_dir/ForgeDesignTokens.swift"
@@ -19,6 +20,8 @@ required_files=(
   "$resources_dir/Fonts/OFL.txt"
   "$resources_dir/ja.lproj/Localizable.strings"
   "$resources_dir/en.lproj/Localizable.strings"
+  "$project_spec"
+  "$root_dir/apps/apple/PixelForgeApp/Supporting/Info.plist"
 )
 
 for required_file in "${required_files[@]}"; do
@@ -38,12 +41,35 @@ if rg -n 'RoundedRectangle\(' "$design_dir" "$screens_dir"; then
   exit 1
 fi
 
-for screenshot in "$dark_screenshot" "$light_screenshot"; do
-  if [[ ! -s "$root_dir/$screenshot" ]]; then
-    echo "design-system check: required review screenshot is missing: $screenshot" >&2
-    exit 1
-  fi
+for screen in "${review_screens[@]}"; do
+  for theme in "${review_themes[@]}"; do
+    screenshot="designs/reviews/pixel-forge-$screen--$theme.png"
+    if [[ ! -s "$root_dir/$screenshot" ]]; then
+      echo "design-system check: required review screenshot is missing: $screenshot" >&2
+      exit 1
+    fi
+    pixel_width="$(sips -g pixelWidth "$root_dir/$screenshot" | awk '/pixelWidth/ {print $2}')"
+    pixel_height="$(sips -g pixelHeight "$root_dir/$screenshot" | awk '/pixelHeight/ {print $2}')"
+    if (( pixel_width >= pixel_height )); then
+      echo "design-system check: review screenshot must be portrait: $screenshot" >&2
+      exit 1
+    fi
+  done
 done
+
+if ! rg -q 'TARGETED_DEVICE_FAMILY: "1"' "$project_spec"; then
+  echo "design-system check: the app must target iPhone only" >&2
+  exit 1
+fi
+if ! rg -q 'SUPPORTS_MACCATALYST: NO' "$project_spec"; then
+  echo "design-system check: Mac Catalyst must stay disabled" >&2
+  exit 1
+fi
+if rg -n 'UIInterfaceOrientationLandscape|platform:[[:space:]]*macOS|import AppKit' \
+  "$project_spec" "$app_dir"; then
+  echo "design-system check: the app must remain iPhone portrait only" >&2
+  exit 1
+fi
 
 for localization in \
   "$resources_dir/ja.lproj/Localizable.strings" \
@@ -83,14 +109,14 @@ for screen in "$screens_dir"/*.swift; do
   fi
 done
 
-for component in ForgeCanvas ForgeTopBar ForgeGeneratedCard ForgeLibraryEmpty ForgeButton; do
+for component in ForgeCanvas ForgeTopBar ForgeGeneratedCard ForgeLibraryEmpty ForgeSettingsButton; do
   if ! rg -q "\\b${component}\\b" "$screens_dir/WorkbenchView.swift"; then
     echo "design-system check: WorkbenchView must use shared component $component" >&2
     exit 1
   fi
 done
 
-for component in ForgeCanvas ForgeModalHeader ForgePreviewPane ForgeSidebar ForgeButton; do
+for component in ForgeCanvas ForgeModalHeader ForgePreviewPane ForgePixelSurface ForgeButton; do
   if ! rg -q "\\b${component}\\b" "$screens_dir/ConversionModalView.swift"; then
     echo "design-system check: ConversionModalView must use shared component $component" >&2
     exit 1
@@ -128,11 +154,14 @@ if git -C "$root_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   } | sort -u > "$temporary_dir/changed-files"
 
   if rg -q '^apps/apple/PixelForgeApp/Sources/PixelForgeApp/(Design|Screens)/.*\.swift$' "$temporary_dir/changed-files"; then
-    for screenshot in "$dark_screenshot" "$light_screenshot"; do
-      if ! rg -Fxq "$screenshot" "$temporary_dir/changed-files"; then
-        echo "design-system check: SwiftUI design changes require an updated $screenshot" >&2
-        exit 1
-      fi
+    for screen in "${review_screens[@]}"; do
+      for theme in "${review_themes[@]}"; do
+        screenshot="designs/reviews/pixel-forge-$screen--$theme.png"
+        if ! rg -Fxq "$screenshot" "$temporary_dir/changed-files"; then
+          echo "design-system check: SwiftUI design changes require an updated $screenshot" >&2
+          exit 1
+        fi
+      done
     done
   fi
 fi

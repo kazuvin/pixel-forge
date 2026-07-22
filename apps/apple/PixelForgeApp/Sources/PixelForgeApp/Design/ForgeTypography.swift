@@ -5,11 +5,12 @@ enum ForgeFont {
     static let postScriptName = "DotGothic16-Regular"
 
     private static let registration: Void = {
-        let bundledURL = Bundle.module.url(
+        let appBundle = Bundle(for: ForgeFontBundleToken.self)
+        let bundledURL = appBundle.url(
             forResource: "DotGothic16-Regular",
             withExtension: "ttf",
             subdirectory: "Fonts"
-        ) ?? Bundle.module.url(forResource: "DotGothic16-Regular", withExtension: "ttf")
+        ) ?? appBundle.url(forResource: "DotGothic16-Regular", withExtension: "ttf")
 
         guard let bundledURL else { return }
         CTFontManagerRegisterFontsForURL(bundledURL as CFURL, .process, nil)
@@ -23,6 +24,8 @@ enum ForgeFont {
         .custom(postScriptName, size: size, relativeTo: style)
     }
 }
+
+private final class ForgeFontBundleToken {}
 
 enum ForgeTextStyle {
     case display

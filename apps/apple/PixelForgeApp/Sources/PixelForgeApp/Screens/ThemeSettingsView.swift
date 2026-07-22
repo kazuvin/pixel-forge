@@ -1,30 +1,65 @@
-import AppKit
 import SwiftUI
+import UIKit
 
 struct ThemeSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var entitlement: ProEntitlementService
     @AppStorage(ForgeTheme.storageKey) private var themeRawValue = ForgeTheme.system.rawValue
+    @AppStorage(AppLanguage.storageKey) private var languageRawValue = AppLanguage.system.rawValue
     @State private var showsProExplanation = false
+    @State private var shareItems: [Any] = []
+    @State private var showsShareSheet = false
 
     var body: some View {
         ForgeCanvas {
-            ScrollView {
-                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
-                    appearance
-                    pro
-                    support
-                    about
+            VStack(spacing: 0) {
+                ForgeModalHeader(
+                    eyebrow: L10n.settingsEyebrow,
+                    title: L10n.settings,
+                    detail: L10n.settingsSubtitle,
+                    close: { dismiss() }
+                )
+                ForgeDivider()
+                ScrollView {
+                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.section) {
+                        language
+                        appearance
+                        pro
+                        support
+                        about
+                    }
+                    .padding(ForgeDesign.Spacing.regular)
                 }
-                .padding(ForgeDesign.Spacing.roomy)
             }
         }
-        .frame(width: 760, height: 720)
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showsShareSheet) {
+            ActivitySheet(items: shareItems)
+        }
         .task {
             await entitlement.start()
             enforceAvailableTheme()
         }
         .onChange(of: entitlement.status) { _, _ in
             enforceAvailableTheme()
+        }
+    }
+
+    private var language: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            ForgeSectionHeader(
+                eyebrow: L10n.languageEyebrow,
+                title: L10n.languageTitle,
+                detail: L10n.languageDescription
+            )
+            ForgeSegmentedControl(
+                selection: languageSelection,
+                options: [
+                    ForgeSegmentOption(id: "system", value: .system, title: L10n.languageSystem),
+                    ForgeSegmentOption(id: "en", value: .english, title: L10n.languageEnglish),
+                    ForgeSegmentOption(id: "ja", value: .japanese, title: L10n.languageJapanese),
+                ]
+            )
         }
     }
 
@@ -35,7 +70,7 @@ struct ThemeSettingsView: View {
                 title: L10n.appearanceTitle,
                 detail: L10n.appearanceDescription
             )
-            HStack(spacing: ForgeDesign.Spacing.compact) {
+            VStack(spacing: ForgeDesign.Spacing.compact) {
                 ForgeThemeCard(
                     theme: .system,
                     title: L10n.systemTheme,
@@ -144,6 +179,13 @@ struct ThemeSettingsView: View {
         ForgeTheme(rawValue: themeRawValue) ?? .system
     }
 
+    private var languageSelection: Binding<AppLanguage> {
+        Binding(
+            get: { AppLanguage(rawValue: languageRawValue) ?? .system },
+            set: { languageRawValue = $0.rawValue }
+        )
+    }
+
     private var purchaseTitle: String {
         if let price = entitlement.displayPrice {
             return "\(L10n.purchase) · \(price)"
@@ -210,17 +252,12 @@ struct ThemeSettingsView: View {
 
     private func open(_ url: URL?) {
         guard let url else { return }
-        NSWorkspace.shared.open(url)
+        UIApplication.shared.open(url)
     }
 
     private func share(_ url: URL?) {
-        guard let url,
-              let contentView = NSApp.keyWindow?.contentView
-        else { return }
-        NSSharingServicePicker(items: [url]).show(
-            relativeTo: contentView.bounds,
-            of: contentView,
-            preferredEdge: .minY
-        )
+        guard let url else { return }
+        shareItems = [url]
+        showsShareSheet = true
     }
 }

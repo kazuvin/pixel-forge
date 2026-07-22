@@ -8,15 +8,15 @@ enum AppConfiguration {
     static let feedbackURL = url(named: "PIXEL_FORGE_FEEDBACK_URL")
     static let webBaseURL = url(named: "PIXEL_FORGE_WEB_BASE_URL")
 
-    static func supportURL(languageCode: String = Locale.current.language.languageCode?.identifier ?? "ja") -> URL? {
+    static func supportURL(languageCode: String = AppLanguage.selected.resolvedLanguageCode()) -> URL? {
         localizedWebURL(path: "support", languageCode: languageCode)
     }
 
-    static func privacyURL(languageCode: String = Locale.current.language.languageCode?.identifier ?? "ja") -> URL? {
+    static func privacyURL(languageCode: String = AppLanguage.selected.resolvedLanguageCode()) -> URL? {
         localizedWebURL(path: "privacy", languageCode: languageCode)
     }
 
-    static func termsURL(languageCode: String = Locale.current.language.languageCode?.identifier ?? "ja") -> URL? {
+    static func termsURL(languageCode: String = AppLanguage.selected.resolvedLanguageCode()) -> URL? {
         localizedWebURL(path: "terms", languageCode: languageCode)
     }
 

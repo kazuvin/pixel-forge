@@ -25,7 +25,7 @@ cargo run -p pixel-cli -- \
 
 "$root_dir/scripts/build-apple.sh"
 swift test --package-path "$root_dir/packages/PixelCoreKit"
-swift test --package-path "$root_dir/apps/apple/PixelForgeApp"
+"$root_dir/scripts/run-ios-tests.sh"
 
 corepack pnpm --filter @pixel-forge/web test
 corepack pnpm --filter @pixel-forge/web check

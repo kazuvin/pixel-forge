@@ -3,8 +3,9 @@ import SwiftUI
 
 struct ConversionModalView: View {
     @ObservedObject var model: ConversionSessionModel
-    let reviewCaptureURL: URL?
     let close: () -> Void
+    @State private var exportItems: [URL] = []
+    @State private var showsShareSheet = false
 
     var body: some View {
         ForgeCanvas {
@@ -19,12 +20,9 @@ struct ConversionModalView: View {
                 modalContent
             }
         }
-        .frame(width: 980, height: 720)
-        .task {
-            captureReviewIfNeeded(for: model.state)
-        }
-        .onChange(of: model.state) { _, state in
-            captureReviewIfNeeded(for: state)
+        .interactiveDismissDisabled(model.state == .rendering)
+        .sheet(isPresented: $showsShareSheet) {
+            ActivitySheet(items: exportItems)
         }
     }
 
@@ -48,17 +46,18 @@ struct ConversionModalView: View {
     }
 
     private var editor: some View {
-        HStack(spacing: 0) {
-            ForgePreviewPane(
-                label: L10n.input,
-                metadata: model.sourceDimensionsLabel,
-                image: model.sourceImage,
-                pixelated: false,
-                emptyMessage: L10n.inputEmpty
-            )
-            .padding(ForgeDesign.Spacing.roomy)
-            ForgeSidebar {
-                ScrollView {
+        ScrollView {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                ForgePreviewPane(
+                    label: L10n.input,
+                    metadata: model.sourceDimensionsLabel,
+                    image: model.sourceImage,
+                    pixelated: false,
+                    emptyMessage: L10n.inputEmpty
+                )
+                .frame(height: 260)
+
+                ForgePixelSurface(level: .panel) {
                     VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
                         ForgeSectionHeader(
                             eyebrow: L10n.recipeEyebrow,
@@ -93,12 +92,13 @@ struct ConversionModalView: View {
                         actionButtons
                     }
                 }
+                .onChange(of: model.longSide) { _, _ in model.refreshProRequirement() }
+                .onChange(of: model.upscale) { _, _ in model.refreshProRequirement() }
+                .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
+                .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
+                .onChange(of: model.outlineMode) { _, _ in model.refreshProRequirement() }
             }
-            .onChange(of: model.longSide) { _, _ in model.refreshProRequirement() }
-            .onChange(of: model.upscale) { _, _ in model.refreshProRequirement() }
-            .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
-            .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
-            .onChange(of: model.outlineMode) { _, _ in model.refreshProRequirement() }
+            .padding(ForgeDesign.Spacing.regular)
         }
     }
 
@@ -221,30 +221,22 @@ struct ConversionModalView: View {
     @ViewBuilder
     private var actionButtons: some View {
         if model.hasExistingRecord {
-            ForgeButton(
-                title: L10n.updateImage,
-                icon: .render,
-                role: .primary
-            ) {
+            ForgeButton(title: L10n.updateImage, icon: .render, role: .primary) {
                 model.convert(saveMode: .update)
             }
             ForgeButton(title: L10n.saveAsNew, icon: .plus) {
                 model.convert(saveMode: .newRecord)
             }
         } else {
-            ForgeButton(
-                title: L10n.convert,
-                icon: .render,
-                role: .primary
-            ) {
+            ForgeButton(title: L10n.convert, icon: .render, role: .primary) {
                 model.convert(saveMode: .newRecord)
             }
         }
     }
 
     private var result: some View {
-        VStack(spacing: ForgeDesign.Spacing.regular) {
-            HStack(spacing: ForgeDesign.Spacing.regular) {
+        ScrollView {
+            VStack(spacing: ForgeDesign.Spacing.regular) {
                 ForgePreviewPane(
                     label: L10n.input,
                     metadata: model.sourceDimensionsLabel,
@@ -252,6 +244,7 @@ struct ConversionModalView: View {
                     pixelated: false,
                     emptyMessage: L10n.inputEmpty
                 )
+                .frame(height: 240)
                 ForgePreviewPane(
                     label: L10n.output,
                     metadata: model.outputDimensionsLabel,
@@ -259,28 +252,27 @@ struct ConversionModalView: View {
                     pixelated: true,
                     emptyMessage: L10n.outputEmpty
                 )
-            }
-            ForgeResultMetadata(
-                logical: model.logicalDimensionsLabel,
-                output: model.outputDimensionsLabel,
-                algorithm: model.currentRecord?.metadata.algorithmVersion ?? PixelCoreInfo.algorithmVersion,
-                paletteName: model.currentRecord?.metadata.paletteName ?? L10n.paletteSource
-            )
-            HStack(spacing: ForgeDesign.Spacing.compact) {
-                ForgeButton(title: L10n.adjust, icon: .edit, fillsWidth: false) {
-                    model.edit()
+                .frame(height: 240)
+                ForgeResultMetadata(
+                    logical: model.logicalDimensionsLabel,
+                    output: model.outputDimensionsLabel,
+                    algorithm: model.currentRecord?.metadata.algorithmVersion ?? PixelCoreInfo.algorithmVersion,
+                    paletteName: model.currentRecord?.metadata.paletteName ?? L10n.paletteSource
+                )
+                HStack(spacing: ForgeDesign.Spacing.compact) {
+                    ForgeButton(title: L10n.adjust, icon: .edit) {
+                        model.edit()
+                    }
+                    ForgeButton(title: L10n.export, icon: .export, role: .primary) {
+                        if let items = model.prepareExport() {
+                            exportItems = items
+                            showsShareSheet = true
+                        }
+                    }
                 }
-                ForgeButton(
-                    title: L10n.export,
-                    icon: .export,
-                    role: .primary,
-                    fillsWidth: false
-                ) {
-                    model.export()
-                }
             }
+            .padding(ForgeDesign.Spacing.regular)
         }
-        .padding(ForgeDesign.Spacing.roomy)
     }
 
     private var failure: some View {
@@ -308,14 +300,6 @@ struct ConversionModalView: View {
             L10n.stateResult
         case .failure:
             L10n.stateFailure
-        }
-    }
-
-    private func captureReviewIfNeeded(for state: ConversionModalState) {
-        guard state == .result, let reviewCaptureURL else { return }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(700))
-            ReviewCapture.saveMainWindow(to: reviewCaptureURL)
         }
     }
 }

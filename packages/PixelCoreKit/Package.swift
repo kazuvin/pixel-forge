@@ -5,6 +5,7 @@ let package = Package(
     name: "PixelCoreKit",
     platforms: [
         .macOS(.v14),
+        .iOS(.v17),
     ],
     products: [
         .library(name: "PixelCoreKit", targets: ["PixelCoreKit"]),
@@ -24,4 +25,3 @@ let package = Package(
         ),
     ]
 )
-

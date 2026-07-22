@@ -1,0 +1,631 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		015C02105881FA374A04DDD9 /* StoredRecipe.swift in Sources */ = {isa = PBXBuildFile; fileRef = D62CB51D3EA4147E3DF72D58 /* StoredRecipe.swift */; };
+		0396AF71114627DD408D912D /* review-gradient.png in Resources */ = {isa = PBXBuildFile; fileRef = BC649120701191DD37C4BAB0 /* review-gradient.png */; };
+		0BE60107823C2711C1BA5640 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7DB54740F87B86E61C8D6EB2 /* Localizable.strings */; };
+		0F10E1AA87DE8A85BCDFDC19 /* WorkbenchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EDE84AF1BB1A1DBF69EA5E /* WorkbenchView.swift */; };
+		1B7DB9A875ECA7D9580DD8EA /* ActivitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1640F580FDDD647CAC3D0866 /* ActivitySheet.swift */; };
+		42251FDF4169276BD30742D3 /* LocalLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F3576B67FD6F55C026BD441 /* LocalLibraryStore.swift */; };
+		49C47CE418B243DFB14A97BE /* AppLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 452821937474DDD2F97E3525 /* AppLanguageTests.swift */; };
+		4A00FB360F8A9298B3389E82 /* StoredRecipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFD76E720BAAA81446C0A3D6 /* StoredRecipeTests.swift */; };
+		4DD66FBFD649CB8F912243A2 /* ForgeTypography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 468C8653DF093977F314D838 /* ForgeTypography.swift */; };
+		5BBD0C05ACE57BF95A64C417 /* PixelCoreKit in Frameworks */ = {isa = PBXBuildFile; productRef = E251027867813D2A1787EBCC /* PixelCoreKit */; };
+		6ED9DA2E9E42581596446728 /* PixelForgeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F32269F63CB901A330C43BE /* PixelForgeApp.swift */; };
+		71775A99C6DCE853FA34E782 /* ForgeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D15485300A32725BD372BF9 /* ForgeComponents.swift */; };
+		7288DF0A7695821C9438767B /* ConversionModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88849A829235C65DAA8B2EF7 /* ConversionModalView.swift */; };
+		765FEC13F9BAB6A25B52B94F /* ForgeIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C65A575F20AD17E4410FEE /* ForgeIcons.swift */; };
+		857F73CA4289329CDF9288E9 /* ForgeDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5758ABAA9C50D4144953D73E /* ForgeDesignTokens.swift */; };
+		890E39F1F15E6AEA1052994E /* ProEntitlementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396B7EB66C12E6A6AEA5DBB6 /* ProEntitlementService.swift */; };
+		9B4B47F2C41BBA18C75CC011 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB767B1DF4F987BA9D478BF6 /* Localization.swift */; };
+		C0AEC3C7176F13E8AE2F5752 /* ProAccessPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4092236FF363F7830B932FB /* ProAccessPolicy.swift */; };
+		C7CB9212CE901BA64B076F11 /* ReviewConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */; };
+		DEBBD0AFFECF7EC784C7981E /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 50FD5BD73885CB873E73B635 /* OFL.txt */; };
+		E11BCE4CFDA86040744743C2 /* LocalLibraryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4EAD21E3F66608A305A1532 /* LocalLibraryStoreTests.swift */; };
+		E28AD883B6E981B35EE9158B /* DotGothic16-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EE4D2616F7425773DD52C180 /* DotGothic16-Regular.ttf */; };
+		E3EDB0E365C2D7F51B84303B /* WorkbenchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57896F91B6CA583FE23BF38B /* WorkbenchModel.swift */; };
+		E471D45200B973D032CD5749 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58F0E564B95BC2557260BB4 /* AppConfiguration.swift */; };
+		FA3F06D2CFFCF59409BC1019 /* ProAccessPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 494B471E2D6C901143F233DD /* ProAccessPolicyTests.swift */; };
+		FC5F6C7F5372B2DF2F978C9D /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF227DF17CBDA9E1D11F0D8C /* ThemeSettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F4510E956EF45B09130D6BD2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3329699320C8A479729AFEE2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6D937E328EB155B580C4E8AC;
+			remoteInfo = PixelForgeApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		04C65A575F20AD17E4410FEE /* ForgeIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeIcons.swift; sourceTree = "<group>"; };
+		1640F580FDDD647CAC3D0866 /* ActivitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivitySheet.swift; sourceTree = "<group>"; };
+		23EDE84AF1BB1A1DBF69EA5E /* WorkbenchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchView.swift; sourceTree = "<group>"; };
+		35E0F7ACA34AD6B24EA04B23 /* PixelForgeApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = PixelForgeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		396B7EB66C12E6A6AEA5DBB6 /* ProEntitlementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProEntitlementService.swift; sourceTree = "<group>"; };
+		452821937474DDD2F97E3525 /* AppLanguageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguageTests.swift; sourceTree = "<group>"; };
+		468C8653DF093977F314D838 /* ForgeTypography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeTypography.swift; sourceTree = "<group>"; };
+		494B471E2D6C901143F233DD /* ProAccessPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProAccessPolicyTests.swift; sourceTree = "<group>"; };
+		4F3576B67FD6F55C026BD441 /* LocalLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLibraryStore.swift; sourceTree = "<group>"; };
+		50FD5BD73885CB873E73B635 /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
+		56C4CD3E64393950D065481B /* PixelForgeAppTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = PixelForgeAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5758ABAA9C50D4144953D73E /* ForgeDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeDesignTokens.swift; sourceTree = "<group>"; };
+		57896F91B6CA583FE23BF38B /* WorkbenchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkbenchModel.swift; sourceTree = "<group>"; };
+		66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewConfiguration.swift; sourceTree = "<group>"; };
+		6A5F5AC2CCF6873B61593A67 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		7F32269F63CB901A330C43BE /* PixelForgeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelForgeApp.swift; sourceTree = "<group>"; };
+		88849A829235C65DAA8B2EF7 /* ConversionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversionModalView.swift; sourceTree = "<group>"; };
+		9D15485300A32725BD372BF9 /* ForgeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgeComponents.swift; sourceTree = "<group>"; };
+		AB767B1DF4F987BA9D478BF6 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		BC649120701191DD37C4BAB0 /* review-gradient.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "review-gradient.png"; sourceTree = "<group>"; };
+		D58F0E564B95BC2557260BB4 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		D62CB51D3EA4147E3DF72D58 /* StoredRecipe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredRecipe.swift; sourceTree = "<group>"; };
+		E09B6D3D6230FBB5DB729DB8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		E4092236FF363F7830B932FB /* ProAccessPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProAccessPolicy.swift; sourceTree = "<group>"; };
+		EC49C35F86D77F12C9591D73 /* PixelCoreKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PixelCoreKit; path = ../../../packages/PixelCoreKit; sourceTree = SOURCE_ROOT; };
+		EE4D2616F7425773DD52C180 /* DotGothic16-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DotGothic16-Regular.ttf"; sourceTree = "<group>"; };
+		EF227DF17CBDA9E1D11F0D8C /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
+		EFD76E720BAAA81446C0A3D6 /* StoredRecipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredRecipeTests.swift; sourceTree = "<group>"; };
+		F4EAD21E3F66608A305A1532 /* LocalLibraryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLibraryStoreTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C70343B2F91A543B711F58BB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5BBD0C05ACE57BF95A64C417 /* PixelCoreKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		141018DC95BBB74A6A3AC7E4 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				4F3576B67FD6F55C026BD441 /* LocalLibraryStore.swift */,
+				D62CB51D3EA4147E3DF72D58 /* StoredRecipe.swift */,
+			);
+			path = Library;
+			sourceTree = "<group>";
+		};
+		1604413BA468A492BE611E17 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				EC49C35F86D77F12C9591D73 /* PixelCoreKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		526BDB20C8EA10F4CF197D74 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				88849A829235C65DAA8B2EF7 /* ConversionModalView.swift */,
+				EF227DF17CBDA9E1D11F0D8C /* ThemeSettingsView.swift */,
+				23EDE84AF1BB1A1DBF69EA5E /* WorkbenchView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		528FAC9EE0B18F5DF43B5040 /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				9D15485300A32725BD372BF9 /* ForgeComponents.swift */,
+				5758ABAA9C50D4144953D73E /* ForgeDesignTokens.swift */,
+				04C65A575F20AD17E4410FEE /* ForgeIcons.swift */,
+				468C8653DF093977F314D838 /* ForgeTypography.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		561F296CFBAD2EA75769A634 /* PixelForgeApp */ = {
+			isa = PBXGroup;
+			children = (
+				1640F580FDDD647CAC3D0866 /* ActivitySheet.swift */,
+				D58F0E564B95BC2557260BB4 /* AppConfiguration.swift */,
+				AB767B1DF4F987BA9D478BF6 /* Localization.swift */,
+				7F32269F63CB901A330C43BE /* PixelForgeApp.swift */,
+				66E92C0443BF6EF0EB8D1B12 /* ReviewConfiguration.swift */,
+				57896F91B6CA583FE23BF38B /* WorkbenchModel.swift */,
+				528FAC9EE0B18F5DF43B5040 /* Design */,
+				141018DC95BBB74A6A3AC7E4 /* Library */,
+				7B61BF745B05E0B62241AB5F /* Purchase */,
+				9CD4B73D85E7D208AC5DFCB6 /* Resources */,
+				526BDB20C8EA10F4CF197D74 /* Screens */,
+			);
+			path = PixelForgeApp;
+			sourceTree = "<group>";
+		};
+		5B0ED40EEE030F3069103275 /* ReviewAssets */ = {
+			isa = PBXGroup;
+			children = (
+				BC649120701191DD37C4BAB0 /* review-gradient.png */,
+			);
+			path = ReviewAssets;
+			sourceTree = "<group>";
+		};
+		60BEACEAE4902AC310FDBBCD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				35E0F7ACA34AD6B24EA04B23 /* PixelForgeApp.app */,
+				56C4CD3E64393950D065481B /* PixelForgeAppTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		74F3BF7029562E79F65C5FC9 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				8451C1C293A1D01B378ADEFE /* PixelForgeAppTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		7AB7B34CEA50F2FD2D0BF4AB /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				561F296CFBAD2EA75769A634 /* PixelForgeApp */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		7B61BF745B05E0B62241AB5F /* Purchase */ = {
+			isa = PBXGroup;
+			children = (
+				E4092236FF363F7830B932FB /* ProAccessPolicy.swift */,
+				396B7EB66C12E6A6AEA5DBB6 /* ProEntitlementService.swift */,
+			);
+			path = Purchase;
+			sourceTree = "<group>";
+		};
+		8451C1C293A1D01B378ADEFE /* PixelForgeAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				452821937474DDD2F97E3525 /* AppLanguageTests.swift */,
+				F4EAD21E3F66608A305A1532 /* LocalLibraryStoreTests.swift */,
+				494B471E2D6C901143F233DD /* ProAccessPolicyTests.swift */,
+				EFD76E720BAAA81446C0A3D6 /* StoredRecipeTests.swift */,
+			);
+			path = PixelForgeAppTests;
+			sourceTree = "<group>";
+		};
+		89E9FDD5C6BCD1986B118DB5 = {
+			isa = PBXGroup;
+			children = (
+				1604413BA468A492BE611E17 /* Packages */,
+				7AB7B34CEA50F2FD2D0BF4AB /* Sources */,
+				74F3BF7029562E79F65C5FC9 /* Tests */,
+				60BEACEAE4902AC310FDBBCD /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9CD4B73D85E7D208AC5DFCB6 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F2C63D7BAD3BB44C7CB7F1BF /* Fonts */,
+				7DB54740F87B86E61C8D6EB2 /* Localizable.strings */,
+				5B0ED40EEE030F3069103275 /* ReviewAssets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		F2C63D7BAD3BB44C7CB7F1BF /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				EE4D2616F7425773DD52C180 /* DotGothic16-Regular.ttf */,
+				50FD5BD73885CB873E73B635 /* OFL.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6D937E328EB155B580C4E8AC /* PixelForgeApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 12E507517E681F7235E8672F /* Build configuration list for PBXNativeTarget "PixelForgeApp" */;
+			buildPhases = (
+				3A7CD63BAD7A61E15BF4AC11 /* Sources */,
+				C1279BF3CF245352E678D394 /* Resources */,
+				C70343B2F91A543B711F58BB /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PixelForgeApp;
+			packageProductDependencies = (
+				E251027867813D2A1787EBCC /* PixelCoreKit */,
+			);
+			productName = PixelForgeApp;
+			productReference = 35E0F7ACA34AD6B24EA04B23 /* PixelForgeApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		900E595F70186018DFDA10BF /* PixelForgeAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 00471691CCA600509E52AA0F /* Build configuration list for PBXNativeTarget "PixelForgeAppTests" */;
+			buildPhases = (
+				3A0DA2AEF007B084E1760875 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A2D3B2C9A31FC129C92D715D /* PBXTargetDependency */,
+			);
+			name = PixelForgeAppTests;
+			packageProductDependencies = (
+			);
+			productName = PixelForgeAppTests;
+			productReference = 56C4CD3E64393950D065481B /* PixelForgeAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3329699320C8A479729AFEE2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 917EA1B948FE369443CE1D69 /* Build configuration list for PBXProject "PixelForgeApp" */;
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+				ja,
+			);
+			mainGroup = 89E9FDD5C6BCD1986B118DB5;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				34983D158B69906D9DE3CB84 /* XCLocalSwiftPackageReference "../../../packages/PixelCoreKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 60BEACEAE4902AC310FDBBCD /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6D937E328EB155B580C4E8AC /* PixelForgeApp */,
+				900E595F70186018DFDA10BF /* PixelForgeAppTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C1279BF3CF245352E678D394 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E28AD883B6E981B35EE9158B /* DotGothic16-Regular.ttf in Resources */,
+				0BE60107823C2711C1BA5640 /* Localizable.strings in Resources */,
+				DEBBD0AFFECF7EC784C7981E /* OFL.txt in Resources */,
+				0396AF71114627DD408D912D /* review-gradient.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3A0DA2AEF007B084E1760875 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49C47CE418B243DFB14A97BE /* AppLanguageTests.swift in Sources */,
+				E11BCE4CFDA86040744743C2 /* LocalLibraryStoreTests.swift in Sources */,
+				FA3F06D2CFFCF59409BC1019 /* ProAccessPolicyTests.swift in Sources */,
+				4A00FB360F8A9298B3389E82 /* StoredRecipeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3A7CD63BAD7A61E15BF4AC11 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1B7DB9A875ECA7D9580DD8EA /* ActivitySheet.swift in Sources */,
+				E471D45200B973D032CD5749 /* AppConfiguration.swift in Sources */,
+				7288DF0A7695821C9438767B /* ConversionModalView.swift in Sources */,
+				71775A99C6DCE853FA34E782 /* ForgeComponents.swift in Sources */,
+				857F73CA4289329CDF9288E9 /* ForgeDesignTokens.swift in Sources */,
+				765FEC13F9BAB6A25B52B94F /* ForgeIcons.swift in Sources */,
+				4DD66FBFD649CB8F912243A2 /* ForgeTypography.swift in Sources */,
+				42251FDF4169276BD30742D3 /* LocalLibraryStore.swift in Sources */,
+				9B4B47F2C41BBA18C75CC011 /* Localization.swift in Sources */,
+				6ED9DA2E9E42581596446728 /* PixelForgeApp.swift in Sources */,
+				C0AEC3C7176F13E8AE2F5752 /* ProAccessPolicy.swift in Sources */,
+				890E39F1F15E6AEA1052994E /* ProEntitlementService.swift in Sources */,
+				C7CB9212CE901BA64B076F11 /* ReviewConfiguration.swift in Sources */,
+				015C02105881FA374A04DDD9 /* StoredRecipe.swift in Sources */,
+				FC5F6C7F5372B2DF2F978C9D /* ThemeSettingsView.swift in Sources */,
+				E3EDB0E365C2D7F51B84303B /* WorkbenchModel.swift in Sources */,
+				0F10E1AA87DE8A85BCDFDC19 /* WorkbenchView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A2D3B2C9A31FC129C92D715D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6D937E328EB155B580C4E8AC /* PixelForgeApp */;
+			targetProxy = F4510E956EF45B09130D6BD2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		7DB54740F87B86E61C8D6EB2 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6A5F5AC2CCF6873B61593A67 /* en */,
+				E09B6D3D6230FBB5DB729DB8 /* ja */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		3BB7A4D20C743A8202CE44AC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COMPRESS_PNG_FILES = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = Supporting/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kazuvin.pixelforge;
+				PRODUCT_MODULE_NAME = PixelForgeApp;
+				PRODUCT_NAME = PixelForgeApp;
+				SDKROOT = iphoneos;
+				STRIP_PNG_TEXT = NO;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		454212BB4AD455A7334CBED9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kazuvin.pixelforge.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PixelForgeApp.app/PixelForgeApp";
+			};
+			name = Debug;
+		};
+		A6189338817A901799C500A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		CFDDB23112530274A72D86E9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COMPRESS_PNG_FILES = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				INFOPLIST_FILE = Supporting/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kazuvin.pixelforge;
+				PRODUCT_MODULE_NAME = PixelForgeApp;
+				PRODUCT_NAME = PixelForgeApp;
+				SDKROOT = iphoneos;
+				STRIP_PNG_TEXT = NO;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		FDBE0B63043723AC8FC16B1D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kazuvin.pixelforge.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PixelForgeApp.app/PixelForgeApp";
+			};
+			name = Release;
+		};
+		FF43A9BCBDA73406D13497E1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		00471691CCA600509E52AA0F /* Build configuration list for PBXNativeTarget "PixelForgeAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				454212BB4AD455A7334CBED9 /* Debug */,
+				FDBE0B63043723AC8FC16B1D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		12E507517E681F7235E8672F /* Build configuration list for PBXNativeTarget "PixelForgeApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFDDB23112530274A72D86E9 /* Debug */,
+				3BB7A4D20C743A8202CE44AC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		917EA1B948FE369443CE1D69 /* Build configuration list for PBXProject "PixelForgeApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FF43A9BCBDA73406D13497E1 /* Debug */,
+				A6189338817A901799C500A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		34983D158B69906D9DE3CB84 /* XCLocalSwiftPackageReference "../../../packages/PixelCoreKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../../packages/PixelCoreKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E251027867813D2A1787EBCC /* PixelCoreKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = PixelCoreKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3329699320C8A479729AFEE2 /* Project object */;
+}

@@ -1,0 +1,166 @@
+# iPhone MVP画面仕様
+
+## 対象と原則
+
+Pixel ForgeのUIはiOS 17以降のiPhone縦向きだけを対象とする。iPad、横向き、Mac Catalyst、Designed for iPad on MacはMVPに含めない。
+
+ホームは生成結果を見つける場所、全画面の変換フローは一つの画像を調整して結果を確定する場所、設定は言語・外観・購入・サポートをまとめる場所とする。タブバーを設けず、片手で上から下へ読める順序を保つ。
+
+## Navigation
+
+```text
+Home
+├─ New Conversion (full screen)
+│  └─ editing -> rendering -> result / failure
+├─ Existing Result (same full screen)
+│  └─ result -> editing -> update or save as new
+└─ Settings (in-app destination)
+   ├─ Language
+   ├─ Appearance
+   ├─ Pixel Forge Pro
+   ├─ Support
+   └─ About
+```
+
+- 起点はHomeだけとし、tab barを置かない。
+- 変換は新規・既存とも同じfull-screen coverを使い、状態ごとに別画面を重ねない。
+- SettingsはHomeからアプリ内遷移し、専用の閉じる操作でHomeへ戻る。
+- 変換中はinteractive dismissalを無効にし、重複実行を許可しない。
+
+## Home
+
+```text
+┌───────────────────────────┐
+│ [PF] Pixel Forge  [≡] [+] │
+│      local library        │
+├───────────────────────────┤
+│ ┌──────────┐ ┌──────────┐ │
+│ │ preview  │ │ preview  │ │
+│ ├──────────┤ ├──────────┤ │
+│ │ name [×] │ │ name [×] │ │
+│ │ metadata │ │ metadata │ │
+│ └──────────┘ └──────────┘ │
+│                           │
+├───────────────────────────┤
+│ local library / count     │
+└───────────────────────────┘
+```
+
+- safe area直下のtop barにはbrand、設定、画像追加だけを置く。
+- 画像追加はaction sheetを開き、`写真を選ぶ`と`ファイルから選ぶ`を分ける。
+- 生成結果は新しい順で常に2列の`LazyVGrid`へ表示する。
+- preview領域の高さを揃え、画像はaspect fitかつ補間なしで表示する。
+- card全体のtapで共通変換フローのresultを開く。削除buttonはcard tapと競合させない。
+- 下端にはローカル保存であることと件数を短く表示する。
+
+### Empty
+
+- 見出し: `最初の画像を作りましょう`
+- 説明: 写真ライブラリまたはFilesから選べること、処理がiPhone内で完結することを示す。
+- 主操作: `画像を選ぶ`
+- upload、account、cloudを想起させる表現を使わない。
+
+## Conversion: editing
+
+```text
+┌───────────────────────────┐
+│ [PF] source.png        [×]│
+│      1200 × 900 px        │
+├───────────────────────────┤
+│ INPUT                     │
+│ ┌───────────────────────┐ │
+│ │ source preview        │ │
+│ └───────────────────────┘ │
+│                           │
+│ CONVERSION OPTIONS        │
+│ logical size / upscale    │
+│ crop                      │
+│ palette / tone            │
+│ outline                   │
+│ [      変換する       ]   │
+└───────────────────────────┘
+```
+
+- preview、幾何、色、輪郭、主操作を縦一列で並べ、画面全体をscroll可能にする。
+- 無料範囲外の設定も隠さずlockを表示する。選択時にProが必要であることを説明し、現在の入力と設定を失わない。
+- 新規変換の主操作は`変換する`とする。
+- 既存recordの調整では`この画像を更新`を主操作、`別の画像として保存`を副操作として同時に提示する。
+- touch targetは44pt以上とし、lockや選択状態を色だけで示さない。
+
+## Conversion: rendering / failure
+
+- 変換開始から200ms以内に完了した場合はloadingを表示せずresultへ切り替える。
+- 200msを超えた場合だけ不定進捗と`変換中`を表示し、見せるための待ち時間を追加しない。
+- 処理はUI thread外で実行する。MVPでは変換を閉じてHomeへ戻すbackground queueや複数並列変換を持たない。
+- failureでは入力と設定を保持し、既存recordの更新失敗なら以前の結果が残っていることを表示する。
+
+## Conversion: result
+
+```text
+┌───────────────────────────┐
+│ [PF] source.png        [×]│
+├───────────────────────────┤
+│ INPUT                     │
+│ ┌───────────────────────┐ │
+│ │ source                │ │
+│ └───────────────────────┘ │
+│ OUTPUT                    │
+│ ┌───────────────────────┐ │
+│ │ pixel result          │ │
+│ └───────────────────────┘ │
+│ size / palette / version  │
+│ [調整する] [共有する]     │
+└───────────────────────────┘
+```
+
+- 新規変換完了後とHomeのcard tapで同じresultを表示する。
+- inputとoutputを縦に比較し、outputは補間なしで表示する。
+- 論理寸法、保存寸法、palette、algorithm versionを表示する。
+- `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeを初期値にする。
+- 書き出しはPNGとrecipe JSONを一時生成してiOS share sheetへ同時に渡す。
+
+## Settings
+
+```text
+┌───────────────────────────┐
+│ [PF] 設定              [×]│
+├───────────────────────────┤
+│ LANGUAGE                  │
+│ [System] [English] [日本語]│
+│                           │
+│ APPEARANCE                │
+│ iOSに合わせる             │
+│ 黒基調 PRO                │
+│ 白基調 PRO                │
+│                           │
+│ PIXEL FORGE PRO           │
+│ purchase / restore        │
+│                           │
+│ SUPPORT / ABOUT           │
+└───────────────────────────┘
+```
+
+- 言語の初期値は`システムデフォルト`とし、`English`、`日本語`へ手動固定できる。
+- system時はiOSの最優先言語だけを評価し、日本語なら日本語、英語なら英語、それ以外なら英語へfallbackする。
+- 言語変更はその場で画面文言とsupport URLへ反映し、再起動後も保持する。
+- 無料版はiOS appearanceへの自動追従を利用でき、Proはdark/lightを手動固定できる。
+- Supportにはレビュー、シェア、Googleフォーム、privacy、termsを置き、Aboutにはversionとbuildを表示する。
+
+## Portrait / accessibility contract
+
+- app targetは`TARGETED_DEVICE_FAMILY = 1`、`SUPPORTS_MACCATALYST = NO`とする。
+- `UISupportedInterfaceOrientations`は`UIInterfaceOrientationPortrait`だけを含める。
+- すべてのicon buttonに日英のaccessibility labelを付ける。
+- Dynamic Typeによる極端な崩れ、VoiceOver順序、dark/light contrast、Reduce Motionをrelease前に実機確認する。
+- 小さいiPhoneでも2列gridを維持し、card名は省略、重要metadataは複数行で表示する。
+
+## Review screenshots
+
+次の8枚をiPhone Simulatorの縦向きで保存する。
+
+- `pixel-forge-home--{dark,light}.png`
+- `pixel-forge-conversion-editing--{dark,light}.png`
+- `pixel-forge-conversion-result--{dark,light}.png`
+- `pixel-forge-settings--{dark,light}.png`
+
+自動取得は`./scripts/capture-apple-review.sh`を使う。

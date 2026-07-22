@@ -1,5 +1,5 @@
-import AppKit
 import SwiftUI
+import UIKit
 
 struct ForgePixelChamferShape: Shape {
     var cut: CGFloat = ForgeDesign.Size.cornerCut
@@ -183,7 +183,7 @@ struct ForgeTopBar<Trailing: View>: View {
             Spacer(minLength: ForgeDesign.Spacing.regular)
             trailing()
         }
-        .padding(.horizontal, ForgeDesign.Spacing.roomy)
+        .padding(.horizontal, ForgeDesign.Spacing.regular)
         .frame(height: ForgeDesign.Size.toolbarHeight)
         .background(palette.panel)
     }
@@ -228,20 +228,19 @@ struct ForgeIconButton: View {
             ForgeIcon(name: icon)
         }
         .buttonStyle(ForgeIconButtonChrome())
-        .help(accessibilityLabel)
         .accessibilityLabel(accessibilityLabel)
     }
 }
 
 struct ForgeSettingsButton: View {
     let label: String
+    let action: () -> Void
 
     var body: some View {
-        SettingsLink {
+        Button(action: action) {
             ForgeIcon(name: .sliders)
         }
         .buttonStyle(ForgeIconButtonChrome())
-        .help(label)
         .accessibilityLabel(label)
     }
 }
@@ -447,7 +446,7 @@ struct ForgeMetricStepper: View {
         }
         .padding(.leading, ForgeDesign.Spacing.compact)
         .padding(.trailing, ForgeDesign.Spacing.tight)
-        .frame(height: 54)
+        .frame(height: 58)
         .background {
             ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
                 .fill(palette.surface)
@@ -473,7 +472,7 @@ private struct ForgeStepButton: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(palette.ink)
-        .frame(width: 30, height: 30)
+        .frame(width: 44, height: 44)
         .background {
             ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
                 .fill(palette.surfaceRaised)
@@ -506,7 +505,7 @@ struct ForgeSegmentedControl<Value: Hashable>: View {
                     Text(option.title)
                         .forgeTextStyle(.caption)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 36)
+                        .frame(height: 44)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -545,7 +544,7 @@ struct ForgePreviewPane: View {
     @Environment(\.forgePalette) private var palette
     let label: String
     let metadata: String
-    let image: NSImage?
+    let image: UIImage?
     let pixelated: Bool
     let emptyMessage: String
 
@@ -566,12 +565,12 @@ struct ForgePreviewPane: View {
                 ForgePixelGridBackground()
                 if let image {
                     if pixelated {
-                        Image(nsImage: image)
+                        Image(uiImage: image)
                             .resizable()
                             .interpolation(.none)
                             .scaledToFit()
                     } else {
-                        Image(nsImage: image)
+                        Image(uiImage: image)
                             .resizable()
                             .interpolation(.high)
                             .scaledToFit()
@@ -659,7 +658,7 @@ struct ForgeStatusStrip: View {
                 .forgeTextStyle(.micro)
                 .foregroundStyle(palette.muted)
         }
-        .padding(.horizontal, ForgeDesign.Spacing.roomy)
+        .padding(.horizontal, ForgeDesign.Spacing.regular)
         .frame(height: 38)
         .background(palette.panel)
     }
@@ -739,7 +738,7 @@ struct ForgeLibraryEmpty: View {
 
 struct ForgeGeneratedCard: View {
     @Environment(\.forgePalette) private var palette
-    let image: NSImage?
+    let image: UIImage?
     let title: String
     let detail: String
     let updated: String
@@ -752,14 +751,14 @@ struct ForgeGeneratedCard: View {
                 ZStack {
                     ForgePixelGridBackground()
                     if let image {
-                        Image(nsImage: image)
+                        Image(uiImage: image)
                             .resizable()
                             .interpolation(.none)
                             .scaledToFit()
                             .padding(ForgeDesign.Spacing.compact)
                     }
                 }
-                .frame(minHeight: 190)
+                .frame(height: 136)
                 ForgeDivider()
                 HStack(spacing: ForgeDesign.Spacing.compact) {
                     VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
@@ -778,7 +777,7 @@ struct ForgeGeneratedCard: View {
                         delete()
                     }
                 }
-                .padding(ForgeDesign.Spacing.regular)
+                .padding(ForgeDesign.Spacing.compact)
             }
             .contentShape(Rectangle())
             .onTapGesture(perform: open)
@@ -809,7 +808,7 @@ struct ForgeModalHeader: View {
             Spacer()
             ForgeIconButton(icon: .close, accessibilityLabel: L10n.close, action: close)
         }
-        .padding(.horizontal, ForgeDesign.Spacing.roomy)
+        .padding(.horizontal, ForgeDesign.Spacing.regular)
         .frame(height: ForgeDesign.Size.toolbarHeight)
         .background(palette.panel)
     }
@@ -912,7 +911,11 @@ struct ForgeResultMetadata: View {
 
     var body: some View {
         ForgePixelSurface(level: .raised, padding: ForgeDesign.Spacing.compact) {
-            HStack(spacing: ForgeDesign.Spacing.roomy) {
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                alignment: .leading,
+                spacing: ForgeDesign.Spacing.compact
+            ) {
                 item(L10n.logicalSize, logical)
                 item(L10n.outputSize, output)
                 item(L10n.palette, paletteName)

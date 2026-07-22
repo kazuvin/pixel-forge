@@ -1,12 +1,11 @@
-import AppKit
 import Foundation
 import PixelCoreKit
+import UIKit
 
 @MainActor
 final class HomeModel: ObservableObject {
     @Published var records: [GeneratedImageRecord] = []
-    @Published var thumbnails: [UUID: NSImage] = [:]
-    @Published var isShowingImporter = false
+    @Published var thumbnails: [UUID: UIImage] = [:]
     @Published var session: ConversionSessionModel?
     @Published var errorMessage: String?
 
@@ -20,9 +19,9 @@ final class HomeModel: ObservableObject {
         do {
             let snapshot = try await store.loadSnapshot()
             records = snapshot.records.sorted { $0.createdAt > $1.createdAt }
-            var loaded: [UUID: NSImage] = [:]
+            var loaded: [UUID: UIImage] = [:]
             for record in records {
-                if let image = NSImage(data: try await store.pngData(for: record)) {
+                if let image = UIImage(data: try await store.pngData(for: record)) {
                     loaded[record.id] = image
                 }
             }
@@ -63,6 +62,50 @@ final class HomeModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func load(data: Data, filename: String, entitlement: ProEntitlementService) {
+        do {
+            session = try ConversionSessionModel(
+                sourceData: data,
+                sourceFilename: filename,
+                store: store,
+                entitlement: entitlement,
+                onLibraryChange: { [weak self] in
+                    await self?.loadLibrary()
+                }
+            )
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func prepareReviewHome(imageData: Data) {
+        guard let image = UIImage(data: imageData) else { return }
+        let baseDate = Date(timeIntervalSince1970: 1_751_328_000)
+        let sizes: [(logical: UInt32, output: UInt32)] = [(64, 512), (32, 256)]
+        records = sizes.enumerated().map { index, size in
+            GeneratedImageRecord(
+                id: UUID(),
+                sourceHash: "review-\(index)",
+                sourceFilename: "pixel-study-0\(index + 1).png",
+                pngRelativePath: "review/\(index).png",
+                recipeRelativePath: "review/\(index).json",
+                createdAt: baseDate.addingTimeInterval(Double(index) * 60),
+                updatedAt: baseDate.addingTimeInterval(Double(index) * 60),
+                metadata: GeneratedImageMetadata(
+                    logicalWidth: size.logical,
+                    logicalHeight: size.logical,
+                    outputWidth: size.output,
+                    outputHeight: size.output,
+                    paletteName: index == 0 ? "Source" : "PICO-8",
+                    algorithmVersion: PixelCoreInfo.algorithmVersion
+                )
+            )
+        }
+        thumbnails = Dictionary(uniqueKeysWithValues: records.map { ($0.id, image) })
+        errorMessage = nil
     }
 
     func open(_ record: GeneratedImageRecord, entitlement: ProEntitlementService) async {
@@ -130,12 +173,12 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     let id = UUID()
     let sourceData: Data
     let sourceFilename: String
-    let sourceImage: NSImage?
+    let sourceImage: UIImage?
     let sourceDimensions: PixelImageDimensions
 
     @Published var state: ConversionModalState
     @Published var showsLoader = false
-    @Published var outputImage: NSImage?
+    @Published var outputImage: UIImage?
     @Published var errorMessage: String?
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
@@ -173,7 +216,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         let processor = try PixelCoreProcessor(imageData: sourceData)
         self.sourceData = sourceData
         self.sourceFilename = sourceFilename
-        sourceImage = NSImage(data: sourceData)
+        sourceImage = UIImage(data: sourceData)
         sourceDimensions = processor.sourceDimensions
         cropWidth = Int(processor.sourceDimensions.width)
         cropHeight = Int(processor.sourceDimensions.height)
@@ -196,10 +239,10 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         let recipe = try StoredRecipe(json: recipeJSON)
         self.sourceData = sourceData
         sourceFilename = record.sourceFilename
-        sourceImage = NSImage(data: sourceData)
+        sourceImage = UIImage(data: sourceData)
         sourceDimensions = processor.sourceDimensions
         state = .result
-        outputImage = NSImage(data: pngData)
+        outputImage = UIImage(data: pngData)
         currentRecord = record
         latestPNGData = pngData
         latestRecipeJSON = recipeJSON
@@ -316,7 +359,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                     self.currentRecord = record
                     self.latestPNGData = result.pngData
                     self.latestRecipeJSON = result.recipeJSON
-                    self.outputImage = NSImage(data: result.pngData)
+                    self.outputImage = UIImage(data: result.pngData)
                     self.showsLoader = false
                     self.state = .result
                     await self.onLibraryChange()
@@ -329,35 +372,33 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         }
     }
 
-    func export() {
-        guard let pngData = latestPNGData, let recipeJSON = latestRecipeJSON else { return }
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [.png]
-        panel.canCreateDirectories = true
-        panel.nameFieldStringValue = suggestedOutputName
-        panel.message = L10n.exportPanelMessage
-        guard panel.runModal() == .OK, let pngURL = panel.url else { return }
+    func prepareExport() -> [URL]? {
+        guard let pngData = latestPNGData, let recipeJSON = latestRecipeJSON else { return nil }
         do {
-            let recipeURL = pngURL.deletingPathExtension().appendingPathExtension("recipe.json")
-            if FileManager.default.fileExists(atPath: recipeURL.path) {
-                let alert = NSAlert()
-                alert.messageText = L10n.recipeOverwriteTitle
-                alert.informativeText = L10n.recipeOverwriteDetail
-                alert.addButton(withTitle: L10n.overwrite)
-                alert.addButton(withTitle: L10n.cancel)
-                guard alert.runModal() == .alertFirstButtonReturn else { return }
-            }
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("PixelForgeExport", isDirectory: true)
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let pngURL = directory.appendingPathComponent(suggestedOutputName)
+            let recipeURL = directory.appendingPathComponent(suggestedRecipeName)
             try pngData.write(to: pngURL, options: .atomic)
             try recipeJSON.write(to: recipeURL, atomically: true, encoding: .utf8)
             errorMessage = nil
+            return [pngURL, recipeURL]
         } catch {
             errorMessage = L10n.exportFailure(error.localizedDescription)
+            return nil
         }
     }
 
     private var suggestedOutputName: String {
         let stem = (sourceFilename as NSString).deletingPathExtension
         return "\(stem)-pixel.png"
+    }
+
+    private var suggestedRecipeName: String {
+        let stem = (sourceFilename as NSString).deletingPathExtension
+        return "\(stem)-pixel.recipe.json"
     }
 
     private func makeSettings() throws -> PixelConversionSettings {

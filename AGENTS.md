@@ -28,7 +28,7 @@
 - theme固有値は`ForgePalette.dark`と`ForgePalette.light`だけに置き、画面やcomponentでtheme分岐しない。
 - UI iconは`ForgeIcon`と`ForgeIconName`へpixel gridとして定義し、SF Symbolsを画面・共通componentから直接利用しない。
 - 表示文言は日英`Localizable.strings`へ同じkeyで追加し、UI fontは同梱のDotGothic16を`ForgeTypography`経由で使う。
-- `Design/`または`Screens/`を変更したら、黒基調・白基調の両方で起動確認し、`designs/reviews/pixel-forge-workbench--diagonal-pixel-border-icons-v2--{dark,light}.png`を更新する。
+- `Design/`または`Screens/`を変更したら、iPhone縦向きの黒基調・白基調で起動確認し、`designs/reviews/pixel-forge-{home,conversion-editing,conversion-result,settings}--{dark,light}.png`を更新する。
 - `scripts/verify-apple-design-system.sh`は上記の直書き、翻訳key差分、font、review screenshotを検査する。回避する変更は行わない。
 - 完了前に`./scripts/ci-local.sh`を実行する。
 - 既存の未コミット変更はユーザーの作業として扱い、勝手に戻さない。

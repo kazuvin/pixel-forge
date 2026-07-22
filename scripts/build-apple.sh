@@ -7,12 +7,16 @@ build_dir="$root_dir/build/apple"
 bindings_dir="$build_dir/bindings"
 headers_dir="$build_dir/headers"
 library_dir="$build_dir/library"
+ios_device_library_dir="$build_dir/library-ios"
+ios_simulator_library_dir="$build_dir/library-ios-simulator"
 artifact_path="$root_dir/packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework"
 generated_swift="$root_dir/packages/PixelCoreKit/Sources/PixelCoreKit/Generated/PixelForgeCore.swift"
 
-mkdir -p "$bindings_dir" "$headers_dir" "$library_dir" "$(dirname "$artifact_path")" "$(dirname "$generated_swift")"
+mkdir -p "$bindings_dir" "$headers_dir" "$library_dir" "$ios_device_library_dir" "$ios_simulator_library_dir" "$(dirname "$artifact_path")" "$(dirname "$generated_swift")"
 
 cargo build --manifest-path "$root_dir/Cargo.toml" --release -p pixel-ffi
+cargo build --manifest-path "$root_dir/Cargo.toml" --release -p pixel-ffi --target aarch64-apple-ios
+cargo build --manifest-path "$root_dir/Cargo.toml" --release -p pixel-ffi --target aarch64-apple-ios-sim
 cargo run --manifest-path "$root_dir/Cargo.toml" -p pixel-uniffi-bindgen -- \
   generate \
   --library "$root_dir/target/release/libpixel_ffi.dylib" \
@@ -32,6 +36,8 @@ cp "$swift_source" "$generated_swift"
 cp "$ffi_header" "$headers_dir/$(basename "$ffi_header")"
 cp "$module_map" "$headers_dir/module.modulemap"
 cp "$root_dir/target/release/libpixel_ffi.a" "$library_dir/libPixelForgeCoreFFI.a"
+cp "$root_dir/target/aarch64-apple-ios/release/libpixel_ffi.a" "$ios_device_library_dir/libPixelForgeCoreFFI.a"
+cp "$root_dir/target/aarch64-apple-ios-sim/release/libpixel_ffi.a" "$ios_simulator_library_dir/libPixelForgeCoreFFI.a"
 
 expected_artifact="$root_dir/packages/PixelCoreKit/Artifacts/PixelForgeCoreFFI.xcframework"
 if [[ "$artifact_path" != "$expected_artifact" ]]; then
@@ -43,7 +49,10 @@ rm -rf "$artifact_path"
 xcodebuild -create-xcframework \
   -library "$library_dir/libPixelForgeCoreFFI.a" \
   -headers "$headers_dir" \
+  -library "$ios_device_library_dir/libPixelForgeCoreFFI.a" \
+  -headers "$headers_dir" \
+  -library "$ios_simulator_library_dir/libPixelForgeCoreFFI.a" \
+  -headers "$headers_dir" \
   -output "$artifact_path"
 
 echo "Generated $artifact_path"
-

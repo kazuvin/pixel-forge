@@ -102,7 +102,7 @@ enum ForgeDesign {
         static let compactCornerCut: CGFloat = 4
         static let previewCornerCut: CGFloat = 8
         static let statusLamp: CGFloat = 7
-        static let controlHeight: CGFloat = 42
+        static let controlHeight: CGFloat = 44
         static let buttonHeight: CGFloat = 46
         static let toolbarHeight: CGFloat = 82
         static let recipeWidth: CGFloat = 352

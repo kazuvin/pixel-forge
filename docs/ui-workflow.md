@@ -2,9 +2,9 @@
 
 ## 方向性
 
-対象は写真をゲーム素材へ変換する個人制作者。ホームは生成物を見つけること、共通変換モーダルは一つの画像を調整して結果を確定すること、設定はアプリ全体の選択とサポート導線をまとめることに集中する。
+対象は写真をゲーム素材へ変換する個人制作者。iPhone縦画面のホームは生成物を見つけること、全画面の共通変換フローは一つの画像を調整して結果を確定すること、アプリ内設定は全体の選択とサポート導線をまとめることに集中する。
 
-参考ビジュアルから、一般的なmacOS utilityではなく、制作機器の操作盤を思わせるpixel workbenchを採用する。対角pixelで面取りした細枠、square status lamp、密度のあるdata label、pixel grid iconを署名要素とし、装飾はその1系統に限定する。
+参考ビジュアルから、一般的なモバイル写真アプリではなく、ポケットサイズの制作機器を思わせるpixel workbenchを採用する。対角pixelで面取りした細枠、square status lamp、密度のあるdata label、pixel grid iconを署名要素とし、装飾はその1系統に限定する。
 
 ## Visual system
 
@@ -20,7 +20,7 @@
 | Accent | `#EF7A9E` | `#BC3F66` | 実行、選択、状態lamp |
 | Grid | `#66728E` | `#8D98AA` | pixel frame / checker |
 
-- system themeは現在のmacOS appearanceに応じてdark/lightいずれかのpaletteへ解決する。theme差分はpaletteだけに閉じ、layout、spacing、component treeを分岐させない。
+- system themeは現在のiOS appearanceに応じてdark/lightいずれかのpaletteへ解決する。theme差分はpaletteだけに閉じ、layout、spacing、component treeを分岐させない。
 - gradient、glass、装飾目的のshadow、連続的な大きなcorner radiusを使わない。
 - surfaceの面は`ForgePixelChamferShape`で45度に切り、borderの斜線は`ForgePixelBorder`で角だけが接する独立square pixel列として描く。
 - 斜線を水平・垂直rectのL字連続で疑似表現しない。通常の`RoundedRectangle`と自動`stroke`もpixel UI枠には使わない。
@@ -29,15 +29,15 @@
 
 ## Typography / localization
 
-- UI fontはDotGothic16をSwift Package resourceとして同梱する。
+- UI fontはDotGothic16をiPhone app resourceとして同梱する。
 - DotGothic16は日本語・Latinを収録し、ライセンスは`Resources/Fonts/OFL.txt`を同梱する。
 - font size、trackingは`ForgeTypography.swift`の`ForgeTextStyle`だけを使う。
 - 文言は`Resources/ja.lproj/Localizable.strings`と`en.lproj/Localizable.strings`へ同じkeyで追加する。
-- app内へ言語切替を重複実装せず、macOSの優先言語へ追従する。
+- system、English、日本語の選択を設定画面へ一つだけ置く。systemで日本語・英語以外の最優先言語は英語へフォールバックする。
 
 ## Layout source of truth
 
-画面構成、状態遷移、文言、操作は`docs/ui/layouts/mvp-macos-screens.md`を正本とする。MVPは単一のHome window、共通Conversion modal、Settings windowから成り、tab barと複数の編集windowを設けない。
+画面構成、状態遷移、文言、操作は`docs/ui/layouts/mvp-iphone-screens.md`を正本とする。MVPは縦向きのHome、共通Conversion flow、アプリ内Settingsから成り、tab barを設けない。
 
 ### Home
 
@@ -56,14 +56,15 @@
 ### Conversion modal
 
 ```text
-┌───────────────────────────────────────────────┐
-│ NEW CONVERSION / RESULT                       │
-├────────────────────────┬──────────────────────┤
-│ source / input         │ settings / output    │
-│ crop or comparison     │ recipe metadata      │
-├────────────────────────┴──────────────────────┤
-│ status                         primary action │
-└───────────────────────────────────────────────┘
+┌───────────────────────────┐
+│ NEW CONVERSION / RESULT × │
+├───────────────────────────┤
+│ source / input preview    │
+├───────────────────────────┤
+│ settings or output        │
+│ recipe metadata           │
+│ primary action            │
+└───────────────────────────┘
 ```
 
 ## 実装境界
@@ -73,7 +74,7 @@ ForgePalette / spacing / size
             ↓
 Forge typography / chamfer fill / diagonal pixel border / pixel icon
             ↓
-Forge top bar / generated card / drop target / preview / control / status
+Forge top bar / generated card / empty state / preview / control / status
             ↓
 HomeView / ConversionModal / SettingsView（状態と配置だけ）
 ```
@@ -88,19 +89,19 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 
 ## 変更手順
 
-1. `docs/requirements.md`、`docs/spec.md`、`docs/ui/layouts/mvp-macos-screens.md`、この文書を読む。
+1. `docs/requirements.md`、`docs/spec.md`、`docs/ui/layouts/mvp-iphone-screens.md`、この文書を読む。
 2. 既存のDesign token/componentで画面を構成できるか確認する。
 3. 不足する場合だけDesign層へ汎用APIとして追加する。
 4. Screen層では共通部品の組み合わせと状態接続だけを行う。
 5. `./scripts/verify-apple-design-system.sh`を実行する。
 6. system/dark/lightでHome empty、Home grid、editing、rendering、result、error、free/Pro settingsを確認する。
-7. `designs/reviews/pixel-forge-workbench--diagonal-pixel-border-icons-v2--dark.png`と`--light.png`を更新する。
+7. Home、変換設定、変換結果、設定を`designs/reviews/pixel-forge-{screen}--{dark,light}.png`へ別々に保存する。
 8. `./scripts/ci-local.sh`を実行する。
 
 `verify-apple-design-system.sh`はscreen層のstyle直書き、日英key不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。
 
-同じ入力とwindow sizeで両themeを再撮影する場合は次を使う。app自身のcontent viewを取得するため、画面収録権限には依存しない。
+同じfixtureとiPhone Simulatorで4画面を両themeで再撮影する場合は次を使う。
 
 ```bash
-./scripts/capture-apple-review.sh /absolute/path/to/input.jpg
+./scripts/capture-apple-review.sh
 ```

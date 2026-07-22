@@ -45,7 +45,7 @@ custom domainは未決とし、次のstable pathを契約とする。
 
 - `/`はbrowser languageを参考に日英の入口を示す。JavaScriptだけに依存したredirectは行わない。
 - headerまたはfooterに言語切替を常設する。
-- macOSアプリは現在のlocalizationに対応するURLを直接開く。
+- iPhoneアプリは設定中の表示言語に対応するURLを直接開く。
 - 公開後はpathを変更せず、変更が必要な場合は恒久redirectを用意する。
 
 ## Support
@@ -89,7 +89,7 @@ terms pageは少なくとも次を扱う。
 
 ## Design / accessibility
 
-- macOSアプリと同じPixel Forgeのbrand、DotGothic16、日英の語彙を使う。
+- iPhoneアプリと同じPixel Forgeのbrand、DotGothic16、日英の語彙を使う。
 - appの操作盤をそのままWebへ複製せず、長文を読みやすい幅、行間、heading hierarchyを優先する。
 - accent、対角pixel border、pixel grid iconのうち一つだけを署名要素として使い、法務文書の可読性を損なう装飾を追加しない。
 - keyboard操作、visible focus、semantic heading、landmark、WCAG相当のcontrast、Reduce Motionを満たす。

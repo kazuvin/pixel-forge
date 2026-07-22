@@ -10,11 +10,11 @@
 
 写真または画像ファイルを、好みのドットの細かさと色表現を持つピクセルアートへ変換し、画像として保存できるようにする。
 
-初版のクライアントはmacOS 14以降のSwiftUIアプリとする。詳細な要求は`docs/requirements.md`、画面構成は`docs/ui/layouts/mvp-macos-screens.md`を正本とする。
+初版のクライアントはiOS 17以降のiPhone縦向き専用SwiftUIアプリとする。iPad、横向き、Mac Catalystは対象外とする。詳細な要求は`docs/requirements.md`、画面構成は`docs/ui/layouts/mvp-iphone-screens.md`を正本とする。
 
 ## 基本フロー
 
-1. ホームで写真または画像ファイルを選ぶか、drag and dropする。
+1. ホームで写真ライブラリまたはFilesから画像を選ぶ。
 2. 共通の変換モーダルで必要に応じて画像をcropする。
 3. ドット解像度、色、輪郭線を調整する。
 4. 変換を実行し、同じモーダルで入力と結果を比較する。
@@ -25,7 +25,7 @@
 
 ### 画像選択とトリミング
 
-- Finderのファイル選択またはdrag and dropでPNG、JPEG、PPMを読み込める。
+- 写真ライブラリからPNG/JPEG、FilesからPNG/JPEG/PPMを読み込める。
 - 画像全体をそのまま使うことも、位置と範囲を調整して簡単にトリミングすることもできる。
 - 元画像や一般的な縦横比を選択できる。
 - 変換処理では、トリミング後の縦横比を常に維持し、画像を引き伸ばさない。
@@ -100,12 +100,13 @@
 - 無料版でもcrop、元画像色、基本解像度、preview、PNGとrecipeの書き出し、ローカル履歴を利用できる。
 - 買い切りのPixel Forge Proで任意解像度と拡大率、palette、色調保持、輪郭、dark/light themeの手動固定を解放する。
 - 広告、subscription、変換回数制限、履歴数制限を設けない。
-- themeは無料版でもmacOSの外観へ自動追従する。
-- Pro entitlementはmacOSアプリだけが扱い、Rust coreと個人利用CLIを制限しない。
+- themeは無料版でもiOSの外観へ自動追従する。
+- Pro entitlementはiPhoneアプリだけが扱い、Rust coreと個人利用CLIを制限しない。
 
 ## 設定とサポート
 
-- 設定windowにAppearance、Pixel Forge Pro、Support、Aboutを置く。
+- アプリ内設定画面にLanguage、Appearance、Pixel Forge Pro、Support、Aboutを置く。
+- Languageはシステムデフォルト、English、日本語から選べる。システムの最優先言語が日英以外なら英語を使う。
 - SupportからApp Store review、share、Googleフォーム、privacy、termsを開ける。
 - privacy、terms、supportはAstroで日英の静的ページを生成し、Cloudflare Workers Static Assetsで公開する。
 - marketing versionとbuild numberをAboutへ表示する。

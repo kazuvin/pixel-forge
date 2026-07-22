@@ -6,10 +6,16 @@ final class ProEntitlementService: ObservableObject {
     @Published private(set) var product: Product?
 
     let productID: String
+    private let reviewStatus: ProEntitlementStatus?
     private var updatesTask: Task<Void, Never>?
 
-    init(productID: String = AppConfiguration.proProductID) {
+    init(
+        productID: String = AppConfiguration.proProductID,
+        reviewStatus: ProEntitlementStatus? = nil
+    ) {
         self.productID = productID
+        self.reviewStatus = reviewStatus
+        status = reviewStatus ?? .unknown
     }
 
     deinit {
@@ -21,6 +27,10 @@ final class ProEntitlementService: ObservableObject {
     }
 
     func start() async {
+        if let reviewStatus {
+            status = reviewStatus
+            return
+        }
         guard updatesTask == nil else { return }
         updatesTask = Task { [weak self] in
             for await result in Transaction.updates {
