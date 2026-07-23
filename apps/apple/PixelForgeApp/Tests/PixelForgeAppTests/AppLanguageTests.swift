@@ -65,3 +65,51 @@ struct ImageSourceOptionTests {
         #expect(decoded.cgImage?.height == cgImage.width)
     }
 }
+
+@MainActor
+@Suite("Forge toast notifications")
+struct ForgeToastCenterTests {
+    @Test("notifications stack in arrival order")
+    func stacksNotifications() {
+        let center = ForgeToastCenter(
+            displayNanoseconds: 60_000_000_000,
+            maxVisibleCount: 4
+        )
+
+        center.show("Saved", style: .success)
+        center.show("Check settings", style: .warning)
+        center.show("Failed", style: .error)
+
+        #expect(center.toasts.map(\.message) == ["Saved", "Check settings", "Failed"])
+        #expect(center.toasts.map(\.style) == [.success, .warning, .error])
+    }
+
+    @Test("the oldest notification leaves when the visible stack is full")
+    func trimsOverflowingStack() {
+        let center = ForgeToastCenter(
+            displayNanoseconds: 60_000_000_000,
+            maxVisibleCount: 2
+        )
+
+        center.show("First", style: .success)
+        center.show("Second", style: .warning)
+        center.show("Third", style: .error)
+
+        #expect(center.toasts.map(\.message) == ["Second", "Third"])
+    }
+
+    @Test("notifications disappear after the shared display interval")
+    func dismissesAfterDisplayInterval() async throws {
+        let center = ForgeToastCenter(
+            displayNanoseconds: 20_000_000,
+            maxVisibleCount: 4
+        )
+
+        center.show("Temporary", style: .success)
+        #expect(center.toasts.count == 1)
+
+        try await Task.sleep(for: .milliseconds(80))
+
+        #expect(center.toasts.isEmpty)
+    }
+}

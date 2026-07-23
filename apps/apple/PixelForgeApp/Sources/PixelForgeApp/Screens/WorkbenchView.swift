@@ -86,7 +86,8 @@ struct WorkbenchView: View {
             ConversionModalView(
                 model: session,
                 opensPalettePicker: reviewScreen == .palettePicker,
-                opensPresetLibrary: reviewScreen == .recipePresetLibrary,
+                opensPresetLibrary: reviewScreen == .recipePresetLibrary
+                    || reviewScreen == .recipePresetNotifications,
                 opensStylePicker: reviewScreen == .conversionStylePicker,
                 opensAdvancedSettings: reviewScreen == .conversionAdvanced
             ) {
@@ -143,6 +144,9 @@ struct WorkbenchView: View {
         } message: {
             Text(L10n.cameraPermissionDetail)
         }
+        .forgeToast(message: $model.errorMessage, style: .error)
+        .forgeToast(message: $model.actionMessage, style: .success)
+        .forgeToastContainer()
         .task {
             await prepareInitialState()
         }
@@ -190,6 +194,9 @@ struct WorkbenchView: View {
         case .recipePresetLibrary:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.prepareReviewPresets()
+        case .recipePresetNotifications:
+            model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
+            model.session?.prepareReviewPresetNotifications()
         case .conversionResult:
             model.load(data: sourceData, filename: "review-gradient.png", entitlement: entitlement)
             model.session?.convert(saveMode: .newRecord)
@@ -251,46 +258,30 @@ struct WorkbenchView: View {
     @ViewBuilder
     private var homeContent: some View {
         if model.records.isEmpty {
-            VStack(spacing: ForgeDesign.Spacing.regular) {
-                if let errorMessage = model.errorMessage {
-                    ForgeAlertBanner(message: errorMessage)
-                }
-                if let actionMessage = model.actionMessage {
-                    ForgeSuccessBanner(message: actionMessage)
-                }
-                ForgeLibraryEmpty(
-                    title: L10n.homeEmptyTitle,
-                    detail: L10n.homeEmptyDetail,
-                    actionTitle: L10n.chooseImage
-                ) { showsSourceMenu = true }
-            }
+            ForgeLibraryEmpty(
+                title: L10n.homeEmptyTitle,
+                detail: L10n.homeEmptyDetail,
+                actionTitle: L10n.chooseImage
+            ) { showsSourceMenu = true }
             .padding(.horizontal, ForgeDesign.Spacing.regular)
             .padding(.top, ForgeDesign.Spacing.regular)
             .padding(.bottom, ForgeDesign.Spacing.regular)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: ForgeDesign.Spacing.compact) {
-                    if let errorMessage = model.errorMessage {
-                        ForgeAlertBanner(message: errorMessage)
-                    }
-                    if let actionMessage = model.actionMessage {
-                        ForgeSuccessBanner(message: actionMessage)
-                    }
-                    LazyVGrid(
-                        columns: [GridItem(.flexible()), GridItem(.flexible())],
-                        spacing: ForgeDesign.Spacing.compact
-                    ) {
-                        ForEach(model.records) { record in
-                            ForgeGeneratedCard(
-                                image: model.thumbnails[record.id],
-                                title: record.sourceFilename,
-                                detail: "\(record.metadata.logicalWidth)×\(record.metadata.logicalHeight) → \(record.metadata.outputWidth)×\(record.metadata.outputHeight)",
-                                updated: AppLanguage.selected.formattedLibraryDate(record.updatedAt),
-                                open: { Task { await model.open(record, entitlement: entitlement) } },
-                                showActions: { selectedRecordForActions = record }
-                            )
-                        }
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: ForgeDesign.Spacing.compact
+                ) {
+                    ForEach(model.records) { record in
+                        ForgeGeneratedCard(
+                            image: model.thumbnails[record.id],
+                            title: record.sourceFilename,
+                            detail: "\(record.metadata.logicalWidth)×\(record.metadata.logicalHeight) → \(record.metadata.outputWidth)×\(record.metadata.outputHeight)",
+                            updated: AppLanguage.selected.formattedLibraryDate(record.updatedAt),
+                            open: { Task { await model.open(record, entitlement: entitlement) } },
+                            showActions: { selectedRecordForActions = record }
+                        )
                     }
                 }
                 .padding(.horizontal, ForgeDesign.Spacing.compact)

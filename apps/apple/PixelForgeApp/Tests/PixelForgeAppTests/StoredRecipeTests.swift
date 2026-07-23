@@ -202,6 +202,36 @@ func adjustRestoresSavedPresetSelection() async throws {
     #expect(model.selectedConversionStyleTitle == "Portrait Lab")
 }
 
+@MainActor
+@Test("editing preview follows the latest conversion style without saving a record")
+func editingPreviewFollowsConversionStyle() async throws {
+    let sourceData = try #require(ReviewConfiguration.sourceData)
+    let model = try ConversionSessionModel(
+        sourceData: sourceData,
+        sourceFilename: "test.png",
+        store: LocalLibraryStore(rootURL: temporaryDirectory()),
+        presetStore: ConversionPresetStore(rootURL: temporaryDirectory()),
+        entitlement: ProEntitlementService(),
+        onLibraryChange: {}
+    )
+
+    model.refreshPreview(immediately: true)
+    try await waitForPreview(model)
+    let standardDimensions = model.outputDimensionsLabel
+
+    let chunky = try #require(
+        ConversionSessionModel.conversionStylePresets.first(where: { $0.id == "chunky" })
+    )
+    model.applyConversionStyle(chunky)
+    try await waitForPreview(model)
+
+    #expect(model.outputImage != nil)
+    #expect(model.outputDimensionsLabel != "—")
+    #expect(model.outputDimensionsLabel != standardDimensions)
+    #expect(model.currentRecord == nil)
+    #expect(model.state == .editing)
+}
+
 private func record(
     algorithmVersion: String,
     presetReference: ConversionPresetReference? = nil
@@ -256,4 +286,13 @@ private func recipeJSON(algorithmVersion: String) -> String {
 private func temporaryDirectory() -> URL {
     FileManager.default.temporaryDirectory
         .appendingPathComponent("PixelForgeRecipeTests-\(UUID().uuidString)", isDirectory: true)
+}
+
+@MainActor
+private func waitForPreview(_ model: ConversionSessionModel) async throws {
+    let deadline = ContinuousClock.now + .seconds(5)
+    while model.isPreviewRendering, ContinuousClock.now < deadline {
+        try await Task.sleep(for: .milliseconds(20))
+    }
+    #expect(!model.isPreviewRendering)
 }

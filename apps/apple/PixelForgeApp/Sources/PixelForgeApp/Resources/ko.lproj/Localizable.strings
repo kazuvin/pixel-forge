@@ -58,7 +58,9 @@
 "action.convert" = "변환";
 "action.adjust" = "조정";
 "action.update_image" = "이 이미지 업데이트";
+"action.save_image" = "이미지 저장";
 "action.save_as_new" = "새 이미지로 저장";
+"action.share_output" = "이미지 공유";
 "action.duplicate" = "복제";
 "action.delete" = "삭제";
 "action.cancel" = "취소";

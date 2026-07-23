@@ -58,7 +58,9 @@
 "action.convert" = "Convert";
 "action.adjust" = "Adjust";
 "action.update_image" = "Update This Image";
+"action.save_image" = "Save Image";
 "action.save_as_new" = "Save as New Image";
+"action.share_output" = "Share Image";
 "action.duplicate" = "Duplicate";
 "action.delete" = "Delete";
 "action.cancel" = "Cancel";

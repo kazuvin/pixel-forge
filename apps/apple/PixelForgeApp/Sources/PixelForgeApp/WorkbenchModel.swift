@@ -279,8 +279,10 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     @Published var state: ConversionModalState
     @Published var showsLoader = false
+    @Published private(set) var isPreviewRendering = false
     @Published var outputImage: UIImage?
     @Published var errorMessage: String?
+    @Published var previewErrorMessage: String?
     @Published var requiresPro = false
     @Published var currentRecord: GeneratedImageRecord?
     @Published var photoSaveState: PhotoSaveState = .idle
@@ -305,13 +307,18 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private let entitlement: ProEntitlementService
     private let photoLibrarySaver: any PhotoLibrarySaving
     private let onLibraryChange: @MainActor () async -> Void
+    private let previewRenderer = ConversionPreviewRenderer()
     private var latestPNGData: Data?
+    private var previewPNGData: Data?
+    private var previewMetadata: GeneratedImageMetadata?
     private var lastRenderedSettings: PixelConversionSettings?
     private var lastRenderedAlgorithmVersion: String?
     private var lastRenderedPresetReference: ConversionPresetReference?
     private var preferredPresetReference: ConversionPresetReference? = .builtIn("standard")
     private var conversionTask: Task<Void, Never>?
     private var loaderTask: Task<Void, Never>?
+    private var previewTask: Task<Void, Never>?
+    private var previewRevision = 0
 
     init(
         sourceData: Data,
@@ -354,6 +361,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         sourceDimensions = processor.sourceDimensions
         state = .result
         outputImage = UIImage(data: pngData)
+        previewPNGData = pngData
+        previewMetadata = record.metadata
         currentRecord = record
         latestPNGData = pngData
         self.store = store
@@ -373,6 +382,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     deinit {
         conversionTask?.cancel()
         loaderTask?.cancel()
+        previewTask?.cancel()
     }
 
     var hasExistingRecord: Bool {
@@ -388,13 +398,13 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     var outputDimensionsLabel: String {
-        guard let record = currentRecord else { return "—" }
-        return "\(record.metadata.outputWidth) × \(record.metadata.outputHeight) px"
+        guard let metadata = displayedMetadata else { return "—" }
+        return "\(metadata.outputWidth) × \(metadata.outputHeight) px"
     }
 
     var logicalDimensionsLabel: String {
-        guard let record = currentRecord else { return "—" }
-        return "\(record.metadata.logicalWidth) × \(record.metadata.logicalHeight) px"
+        guard let metadata = displayedMetadata else { return "—" }
+        return "\(metadata.logicalWidth) × \(metadata.logicalHeight) px"
     }
 
     var selectedPaletteTitle: String {
@@ -467,7 +477,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         apply(preset.settings)
         preferredPresetReference = .builtIn(preset.id)
         settingsCompatibilityWarning = nil
-        refreshProRequirement()
+        settingsDidChange()
     }
 
     func settingsSummary(_ settings: PixelConversionSettings) -> String {
@@ -500,12 +510,13 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         requiresPro = false
         photoSaveState = .idle
         restoreLastRenderedSettings()
-        refreshProRequirement()
         state = .editing
+        settingsDidChange()
     }
 
     func retry() {
         state = .editing
+        refreshPreview()
     }
 
     func refreshProRequirement() {
@@ -514,6 +525,66 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             return
         }
         requiresPro = !ProAccessPolicy.requiredFeatures(for: settings).isEmpty
+    }
+
+    func settingsDidChange() {
+        photoSaveState = .idle
+        refreshProRequirement()
+        refreshPreview()
+    }
+
+    func refreshPreview(immediately: Bool = false) {
+        guard state == .editing else { return }
+        let settings: PixelConversionSettings
+        do {
+            settings = try makeSettings()
+        } catch {
+            previewTask?.cancel()
+            isPreviewRendering = false
+            previewErrorMessage = error.localizedDescription
+            return
+        }
+
+        previewTask?.cancel()
+        previewRevision += 1
+        let revision = previewRevision
+        let sourceData = sourceData
+        isPreviewRendering = true
+        previewErrorMessage = nil
+        previewTask = Task { [weak self] in
+            if !immediately {
+                do {
+                    try await Task.sleep(for: .milliseconds(120))
+                } catch {
+                    return
+                }
+            }
+            let outcome = await self?.previewRenderer.render(
+                sourceData: sourceData,
+                settings: settings
+            )
+            guard
+                !Task.isCancelled,
+                let self,
+                let outcome,
+                revision == self.previewRevision
+            else { return }
+            self.isPreviewRendering = false
+            switch outcome {
+            case let .success(result):
+                do {
+                    let recipe = try StoredRecipe(json: result.recipeJSON)
+                    self.previewPNGData = result.pngData
+                    self.previewMetadata = recipe.metadata
+                    self.outputImage = UIImage(data: result.pngData)
+                    self.previewErrorMessage = nil
+                } catch {
+                    self.previewErrorMessage = error.localizedDescription
+                }
+            case let .failure(message):
+                self.previewErrorMessage = message
+            }
+        }
     }
 
     func loadPresets() async {
@@ -563,7 +634,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                 PixelCoreInfo.algorithmVersion
             )
         }
-        refreshProRequirement()
+        settingsDidChange()
     }
 
     func deletePreset(_ preset: SavedConversionPreset) async {
@@ -605,25 +676,34 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
         ]
     }
 
+    func prepareReviewPresetNotifications() {
+        savedPresets = []
+        presetSuccessMessage = L10n.presetDeleted("TEST")
+        presetErrorMessage = L10n.presetNameRequired
+    }
+
     func convert(saveMode: ConversionSaveMode) {
         let settings: PixelConversionSettings
         do {
             settings = try makeSettings()
         } catch {
-            errorMessage = error.localizedDescription
             state = .failure
+            errorMessage = error.localizedDescription
             return
         }
         guard ProAccessPolicy.canConvert(settings, entitlement: entitlement.status) else {
             requiresPro = true
-            errorMessage = L10n.proRequired
+            errorMessage = nil
             return
         }
 
         conversionTask?.cancel()
         loaderTask?.cancel()
+        previewTask?.cancel()
+        previewRevision += 1
         state = .rendering
         showsLoader = false
+        isPreviewRendering = false
         requiresPro = false
         errorMessage = nil
         loaderTask = Task { [weak self] in
@@ -672,8 +752,11 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                     self.lastRenderedPresetReference = record.presetReference
                     self.preferredPresetReference = record.presetReference
                     self.latestPNGData = result.pngData
+                    self.previewPNGData = result.pngData
+                    self.previewMetadata = recipe.metadata
                     self.outputImage = UIImage(data: result.pngData)
                     self.showsLoader = false
+                    self.previewErrorMessage = nil
                     self.settingsCompatibilityWarning = nil
                     self.state = .result
                     await self.onLibraryChange()
@@ -687,7 +770,7 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     func saveOutputToPhotos() async {
-        guard photoSaveState != .saving, let pngData = latestPNGData else { return }
+        guard photoSaveState != .saving, let pngData = currentOutputPNGData else { return }
         photoSaveState = .saving
         do {
             try await photoLibrarySaver.savePNG(pngData, filename: suggestedOutputName)
@@ -727,6 +810,20 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     private var suggestedOutputName: String {
         let stem = (sourceFilename as NSString).deletingPathExtension
         return "\(stem)-pixel.png"
+    }
+
+    private var displayedMetadata: GeneratedImageMetadata? {
+        if state == .editing {
+            return previewMetadata ?? currentRecord?.metadata
+        }
+        return currentRecord?.metadata ?? previewMetadata
+    }
+
+    private var currentOutputPNGData: Data? {
+        if state == .editing {
+            return previewPNGData ?? latestPNGData
+        }
+        return latestPNGData ?? previewPNGData
     }
 
     private func makeSettings() throws -> PixelConversionSettings {
@@ -872,8 +969,8 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
 
     private func fail(_ message: String) {
         showsLoader = false
-        errorMessage = message
         state = .failure
+        errorMessage = message
     }
 
     private static func rgbColor(_ value: UInt32) -> PixelRGBColor {
@@ -1057,6 +1154,23 @@ private enum PhotoLibrarySaveError: LocalizedError {
 private enum ConversionOutcome: Sendable {
     case success(PixelRenderResult)
     case failure(String)
+}
+
+private actor ConversionPreviewRenderer {
+    func render(
+        sourceData: Data,
+        settings: PixelConversionSettings
+    ) -> ConversionOutcome {
+        guard !Task.isCancelled else {
+            return .failure(CancellationError().localizedDescription)
+        }
+        do {
+            let processor = try PixelCoreProcessor(imageData: sourceData)
+            return .success(try processor.convert(settings))
+        } catch {
+            return .failure(error.localizedDescription)
+        }
+    }
 }
 
 private enum ConversionModelError: LocalizedError {

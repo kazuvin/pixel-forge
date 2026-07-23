@@ -58,7 +58,9 @@
 "action.convert" = "轉換";
 "action.adjust" = "調整";
 "action.update_image" = "更新此影像";
+"action.save_image" = "儲存影像";
 "action.save_as_new" = "另存為新影像";
+"action.share_output" = "分享影像";
 "action.duplicate" = "複製";
 "action.delete" = "刪除";
 "action.cancel" = "取消";

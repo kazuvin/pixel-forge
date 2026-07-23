@@ -38,7 +38,9 @@
 - 変換はUI thread外で実行し、開始後200msを超えた場合だけ不定進捗を表示する。MVPでは複数変換を並列実行しない。
 - 新規変換は成功時に新しい生成recordを作る。既存結果の調整では同じrecordのatomicな更新、または新しいrecordの作成を選べる。
 - `調整する`はrecordのrecipeを正本として全パラメータを復元する。保存時と現行のalgorithm versionが不一致なら旧値を適用せず、警告とともに`PixelConversionSettings`の初期値へフォールバックする。
-- editingの第一選択は6種類の内蔵変換スタイルと保存済み調整プリセットを並べるfull-screen pickerとし、個別パラメータは折りたたみ式の`詳細調整`へ置く。詳細値が選択中presetと一致しなくなった場合は`カスタム調整`として扱う。
+- editing上部には入力画像を置かず、設定へ追従する出力previewを固定する。6種類の内蔵変換スタイルと保存済み調整プリセットは横scrollのrailへ並べ、個別パラメータは折りたたみ式の`詳細調整`へ置く。詳細値が選択中presetと一致しなくなった場合は`カスタム調整`として扱う。
+- editingの設定変更は短時間debounceしたpreview変換へ反映し、古いpreview結果で新しい設定を上書きしない。preview変換は直列化し、保存操作とは別にrecordを更新しない。
+- editing下端には保存／更新を主操作、写真保存、画像共有、複製、削除をicon中心の操作railとして固定する。既存recordでは`別の画像として保存`も同時に提供し、新規recordでは複製と削除を表示しない。
 - 調整プリセットは名前、`PixelConversionSettings`、algorithm version、作成日時、更新日時をApplication Supportへ保存する。同名保存は既存presetを更新し、適用時もalgorithm versionの互換性を確認する。
 - 生成recordはrecipeに加えて内蔵スタイルIDまたは保存済みpreset UUIDを任意の参照として保持する。`調整する`では参照とrecipeの編集可能値が一致する場合に選択状態も復元し、参照がない旧recordは設定値の一致から内蔵／保存済みpresetを推定する。
 - SwiftUIのthemeは`ForgePalette`を環境値として注入し、system、dark、lightで同一layout/component treeを使う。

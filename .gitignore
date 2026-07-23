@@ -5,6 +5,7 @@ target/
 build/apple/
 build/apple-review-derived/
 build/ios-tests-derived/
+build/toast-centering-derived/
 apps/apple/PixelForgeApp/.build/
 xcuserdata/
 packages/PixelCoreKit/.build/

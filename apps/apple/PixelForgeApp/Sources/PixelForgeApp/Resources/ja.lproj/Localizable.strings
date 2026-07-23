@@ -58,7 +58,9 @@
 "action.convert" = "変換する";
 "action.adjust" = "調整する";
 "action.update_image" = "この画像を更新";
+"action.save_image" = "画像を保存";
 "action.save_as_new" = "別の画像として保存";
+"action.share_output" = "画像をシェア";
 "action.duplicate" = "複製する";
 "action.delete" = "削除";
 "action.cancel" = "キャンセル";

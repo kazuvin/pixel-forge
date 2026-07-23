@@ -326,6 +326,7 @@ struct ForgePixelSurface<Content: View>: View {
 
     var body: some View {
         content()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(padding)
             .background {
                 ForgePixelChamferShape()
@@ -400,53 +401,206 @@ struct ForgeLabeledControl<Content: View>: View {
     }
 }
 
-struct ForgeAlertBanner: View {
-    @Environment(\.forgePalette) private var palette
-    let message: String
+enum ForgeToastStyle: Equatable {
+    case success
+    case warning
+    case error
+}
 
-    var body: some View {
-        HStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
-            Rectangle()
-                .fill(palette.danger)
-                .frame(width: ForgeDesign.Size.statusLamp, height: ForgeDesign.Size.statusLamp)
-                .padding(.top, 3)
-            Text(message)
-                .forgeTextStyle(.caption)
-                .foregroundStyle(palette.danger)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+enum ForgeToastPosition: Equatable {
+    case top
+    case bottom
+
+    fileprivate var alignment: Alignment {
+        switch self {
+        case .top:
+            .top
+        case .bottom:
+            .bottom
         }
-        .padding(ForgeDesign.Spacing.compact)
-        .background(palette.danger.opacity(0.08))
-        .overlay {
-            Rectangle()
-                .stroke(palette.danger.opacity(0.7), lineWidth: ForgeDesign.Size.border)
+    }
+
+    fileprivate var transitionEdge: Edge {
+        switch self {
+        case .top:
+            .top
+        case .bottom:
+            .bottom
         }
     }
 }
 
-struct ForgeSuccessBanner: View {
-    @Environment(\.forgePalette) private var palette
+struct ForgeToast: Identifiable, Equatable {
+    let id: UUID
     let message: String
+    let style: ForgeToastStyle
+}
+
+@MainActor
+final class ForgeToastCenter: ObservableObject {
+    @Published private(set) var toasts: [ForgeToast] = []
+
+    private let displayNanoseconds: UInt64
+    private let maxVisibleCount: Int
+    private var dismissalTasks: [UUID: Task<Void, Never>] = [:]
+
+    init(
+        displayNanoseconds: UInt64 = 3_000_000_000,
+        maxVisibleCount: Int = 4
+    ) {
+        self.displayNanoseconds = displayNanoseconds
+        self.maxVisibleCount = max(1, maxVisibleCount)
+    }
+
+    func show(_ message: String, style: ForgeToastStyle) {
+        guard !message.isEmpty else { return }
+
+        while toasts.count >= maxVisibleCount, let oldest = toasts.first {
+            dismiss(oldest.id)
+        }
+
+        let toast = ForgeToast(id: UUID(), message: message, style: style)
+        toasts.append(toast)
+        dismissalTasks[toast.id] = Task { @MainActor [weak self] in
+            try? await Task<Never, Never>.sleep(nanoseconds: self?.displayNanoseconds ?? 0)
+            guard !Task.isCancelled else { return }
+            self?.dismiss(toast.id)
+        }
+    }
+
+    func dismiss(_ id: UUID) {
+        dismissalTasks[id]?.cancel()
+        dismissalTasks[id] = nil
+        toasts.removeAll { $0.id == id }
+    }
+}
+
+private struct ForgeToastCard: View {
+    @Environment(\.forgePalette) private var palette
+    let toast: ForgeToast
 
     var body: some View {
         HStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
             Rectangle()
-                .fill(palette.success)
+                .fill(statusColor)
                 .frame(width: ForgeDesign.Size.statusLamp, height: ForgeDesign.Size.statusLamp)
                 .padding(.top, 3)
-            Text(message)
+            Text(toast.message)
                 .forgeTextStyle(.caption)
-                .foregroundStyle(palette.success)
+                .foregroundStyle(statusColor)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(ForgeDesign.Spacing.compact)
-        .background(palette.success.opacity(0.08))
-        .overlay {
-            Rectangle()
-                .stroke(palette.success.opacity(0.7), lineWidth: ForgeDesign.Size.border)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(palette.surfaceRaised)
         }
+        .overlay {
+            ForgePixelBorder(
+                color: statusColor,
+                cut: ForgeDesign.Size.compactCornerCut
+            )
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var statusColor: Color {
+        switch toast.style {
+        case .success:
+            palette.success
+        case .warning:
+            palette.accent
+        case .error:
+            palette.danger
+        }
+    }
+}
+
+private struct ForgeToastStack: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @EnvironmentObject private var center: ForgeToastCenter
+    let position: ForgeToastPosition
+
+    var body: some View {
+        VStack(spacing: ForgeDesign.Spacing.tight) {
+            ForEach(displayedToasts) { toast in
+                ForgeToastCard(toast: toast)
+                    .transition(
+                        reduceMotion
+                            ? .opacity
+                            : .move(edge: position.transitionEdge).combined(with: .opacity)
+                    )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, ForgeDesign.Spacing.regular)
+        .padding(position == .top ? .top : .bottom, ForgeDesign.Spacing.regular)
+        .animation(
+            reduceMotion ? nil : .easeOut(duration: 0.22),
+            value: center.toasts
+        )
+        .allowsHitTesting(false)
+    }
+
+    private var displayedToasts: [ForgeToast] {
+        switch position {
+        case .top:
+            Array(center.toasts.reversed())
+        case .bottom:
+            center.toasts
+        }
+    }
+}
+
+private struct ForgeToastContainerModifier: ViewModifier {
+    @StateObject private var center = ForgeToastCenter()
+    let position: ForgeToastPosition
+
+    func body(content: Content) -> some View {
+        content
+            .environmentObject(center)
+            .overlay(alignment: position.alignment) {
+                ForgeToastStack(position: position)
+                    .environmentObject(center)
+                    .zIndex(100)
+            }
+    }
+}
+
+private struct ForgeToastMessageModifier: ViewModifier {
+    @EnvironmentObject private var center: ForgeToastCenter
+    @Binding var message: String?
+    let style: ForgeToastStyle
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                present(message)
+            }
+            .onChange(of: message) { _, newValue in
+                present(newValue)
+            }
+    }
+
+    private func present(_ newValue: String?) {
+        guard let newValue else { return }
+        center.show(newValue, style: style)
+        message = nil
+    }
+}
+
+extension View {
+    func forgeToastContainer(position: ForgeToastPosition = .top) -> some View {
+        modifier(ForgeToastContainerModifier(position: position))
+    }
+
+    func forgeToast(
+        message: Binding<String?>,
+        style: ForgeToastStyle
+    ) -> some View {
+        modifier(ForgeToastMessageModifier(message: message, style: style))
     }
 }
 
@@ -1296,9 +1450,26 @@ struct ForgeEmptyState: View {
     @Environment(\.forgePalette) private var palette
     let icon: ForgeIconName
     let message: String
+    var eyebrow: String?
+    var title: String?
 
     var body: some View {
         VStack(spacing: ForgeDesign.Spacing.regular) {
+            if let eyebrow {
+                HStack(spacing: ForgeDesign.Spacing.tight) {
+                    Rectangle()
+                        .fill(palette.accent)
+                        .frame(width: ForgeDesign.Size.statusLamp, height: ForgeDesign.Size.statusLamp)
+                    Text(eyebrow.uppercased())
+                        .forgeTextStyle(.micro)
+                        .foregroundStyle(palette.accent)
+                }
+            }
+            if let title {
+                Text(title)
+                    .forgeTextStyle(.title)
+                    .multilineTextAlignment(.center)
+            }
             ForgeIcon(name: icon, size: 32, colorRole: .muted)
             Text(message)
                 .forgeTextStyle(.body)
@@ -1306,6 +1477,7 @@ struct ForgeEmptyState: View {
                 .frame(maxWidth: 240)
         }
         .foregroundStyle(palette.muted)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -1433,7 +1605,6 @@ struct ForgeLibraryEmpty: View {
                 }
             }
         }
-        .frame(maxWidth: 580)
     }
 }
 
@@ -1609,25 +1780,171 @@ private struct ForgeContextActionRow: View {
 struct ForgeRecordActionPanel: View {
     let adjust: () -> Void
     let save: () -> Void
+    let share: () -> Void
     let duplicate: () -> Void
     let delete: () -> Void
     let isSaving: Bool
 
     var body: some View {
-        LazyVGrid(
-            columns: [GridItem(.flexible()), GridItem(.flexible())],
-            spacing: ForgeDesign.Spacing.compact
-        ) {
-            ForgeButton(title: L10n.adjust, icon: .edit, action: adjust)
+        ForgeConversionActionBar(
+            primaryTitle: L10n.adjust,
+            primaryIcon: .edit,
+            primaryAction: adjust,
+            saveToPhotos: save,
+            share: share,
+            duplicate: duplicate,
+            delete: delete,
+            isSaving: isSaving,
+            hasOutput: true
+        )
+    }
+}
+
+struct ForgeConversionActionBar: View {
+    @Environment(\.forgePalette) private var palette
+    let primaryTitle: String
+    let primaryIcon: ForgeIconName
+    let primaryAction: () -> Void
+    var saveAsNew: (() -> Void)?
+    let saveToPhotos: () -> Void
+    let share: () -> Void
+    var duplicate: (() -> Void)?
+    var delete: (() -> Void)?
+    let isSaving: Bool
+    let hasOutput: Bool
+    var isPrimaryEnabled = true
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            regularActionRow
+            compactActionRow
+        }
+        .padding(.horizontal, ForgeDesign.Spacing.regular)
+        .padding(.vertical, ForgeDesign.Spacing.compact)
+        .frame(maxWidth: .infinity)
+        .background(palette.panel)
+        .overlay(alignment: .top) {
+            ForgeDivider()
+        }
+    }
+
+    private var regularActionRow: some View {
+        HStack(spacing: ForgeDesign.Spacing.tight) {
             ForgeButton(
-                title: isSaving ? L10n.savingToPhotos : L10n.saveToPhotos,
-                icon: .savePhoto,
+                title: primaryTitle,
+                icon: primaryIcon,
                 role: .primary,
-                action: save
+                action: primaryAction
             )
-            .disabled(isSaving)
-            ForgeButton(title: L10n.duplicate, icon: .duplicate, action: duplicate)
-            ForgeDestructiveButton(title: L10n.delete, icon: .trash, action: delete)
+            .frame(minWidth: 132)
+            .disabled(!isPrimaryEnabled)
+            optionalActions
+        }
+    }
+
+    private var compactActionRow: some View {
+        HStack(spacing: ForgeDesign.Spacing.tight) {
+            Spacer(minLength: 0)
+            ForgeCompactActionButton(
+                icon: primaryIcon,
+                accessibilityLabel: primaryTitle,
+                role: .primary,
+                action: primaryAction
+            )
+            .disabled(!isPrimaryEnabled)
+            optionalActions
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private var optionalActions: some View {
+        if let saveAsNew {
+            ForgeCompactActionButton(
+                icon: .plus,
+                accessibilityLabel: L10n.saveAsNew,
+                action: saveAsNew
+            )
+            .disabled(!isPrimaryEnabled)
+        }
+        ForgeCompactActionButton(
+            icon: .savePhoto,
+            accessibilityLabel: isSaving ? L10n.savingToPhotos : L10n.saveToPhotos,
+            action: saveToPhotos
+        )
+        .disabled(isSaving || !hasOutput)
+        ForgeCompactActionButton(
+            icon: .export,
+            accessibilityLabel: L10n.shareOutput,
+            action: share
+        )
+        .disabled(!hasOutput)
+        if let duplicate {
+            ForgeCompactActionButton(
+                icon: .duplicate,
+                accessibilityLabel: L10n.duplicate,
+                action: duplicate
+            )
+        }
+        if let delete {
+            ForgeCompactActionButton(
+                icon: .trash,
+                accessibilityLabel: L10n.delete,
+                role: .destructive,
+                action: delete
+            )
+        }
+    }
+}
+
+private enum ForgeCompactActionRole {
+    case standard
+    case primary
+    case destructive
+}
+
+private struct ForgeCompactActionButton: View {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.isEnabled) private var isEnabled
+    let icon: ForgeIconName
+    let accessibilityLabel: String
+    var role: ForgeCompactActionRole = .standard
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ForgeIcon(
+                name: icon,
+                colorRole: role == .standard ? .ink : .accentInk
+            )
+            .frame(
+                width: ForgeDesign.Size.controlHeight,
+                height: ForgeDesign.Size.controlHeight
+            )
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(backgroundColor)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: role == .standard ? palette.grid : backgroundColor,
+                cut: ForgeDesign.Size.compactCornerCut
+            )
+        }
+        .opacity(isEnabled ? 1 : 0.38)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var backgroundColor: Color {
+        switch role {
+        case .standard:
+            palette.surfaceRaised
+        case .primary:
+            palette.accent
+        case .destructive:
+            palette.danger
         }
     }
 }

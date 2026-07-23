@@ -10,6 +10,7 @@ enum ReviewScreen: String {
     case conversionStylePicker = "conversion-style-picker"
     case palettePicker = "palette-picker"
     case recipePresetLibrary = "recipe-preset-library"
+    case recipePresetNotifications = "recipe-preset-notifications"
     case conversionResult = "conversion-result"
     case settings
     case settingsDeveloper = "settings-developer"

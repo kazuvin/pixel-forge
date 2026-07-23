@@ -9,6 +9,9 @@ struct ConversionModalView: View {
     @State private var showsStylePicker: Bool
     @State private var showsAdvancedSettings: Bool
     @State private var showsResultDeleteConfirmation = false
+    @State private var showsOutputShareSheet = false
+    @State private var outputShareItems: [Any] = []
+    @State private var proRequirementMessage: String?
     private let loadsPresetsOnAppear: Bool
 
     init(
@@ -59,6 +62,7 @@ struct ConversionModalView: View {
         .task {
             if loadsPresetsOnAppear {
                 await model.loadPresets()
+                model.refreshPreview(immediately: true)
             }
         }
         .onChange(of: model.state) { _, state in
@@ -66,6 +70,31 @@ struct ConversionModalView: View {
                 showsAdvancedSettings = true
             }
         }
+        .onChange(of: model.longSide) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.upscale) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.paletteSelection) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.customPaletteColorValues) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.preservesTone) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.saturation) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.lightness) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.outlineMode) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.outlineThreshold) { _, _ in model.settingsDidChange() }
+        .onChange(of: model.requiresPro) { _, isRequired in
+            if isRequired {
+                proRequirementMessage = L10n.proRequired
+            }
+        }
+        .sheet(isPresented: $showsOutputShareSheet) {
+            ActivitySheet(items: outputShareItems)
+        }
+        .forgeToast(message: $model.settingsCompatibilityWarning, style: .warning)
+        .forgeToast(message: $proRequirementMessage, style: .warning)
+        .forgeToast(message: $model.previewErrorMessage, style: .error)
+        .forgeToast(message: transientErrorMessage, style: .error)
+        .forgeToast(message: $model.duplicateMessage, style: .success)
+        .forgeToast(message: photoSaveSuccessMessage, style: .success)
+        .forgeToast(message: photoSaveErrorMessage, style: .error)
+        .forgeToastContainer()
         .forgeOverlay {
             ForgeConfirmationDialog(
                 isPresented: $showsResultDeleteConfirmation,
@@ -115,68 +144,118 @@ struct ConversionModalView: View {
     }
 
     private var editor: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
-                ForgePreviewPane(
-                    label: L10n.input,
-                    metadata: model.sourceDimensionsLabel,
-                    image: model.sourceImage,
-                    pixelated: false,
-                    emptyMessage: L10n.inputEmpty
-                )
-                .frame(height: 260)
+        VStack(spacing: 0) {
+            ForgePreviewPane(
+                label: L10n.output,
+                metadata: model.isPreviewRendering ? L10n.rendering : model.outputDimensionsLabel,
+                image: model.outputImage,
+                pixelated: true,
+                emptyMessage: L10n.outputEmpty
+            )
+            .frame(height: 214)
+            .padding(.horizontal, ForgeDesign.Spacing.regular)
+            .padding(.vertical, ForgeDesign.Spacing.compact)
 
-                ForgePixelSurface(level: .panel) {
-                    VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
-                        ForgeSectionHeader(
-                            eyebrow: L10n.conversionStyleEyebrow,
-                            title: L10n.conversionStyleTitle,
-                            detail: L10n.conversionStyleDetail
-                        )
-                        if let warning = model.settingsCompatibilityWarning {
-                            ForgeAlertBanner(message: warning)
-                        }
-                        ForgePaletteSelectionButton(
-                            title: model.selectedConversionStyleTitle,
-                            detail: model.selectedConversionStyleDetail,
-                            colors: model.selectedConversionStyleColorValues,
-                            isLocked: model.requiresPro
-                        ) {
-                            Task {
-                                await model.loadPresets()
-                                showsStylePicker = true
+            ForgeDivider()
+
+            ScrollViewReader { proxy in
+                ScrollView(.vertical, showsIndicators: false) {
+                    ForgePixelSurface(level: .panel) {
+                        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+                            presetRail
+                            ForgeAdvancedSettingsDisclosure(
+                                title: L10n.advancedSettingsTitle,
+                                detail: L10n.advancedSettingsDetail,
+                                isExpanded: $showsAdvancedSettings
+                            )
+                            if showsAdvancedSettings {
+                                advancedSettings
+                                    .id("advanced-settings")
+                                    .transition(.opacity.combined(with: .move(edge: .top)))
                             }
                         }
-                        ForgeAdvancedSettingsDisclosure(
-                            title: L10n.advancedSettingsTitle,
-                            detail: L10n.advancedSettingsDetail,
-                            isExpanded: $showsAdvancedSettings
-                        )
-                        if showsAdvancedSettings {
-                            advancedSettings
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                        if model.requiresPro {
-                            ForgeAlertBanner(message: L10n.proRequired)
-                        }
-                        if let errorMessage = model.errorMessage {
-                            ForgeAlertBanner(message: errorMessage)
-                        }
-                        actionButtons
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: showsAdvancedSettings)
+                    .padding(ForgeDesign.Spacing.regular)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+                .scrollDismissesKeyboard(.interactively)
+                .task {
+                    if showsAdvancedSettings {
+                        proxy.scrollTo("advanced-settings", anchor: .top)
                     }
                 }
-                .onChange(of: model.longSide) { _, _ in model.refreshProRequirement() }
-                .onChange(of: model.upscale) { _, _ in model.refreshProRequirement() }
-                .onChange(of: model.paletteSelection) { _, _ in model.refreshProRequirement() }
-                .onChange(of: model.preservesTone) { _, _ in model.refreshProRequirement() }
-                .onChange(of: model.outlineMode) { _, _ in model.refreshProRequirement() }
-                .animation(.easeInOut(duration: 0.2), value: showsAdvancedSettings)
+                .onChange(of: showsAdvancedSettings) { _, isExpanded in
+                    guard isExpanded else { return }
+                    Task { @MainActor in
+                        await Task.yield()
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            proxy.scrollTo("advanced-settings", anchor: .top)
+                        }
+                    }
+                }
             }
-            .padding(ForgeDesign.Spacing.regular)
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            editorActionBar
         }
-        .scrollBounceBehavior(.basedOnSize, axes: .vertical)
-        .scrollDismissesKeyboard(.interactively)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private var presetRail: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
+            HStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
+                ForgeSectionHeader(
+                    eyebrow: L10n.conversionStyleEyebrow,
+                    title: L10n.conversionStyleTitle,
+                    detail: L10n.conversionStyleDetail
+                )
+                Spacer(minLength: 0)
+                ForgeIconButton(
+                    icon: .plus,
+                    accessibilityLabel: L10n.recipePresetSave
+                ) {
+                    Task {
+                        await model.loadPresets()
+                        showsPresetLibrary = true
+                    }
+                }
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
+                    ForEach(ConversionSessionModel.conversionStylePresets) { preset in
+                        ForgeConversionStyleCard(
+                            title: preset.displayName,
+                            detail: preset.displayDetail,
+                            summary: model.settingsSummary(preset.settings),
+                            colors: model.colorValues(for: preset.settings),
+                            isSelected: model.isConversionStyleSelected(preset),
+                            isLocked: !model.isProActive && model.conversionStyleRequiresPro(preset)
+                        ) {
+                            model.applyConversionStyle(preset)
+                            showsAdvancedSettings = false
+                        }
+                        .frame(width: 172)
+                    }
+                    ForEach(model.savedPresets) { preset in
+                        ForgeConversionStyleCard(
+                            title: preset.name,
+                            detail: L10n.conversionStyleSavedDetail,
+                            summary: model.settingsSummary(preset.settings),
+                            colors: model.colorValues(for: preset.settings),
+                            isSelected: model.isSavedPresetSelected(preset),
+                            isLocked: preset.algorithmVersion != PixelCoreInfo.algorithmVersion
+                                || (!model.isProActive && model.savedPresetRequiresPro(preset))
+                        ) {
+                            model.applyPreset(preset)
+                            showsAdvancedSettings = false
+                        }
+                        .frame(width: 172)
+                    }
+                }
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+        }
     }
 
     private var advancedSettings: some View {
@@ -275,18 +354,32 @@ struct ConversionModalView: View {
     }
 
     @ViewBuilder
-    private var actionButtons: some View {
+    private var editorActionBar: some View {
         if model.hasExistingRecord {
-            ForgeButton(title: L10n.updateImage, icon: .render, role: .primary) {
-                model.convert(saveMode: .update)
-            }
-            ForgeButton(title: L10n.saveAsNew, icon: .plus) {
-                model.convert(saveMode: .newRecord)
-            }
+            ForgeConversionActionBar(
+                primaryTitle: L10n.updateImage,
+                primaryIcon: .render,
+                primaryAction: { model.convert(saveMode: .update) },
+                saveAsNew: { model.convert(saveMode: .newRecord) },
+                saveToPhotos: { Task { await model.saveOutputToPhotos() } },
+                share: shareOutput,
+                duplicate: { Task { await model.duplicateCurrentRecord() } },
+                delete: { showsResultDeleteConfirmation = true },
+                isSaving: model.photoSaveState == .saving,
+                hasOutput: model.outputImage != nil && !model.isPreviewRendering,
+                isPrimaryEnabled: !model.isPreviewRendering
+            )
         } else {
-            ForgeButton(title: L10n.convert, icon: .render, role: .primary) {
-                model.convert(saveMode: .newRecord)
-            }
+            ForgeConversionActionBar(
+                primaryTitle: L10n.saveImage,
+                primaryIcon: .render,
+                primaryAction: { model.convert(saveMode: .newRecord) },
+                saveToPhotos: { Task { await model.saveOutputToPhotos() } },
+                share: shareOutput,
+                isSaving: model.photoSaveState == .saving,
+                hasOutput: model.outputImage != nil && !model.isPreviewRendering,
+                isPrimaryEnabled: !model.isPreviewRendering
+            )
         }
     }
 
@@ -315,23 +408,10 @@ struct ConversionModalView: View {
                     algorithm: model.currentRecord?.metadata.algorithmVersion ?? PixelCoreInfo.algorithmVersion,
                     paletteName: model.currentRecord?.metadata.paletteName ?? L10n.paletteSource
                 )
-                switch model.photoSaveState {
-                case .idle, .saving:
-                    EmptyView()
-                case .saved:
-                    ForgeSuccessBanner(message: L10n.photoSaveSuccess)
-                case let .failed(message):
-                    ForgeAlertBanner(message: message)
-                }
-                if let duplicateMessage = model.duplicateMessage {
-                    ForgeSuccessBanner(message: duplicateMessage)
-                }
-                if let errorMessage = model.errorMessage {
-                    ForgeAlertBanner(message: errorMessage)
-                }
                 ForgeRecordActionPanel(
                     adjust: { model.edit() },
                     save: { Task { await model.saveOutputToPhotos() } },
+                    share: shareOutput,
                     duplicate: { Task { await model.duplicateCurrentRecord() } },
                     delete: { showsResultDeleteConfirmation = true },
                     isSaving: model.photoSaveState == .saving
@@ -341,6 +421,52 @@ struct ConversionModalView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize, axes: .vertical)
+    }
+
+    private func shareOutput() {
+        guard let outputImage = model.outputImage else { return }
+        outputShareItems = [outputImage]
+        showsOutputShareSheet = true
+    }
+
+    private var transientErrorMessage: Binding<String?> {
+        Binding(
+            get: {
+                model.state == .failure ? nil : model.errorMessage
+            },
+            set: { newValue in
+                if model.state != .failure {
+                    model.errorMessage = newValue
+                }
+            }
+        )
+    }
+
+    private var photoSaveSuccessMessage: Binding<String?> {
+        Binding(
+            get: {
+                model.photoSaveState == .saved ? L10n.photoSaveSuccess : nil
+            },
+            set: { newValue in
+                if newValue == nil, model.photoSaveState == .saved {
+                    model.photoSaveState = .idle
+                }
+            }
+        )
+    }
+
+    private var photoSaveErrorMessage: Binding<String?> {
+        Binding(
+            get: {
+                guard case let .failed(message) = model.photoSaveState else { return nil }
+                return message
+            },
+            set: { newValue in
+                if newValue == nil, case .failed = model.photoSaveState {
+                    model.photoSaveState = .idle
+                }
+            }
+        )
     }
 
     private var failure: some View {
@@ -515,6 +641,8 @@ private struct RecipePresetLibraryView: View {
                 self.pendingDeletion = nil
             }
         }
+        .forgeToast(message: $model.presetSuccessMessage, style: .success)
+        .forgeToast(message: $model.presetErrorMessage, style: .error)
     }
 
     private var savePanel: some View {
@@ -537,12 +665,6 @@ private struct RecipePresetLibraryView: View {
                         }
                     }
                 }
-                if let message = model.presetSuccessMessage {
-                    ForgeSuccessBanner(message: message)
-                }
-                if let message = model.presetErrorMessage {
-                    ForgeAlertBanner(message: message)
-                }
             }
         }
     }
@@ -551,14 +673,12 @@ private struct RecipePresetLibraryView: View {
     private var savedPresetList: some View {
         if model.savedPresets.isEmpty {
             ForgePixelSurface(level: .surface, padding: ForgeDesign.Spacing.section) {
-                VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
-                    ForgeSectionHeader(
-                        eyebrow: L10n.recipePresetEyebrow,
-                        title: L10n.recipePresetEmptyTitle,
-                        detail: nil
-                    )
-                    ForgeEmptyState(icon: .pixelGrid, message: L10n.recipePresetEmptyDetail)
-                }
+                ForgeEmptyState(
+                    icon: .pixelGrid,
+                    message: L10n.recipePresetEmptyDetail,
+                    eyebrow: L10n.recipePresetEyebrow,
+                    title: L10n.recipePresetEmptyTitle
+                )
             }
         } else {
             VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
@@ -622,9 +742,6 @@ private struct PalettePickerView: View {
                     paletteGrid
                     if model.paletteSelection != .source {
                         toneControls
-                    }
-                    if model.requiresPro {
-                        ForgeAlertBanner(message: L10n.proRequired)
                     }
                     ForgeButton(title: L10n.done, icon: .selected, role: .primary) {
                         close()

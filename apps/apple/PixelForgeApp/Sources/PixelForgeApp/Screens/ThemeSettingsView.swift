@@ -6,7 +6,7 @@ struct ThemeSettingsView: View {
     @EnvironmentObject private var entitlement: ProEntitlementService
     @AppStorage(ForgeTheme.storageKey) private var themeRawValue = ForgeTheme.system.rawValue
     @AppStorage(AppLanguage.storageKey) private var languageRawValue = AppLanguage.system.rawValue
-    @State private var showsProExplanation = false
+    @State private var proRequirementMessage: String?
     @State private var shareItems: [Any] = []
     @State private var showsShareSheet = false
     @State private var showsLanguageSelector: Bool
@@ -48,6 +48,8 @@ struct ThemeSettingsView: View {
         .onChange(of: entitlement.status) { _, _ in
             enforceAvailableTheme()
         }
+        .forgeToast(message: $proRequirementMessage, style: .warning)
+        .forgeToastContainer()
         .forgeOverlay {
             ForgeSelectionDialog(
                 isPresented: $showsLanguageSelector,
@@ -110,9 +112,6 @@ struct ThemeSettingsView: View {
                 ) {
                     select(.light)
                 }
-            }
-            if showsProExplanation {
-                ForgeAlertBanner(message: L10n.proRequired)
             }
         }
     }
@@ -299,10 +298,10 @@ struct ThemeSettingsView: View {
 
     private func select(_ theme: ForgeTheme) {
         if theme != .system, !entitlement.status.isActive {
-            showsProExplanation = true
+            proRequirementMessage = L10n.proRequired
             return
         }
-        showsProExplanation = false
+        proRequirementMessage = nil
         themeRawValue = theme.rawValue
     }
 

@@ -59,11 +59,12 @@
 ┌───────────────────────────┐
 │ NEW CONVERSION / RESULT × │
 ├───────────────────────────┤
-│ source / input preview    │
+│ pinned output preview     │
 ├───────────────────────────┤
-│ settings or output        │
-│ recipe metadata           │
-│ primary action            │
+│ preset rail →             │
+│ advanced settings         │
+├───────────────────────────┤
+│ save/update  export icons │
 └───────────────────────────┘
 ```
 
@@ -100,7 +101,7 @@ HomeView / ConversionModal / SettingsView（状態と配置だけ）
 
 `verify-apple-design-system.sh`はscreen層のstyle直書き、4言語のkey不一致、font asset、両theme screenshot、shared component利用を検査し、違反時はCIを失敗させる。
 
-同じfixtureとiPhone Simulatorで全13 surfaceを両theme（26枚）で再撮影する場合は次を使う。
+同じfixtureとiPhone Simulatorで全14 surfaceを両theme（28枚）で再撮影する場合は次を使う。
 
 ```bash
 ./scripts/capture-apple-review.sh

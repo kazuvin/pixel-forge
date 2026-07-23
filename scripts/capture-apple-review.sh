@@ -76,7 +76,11 @@ capture() {
     --review-screen "$screen" \
     --review-theme "$theme" \
     --review-language ja >/dev/null
-  sleep 3
+  if [[ "$screen" == "recipe-preset-notifications" ]]; then
+    sleep 1
+  else
+    sleep 3
+  fi
   xcrun simctl io "$device_id" screenshot "$temporary_output" >/dev/null
   mv "$temporary_output" "$output"
   echo "captured ${output#$root_dir/}"
@@ -92,6 +96,7 @@ for theme in dark light; do
   capture conversion-style-picker "$theme"
   capture palette-picker "$theme"
   capture recipe-preset-library "$theme"
+  capture recipe-preset-notifications "$theme"
   capture conversion-result "$theme"
   capture settings "$theme"
   capture settings-language-selector "$theme"

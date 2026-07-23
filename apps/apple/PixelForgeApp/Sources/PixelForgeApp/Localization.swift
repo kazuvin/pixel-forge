@@ -107,7 +107,9 @@ enum L10n {
     static var convert: String { text("action.convert") }
     static var adjust: String { text("action.adjust") }
     static var updateImage: String { text("action.update_image") }
+    static var saveImage: String { text("action.save_image") }
     static var saveAsNew: String { text("action.save_as_new") }
+    static var shareOutput: String { text("action.share_output") }
     static var duplicate: String { text("action.duplicate") }
     static var delete: String { text("action.delete") }
     static var cancel: String { text("action.cancel") }

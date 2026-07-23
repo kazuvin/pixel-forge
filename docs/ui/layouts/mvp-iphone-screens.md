@@ -72,20 +72,24 @@ Home
 │ [PF] source.png        [×]│
 │      1200 × 900 px        │
 ├───────────────────────────┤
-│ INPUT                     │
+│ OUTPUT / LIVE             │
 │ ┌───────────────────────┐ │
-│ │ source preview        │ │
+│ │ pinned output preview │ │
 │ └───────────────────────┘ │
-│                           │
+├───────────────────────────┤
 │ CONVERSION OPTIONS        │
-│ style cartridge -> picker │
+│ [style][style][style] →   │
+│                  [+保存]  │
 │ [＋ 詳細調整]             │
-│ [      変換する       ]   │
+├───────────────────────────┤
+│ [保存/更新][写真][共有]…  │
 └───────────────────────────┘
 ```
 
-- preview、変換スタイル、詳細調整、主操作を縦一列で並べ、画面全体をscroll可能にする。
-- 通常は6種類の内蔵変換スタイルと保存済みプリセットから選ぶだけで変換できる。pickerは2列card gridとし、pixel参考画像、概要、使用色、lock、選択状態を示す。
+- 入力previewはeditingへ表示しない。出力previewをtop bar直下へ固定し、下側の設定領域だけを縦scroll可能にする。
+- 出力previewは選択中presetと詳細値へリアルタイムに追従する。連続変更は短くdebounceし、preview変換を直列化して最新設定の結果だけを表示する。previewの更新だけではlibrary recordを作成または更新しない。
+- 通常は6種類の内蔵変換スタイルと保存済みプリセットから選ぶだけで変換できる。両方を一つの横scroll railへ並べ、各cardにpixel参考画像、概要、使用色、lock、選択状態を示す。
+- preset railの見出しから現在の調整値を名前付きpresetとして保存・管理できる。
 - 論理解像度、拡大率、palette、輪郭は上級者向けの`詳細調整`内だけへ表示する。値を変更して選択presetと一致しなくなった場合は`カスタム調整`と表示する。
 - 切り抜き機能は置かず、入力画像全体を対象にする。
 - 数値は直接入力でき、増減buttonの長押しとtrackの水平scrubでも連続変更できる。
@@ -93,8 +97,9 @@ Home
 - custom paletteではカンマ区切り入力を使わず、SwiftUI標準のカラーピッカーから色を1色ずつ追加、編集、削除する。
 - palette適用と輪郭modeはpixel preview付きcardで選択し、文言だけに依存しない。
 - 無料範囲外の設定も隠さずlockを表示する。選択時にProが必要であることを説明し、現在の入力と設定を失わない。
-- 新規変換の主操作は`変換する`とする。
+- 新規変換の主操作は`画像を保存`とする。
 - 既存recordの調整では`この画像を更新`を主操作、`別の画像として保存`を副操作として同時に提示する。
+- editing下端には保存／更新、写真保存、画像共有を固定表示し、既存recordでは別画像保存、複製、削除も加える。幅が足りない場合はiconだけにし、accessibility labelで操作名を保持する。
 - touch targetは44pt以上とし、lockや選択状態を色だけで示さない。
 
 ## Conversion: rendering / failure
@@ -129,7 +134,7 @@ Home
 - 論理寸法、保存寸法、palette、algorithm versionを表示する。
 - `調整する`で同じfull-screen coverをeditingへ戻し、保存済みrecipeの全パラメータと内蔵／保存済みプリセットの選択状態を復元する。
 - 保存はPNG画像だけをPhotosの追加専用権限で写真アプリへ追加し、成功または失敗を同じresult内に表示する。recipe JSONは外部へ渡さない。
-- Homeの長押しdialogと同じく、result内から調整、写真保存、複製、削除を実行できる。
+- Homeの長押しdialogと同じく、result内から調整、写真保存、画像共有、複製、削除を実行できる。
 
 ## Settings
 
@@ -169,7 +174,7 @@ Home
 
 ## Review screenshots
 
-次の26枚をiPhone Simulatorの縦向きで保存する。
+次の28枚をiPhone Simulatorの縦向きで保存する。
 
 - `pixel-forge-home--{dark,light}.png`
 - `pixel-forge-image-source-menu--{dark,light}.png`
@@ -180,6 +185,7 @@ Home
 - `pixel-forge-conversion-style-picker--{dark,light}.png`
 - `pixel-forge-palette-picker--{dark,light}.png`
 - `pixel-forge-recipe-preset-library--{dark,light}.png`
+- `pixel-forge-recipe-preset-notifications--{dark,light}.png`
 - `pixel-forge-conversion-result--{dark,light}.png`
 - `pixel-forge-settings--{dark,light}.png`
 - `pixel-forge-settings-language-selector--{dark,light}.png`
