@@ -95,10 +95,10 @@ struct PhotoLibraryAccessPolicyTests {
 @Suite("Built-in palette presets")
 struct PalettePresetTests {
     @MainActor
-    @Test("picker offers twenty-four distinct non-empty presets")
+    @Test("picker offers thirty-three distinct non-empty presets")
     func providesPaletteCollection() {
         let presets = ConversionSessionModel.palettePresets
-        #expect(presets.count == 24)
+        #expect(presets.count == 33)
         #expect(Set(presets.map(\.id)).count == presets.count)
         #expect(Set(presets.map(\.name)).count == presets.count)
         #expect(presets.allSatisfy { !$0.colorValues.isEmpty })
@@ -107,15 +107,47 @@ struct PalettePresetTests {
     }
 
     @MainActor
-    @Test("every palette family has six shades and paired palettes stay balanced")
-    func balancesPaletteFamilies() {
+    @Test("reference palettes keep their native color counts")
+    func preservesReferencePaletteColorCounts() {
         let presets = ConversionSessionModel.palettePresets
-        #expect(presets.allSatisfy { preset in
-            (preset.colorFamilies.count == 1 || preset.colorFamilies.count == 2)
-                && preset.colorFamilies.allSatisfy { $0.count == 6 }
+        let referenceColorCounts = Dictionary(
+            uniqueKeysWithValues: presets
+                .filter { $0.structure == .reference }
+                .map { ($0.id, $0.colorValues.count) }
+        )
+        #expect(referenceColorCounts == [
+            "game-boy": 4,
+            "pico-8": 16,
+            "c64-pepto": 16,
+            "ibm-cga": 16,
+            "zx-spectrum": 15,
+            "master-system": 64,
+            "virtual-boy": 4,
+        ])
+        #expect(presets.first { $0.id == "game-boy" }?.colorValues == [
+            0x0F380F, 0x306230, 0x8BAC0F, 0x9BBC0F,
+        ])
+        #expect(presets.first { $0.id == "pico-8" }?.colorValues == [
+            0x000000, 0x1D2B53, 0x7E2553, 0x008751,
+            0xAB5236, 0x5F574F, 0xC2C3C7, 0xFFF1E8,
+            0xFF004D, 0xFFA300, 0xFFEC27, 0x00E436,
+            0x29ADFF, 0x83769C, 0xFF77A8, 0xFFCCAA,
+        ])
+    }
+
+    @MainActor
+    @Test("creative palettes keep two or three families balanced without a fixed shade count")
+    func balancesCreativePaletteFamilies() {
+        let presets = ConversionSessionModel.palettePresets
+        let creative = presets.filter { $0.structure == .balancedFamilies }
+        #expect(creative.count == 24)
+        #expect(creative.allSatisfy { preset in
+            (preset.colorFamilies.count == 2 || preset.colorFamilies.count == 3)
+                && preset.colorFamilies.allSatisfy { $0.count >= 4 }
+                && Set(preset.colorFamilies.map(\.count)).count == 1
         })
-        #expect(presets.filter { $0.colorFamilies.count == 1 }.count == 3)
-        #expect(presets.filter { $0.colorFamilies.count == 2 }.count == 21)
+        #expect(creative.filter { $0.colorFamilies.count == 3 }.count == 6)
+        #expect(presets.filter { $0.structure == .tonal }.count == 2)
     }
 }
 

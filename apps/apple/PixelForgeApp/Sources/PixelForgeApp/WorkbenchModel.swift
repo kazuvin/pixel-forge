@@ -210,16 +210,39 @@ enum PaletteSelection: Hashable {
     case custom
 }
 
+enum PalettePresetStructure: Hashable {
+    case reference
+    case tonal
+    case balancedFamilies
+}
+
 struct PalettePreset: Identifiable, Hashable {
     let id: String
     let name: String
+    let structure: PalettePresetStructure
     let colorFamilies: [[UInt32]]
 
-    init(id: String, name: String, colorFamilies: [[UInt32]]) {
-        precondition((1 ... 2).contains(colorFamilies.count))
-        precondition(colorFamilies.allSatisfy { $0.count == 6 })
+    init(
+        id: String,
+        name: String,
+        structure: PalettePresetStructure = .balancedFamilies,
+        colorFamilies: [[UInt32]]
+    ) {
+        let colorValues = colorFamilies.flatMap { $0 }
+        precondition(Set(colorValues).count == colorValues.count)
+        switch structure {
+        case .reference:
+            precondition(colorFamilies.count == 1 && colorValues.count >= 2)
+        case .tonal:
+            precondition(colorFamilies.count == 1 && colorValues.count >= 4)
+        case .balancedFamilies:
+            precondition((2 ... 3).contains(colorFamilies.count))
+            precondition(colorFamilies.allSatisfy { $0.count >= 4 })
+            precondition(Set(colorFamilies.map(\.count)).count == 1)
+        }
         self.id = id
         self.name = name
+        self.structure = structure
         self.colorFamilies = colorFamilies
     }
 
@@ -263,6 +286,15 @@ struct PalettePreset: Identifiable, Hashable {
         case "peach-slate": L10n.palettePresetPeachSlate
         case "aurora": L10n.palettePresetAurora
         case "cloudberry": L10n.palettePresetCloudberry
+        case "c64-pepto": L10n.palettePresetC64Pepto
+        case "ibm-cga": L10n.palettePresetIBMCGA
+        case "zx-spectrum": L10n.palettePresetZXSpectrum
+        case "master-system": L10n.palettePresetMasterSystem
+        case "virtual-boy": L10n.palettePresetVirtualBoy
+        case "arcade-primary": L10n.palettePresetArcadePrimary
+        case "tropical-signal": L10n.palettePresetTropicalSignal
+        case "storybook": L10n.palettePresetStorybook
+        case "night-market": L10n.palettePresetNightMarket
         default: name
         }
     }
@@ -1035,18 +1067,55 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     nonisolated static let palettePresets = [
-        PalettePreset(id: "game-boy", name: "Game Boy", colorFamilies: [[
-            0x081C0C, 0x0F380F, 0x306230, 0x5A7D25, 0x8BAC0F, 0xC7D86D,
+        PalettePreset(id: "game-boy", name: "Game Boy DMG", structure: .reference, colorFamilies: [[
+            0x0F380F, 0x306230, 0x8BAC0F, 0x9BBC0F,
         ]]),
-        PalettePreset(id: "pico-8", name: "PICO Spectrum", colorFamilies: [
-            [
-                0x000000, 0x1D2B53, 0x005F73, 0x008751, 0x29ADFF, 0xC2FFED,
-            ],
-            [
-                0x3B102D, 0x7E2553, 0xAB5236, 0xFF004D, 0xFFA300, 0xFFEC27,
-            ],
-        ]),
-        PalettePreset(id: "mono-ink", name: "Mono Ink", colorFamilies: [[
+        PalettePreset(id: "pico-8", name: "PICO-8", structure: .reference, colorFamilies: [[
+            0x000000, 0x1D2B53, 0x7E2553, 0x008751,
+            0xAB5236, 0x5F574F, 0xC2C3C7, 0xFFF1E8,
+            0xFF004D, 0xFFA300, 0xFFEC27, 0x00E436,
+            0x29ADFF, 0x83769C, 0xFF77A8, 0xFFCCAA,
+        ]]),
+        PalettePreset(id: "c64-pepto", name: "C64 Pepto", structure: .reference, colorFamilies: [[
+            0x000000, 0xFFFFFF, 0x68372B, 0x70A4B2,
+            0x6F3D86, 0x588D43, 0x352879, 0xB8C76F,
+            0x6F4F25, 0x433900, 0x9A6759, 0x444444,
+            0x6C6C6C, 0x9AD284, 0x6C5EB5, 0x959595,
+        ]]),
+        PalettePreset(id: "ibm-cga", name: "IBM CGA", structure: .reference, colorFamilies: [[
+            0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
+            0xAA0000, 0xAA00AA, 0xAA5500, 0xAAAAAA,
+            0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,
+            0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF,
+        ]]),
+        PalettePreset(id: "zx-spectrum", name: "ZX Spectrum", structure: .reference, colorFamilies: [[
+            0x000000, 0x0100CE, 0xCF0100, 0xCF01CE,
+            0x00CF15, 0x01CFCF, 0xCFCF15, 0xCFCFCF,
+            0x0200FD, 0xFF0201, 0xFF02FD, 0x00FF1C,
+            0x02FFFF, 0xFFFF1D, 0xFFFFFF,
+        ]]),
+        PalettePreset(id: "master-system", name: "Master System 64", structure: .reference, colorFamilies: [[
+            0x000000, 0x000055, 0x0000AA, 0x0000FF,
+            0x005500, 0x005555, 0x0055AA, 0x0055FF,
+            0x00AA00, 0x00AA55, 0x00AAAA, 0x00AAFF,
+            0x00FF00, 0x00FF55, 0x00FFAA, 0x00FFFF,
+            0x550000, 0x550055, 0x5500AA, 0x5500FF,
+            0x555500, 0x555555, 0x5555AA, 0x5555FF,
+            0x55AA00, 0x55AA55, 0x55AAAA, 0x55AAFF,
+            0x55FF00, 0x55FF55, 0x55FFAA, 0x55FFFF,
+            0xAA0000, 0xAA0055, 0xAA00AA, 0xAA00FF,
+            0xAA5500, 0xAA5555, 0xAA55AA, 0xAA55FF,
+            0xAAAA00, 0xAAAA55, 0xAAAAAA, 0xAAAAFF,
+            0xAAFF00, 0xAAFF55, 0xAAFFAA, 0xAAFFFF,
+            0xFF0000, 0xFF0055, 0xFF00AA, 0xFF00FF,
+            0xFF5500, 0xFF5555, 0xFF55AA, 0xFF55FF,
+            0xFFAA00, 0xFFAA55, 0xFFAAAA, 0xFFAAFF,
+            0xFFFF00, 0xFFFF55, 0xFFFFAA, 0xFFFFFF,
+        ]]),
+        PalettePreset(id: "virtual-boy", name: "Virtual Boy Red", structure: .reference, colorFamilies: [[
+            0x000000, 0x550000, 0xAA0000, 0xFF0000,
+        ]]),
+        PalettePreset(id: "mono-ink", name: "Mono Ink", structure: .tonal, colorFamilies: [[
             0x111318, 0x303640, 0x505866, 0x7B8491, 0xA9B0BA, 0xF5F1E8,
         ]]),
         PalettePreset(id: "ocean-8", name: "Ocean & Coral", colorFamilies: [
@@ -1073,15 +1142,18 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                 0x2A1A16, 0x513326, 0x7A4C34, 0x8A5A3B, 0xB8845C, 0xE8D8A8,
             ],
         ]),
-        PalettePreset(id: "candy-8", name: "Berry & Mint", colorFamilies: [
+        PalettePreset(id: "candy-8", name: "Berry Mint Peach", colorFamilies: [
             [
                 0x2A1B3D, 0x6A2C70, 0xB83B8F, 0xF06F9C, 0xFFB3C6, 0xFFE0EA,
             ],
             [
                 0x14363D, 0x28706F, 0x45A6A1, 0x7AD6CF, 0xA0E7E5, 0xB4F8C8,
             ],
+            [
+                0x3B211A, 0x734233, 0xAD654A, 0xDD8D68, 0xF7BA91, 0xFFE1C2,
+            ],
         ]),
-        PalettePreset(id: "sepia-6", name: "Sepia", colorFamilies: [[
+        PalettePreset(id: "sepia-6", name: "Sepia", structure: .tonal, colorFamilies: [[
             0x241A14, 0x4D3427, 0x76523A, 0xA47A55, 0xD2AC7B, 0xF1DFC0,
         ]]),
         PalettePreset(id: "arctic-rose", name: "Arctic Rose", colorFamilies: [
@@ -1201,6 +1273,9 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
                 0x032A2F, 0x07545B, 0x0C7E84, 0x16A8AA, 0x61D0C9, 0xB8EFE2,
             ],
             [
+                0x0D2A1A, 0x1B5130, 0x2E7B46, 0x49A75D, 0x83D67B, 0xC9F3AD,
+            ],
+            [
                 0x32132F, 0x621F5A, 0x963080, 0xC84C9F, 0xE87DBB, 0xF7BEDA,
             ],
         ]),
@@ -1210,6 +1285,50 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
             ],
             [
                 0x351328, 0x69213F, 0x9E365B, 0xCB587A, 0xE88FA3, 0xF7C7D2,
+            ],
+        ]),
+        PalettePreset(id: "arcade-primary", name: "Arcade Primary", colorFamilies: [
+            [
+                0x3A0E1B, 0x7A1730, 0xB52C4A, 0xE75A6B, 0xFF9A9A,
+            ],
+            [
+                0x081C3A, 0x103E78, 0x176FB0, 0x3BA4D8, 0x9ADDF2,
+            ],
+            [
+                0x3A2C08, 0x785C0D, 0xB38B17, 0xE0BC3D, 0xFFE887,
+            ],
+        ]),
+        PalettePreset(id: "tropical-signal", name: "Tropical Signal", colorFamilies: [
+            [
+                0x05313A, 0x087483, 0x1AB4B8, 0xA8ECE1,
+            ],
+            [
+                0x481A23, 0x9B3441, 0xE46766, 0xFFB49B,
+            ],
+            [
+                0x37400A, 0x7D8A12, 0xC4CE2E, 0xF3F18C,
+            ],
+        ]),
+        PalettePreset(id: "storybook", name: "Storybook", colorFamilies: [
+            [
+                0x12182B, 0x273150, 0x46577A, 0x7183A3, 0xC4CEDB,
+            ],
+            [
+                0x38250D, 0x745018, 0xAE7A28, 0xD5A64A, 0xF2D599,
+            ],
+            [
+                0x361925, 0x6D2A3D, 0xA7475F, 0xD8788C, 0xF0B7C1,
+            ],
+        ]),
+        PalettePreset(id: "night-market", name: "Night Market", colorFamilies: [
+            [
+                0x0B1028, 0x1D2456, 0x353B86, 0x5D61B6, 0xA2A1E3,
+            ],
+            [
+                0x062D2D, 0x075E5B, 0x0B9188, 0x22C5B6, 0x8AEBDD,
+            ],
+            [
+                0x3B1030, 0x7B185A, 0xB72B82, 0xE85AAC, 0xFFB2D3,
             ],
         ]),
     ]

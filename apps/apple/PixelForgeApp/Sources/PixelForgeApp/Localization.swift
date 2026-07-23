@@ -196,6 +196,15 @@ enum L10n {
     static var palettePresetPeachSlate: String { text("palette.preset.peach_slate") }
     static var palettePresetAurora: String { text("palette.preset.aurora") }
     static var palettePresetCloudberry: String { text("palette.preset.cloudberry") }
+    static var palettePresetC64Pepto: String { text("palette.preset.c64_pepto") }
+    static var palettePresetIBMCGA: String { text("palette.preset.ibm_cga") }
+    static var palettePresetZXSpectrum: String { text("palette.preset.zx_spectrum") }
+    static var palettePresetMasterSystem: String { text("palette.preset.master_system") }
+    static var palettePresetVirtualBoy: String { text("palette.preset.virtual_boy") }
+    static var palettePresetArcadePrimary: String { text("palette.preset.arcade_primary") }
+    static var palettePresetTropicalSignal: String { text("palette.preset.tropical_signal") }
+    static var palettePresetStorybook: String { text("palette.preset.storybook") }
+    static var palettePresetNightMarket: String { text("palette.preset.night_market") }
     static var recipePresetEyebrow: String { text("recipe_preset.eyebrow") }
     static var recipePresetTitle: String { text("recipe_preset.title") }
     static var recipePresetCurrent: String { text("recipe_preset.current") }

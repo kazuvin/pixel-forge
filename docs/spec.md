@@ -38,7 +38,7 @@
 - 変換はUI thread外で実行し、開始後200msを超えた場合だけ不定進捗を表示する。MVPでは複数変換を並列実行しない。
 - 新規変換は成功時に新しい生成recordを作る。既存結果の調整では同じrecordのatomicな更新、または新しいrecordの作成を選べる。
 - `調整する`はrecordのrecipeを正本として全パラメータを復元する。保存時と現行のalgorithm versionが不一致なら旧値を適用せず、警告とともに`PixelConversionSettings`の初期値へフォールバックする。
-- editing上部には入力画像を置かず、設定へ追従する出力previewを固定する。内蔵変換スタイルと保存済み調整プリセットは小型の読込／保存操作から扱い、現在の調整名を同じ行へ表示する。元画像色、custom、24種類の組み込みpaletteは小型cardの横scroll railへ並べ、個別パラメータは折りたたみ式の`詳細調整`へ置く。詳細値が選択中presetと一致しなくなった場合は`カスタム調整`として扱う。
+- editing上部には入力画像を置かず、設定へ追従する出力previewを固定する。内蔵変換スタイルと保存済み調整プリセットは小型の読込／保存操作から扱い、現在の調整名を同じ行へ表示する。元画像色、custom、33種類の組み込みpaletteは小型cardの横scroll railへ並べ、個別パラメータは折りたたみ式の`詳細調整`へ置く。詳細値が選択中presetと一致しなくなった場合は`カスタム調整`として扱う。
 - editingの設定変更は短時間debounceしたpreview変換へ反映し、古いpreview結果で新しい設定を上書きしない。preview変換は直列化し、保存操作とは別にrecordを更新しない。
 - editing下端には保存／更新を主操作、写真保存、画像共有、複製、削除をicon中心の操作railとして固定する。既存recordでは`別の画像として保存`も同時に提供し、新規recordでは複製と削除を表示しない。
 - 調整プリセットは名前、`PixelConversionSettings`、algorithm version、作成日時、更新日時をApplication Supportへ保存する。同名保存は既存presetを更新し、適用時もalgorithm versionの互換性を確認する。
@@ -54,7 +54,10 @@
 - iPhoneアプリは切り抜きUIを持たず、変換時のcropを常に画像全体へ設定する。coreと既存recipeのcrop互換性は維持する。
 - 数値設定は直接入力、増減buttonの長押し、水平scrubのすべてに対応する。
 - paletteはeditingの横scroll railへ名前、色数、小さな色swatchだけを表示し、選択をpreviewへ即時反映する。customの選択と編集では専用のfull-screen pickerを開く。
-- 組み込みpaletteは色系統を明示的なfamilyとして保持する。2系統paletteは各familyを同じ6階調、単色系paletteも6階調で構成し、cardでは最大12色を省略せず表示する。
+- 組み込みpaletteは`reference`、`tonal`、`balancedFamilies`を区別する。`reference`は色数を固定せず原典どおり、`tonal`は単一familyを4色以上、`balancedFamilies`は2〜3 familyを各4色以上かつ同数で構成する。
+- reference paletteはGame Boy DMG 4階調、PICO-8公式16色、C64のPepto変換16色、IBM CGAのRGBI 16色、ZX Spectrumのbright blackを除く15色、Master Systemの2bit RGB全64色、Virtual Boyの黒と3段階の赤を収録する。Game Boy、C64、Virtual BoyのRGB値は実機の表示特性をsRGBへ近似した表現であり、hardware内部の固定sRGB値ではない。
+- reference paletteの根拠は[Game Boy Pan Docs](https://gbdev.io/pandocs/Palettes.html)、[PICO-8 manual](https://www.lexaloffle.com/dl/docs/pico-8_manual.html)、[C64 VIC-II color analysis](https://www.pepto.de/projects/colorvic/2001/)、[IBM CGA RGBI palette](https://en.wikipedia.org/wiki/Color_Graphics_Adapter#Color_palette)、[ZX Spectrum manual](https://worldofspectrum.org/ZXBasicManual/zxmanchap16.html)、[Master System architecture](https://www.copetti.org/writings/consoles/master-system/)、[Virtual Boy four-level display](https://www.virtual-boy.com/forums/t/how-to-work-around-the-vbs-color-limitations/)とする。
+- palette cardのswatchは全色を1〜4段へ自動配置し、64色paletteを含めて省略しない。
 - custom paletteはSwiftUI標準`ColorPicker`（opacityなし）を色ごとに表示し、追加・編集・削除で構成する。カンマ区切りやhex列挙の文字入力は提供しない。
 - paletteの適用方法と輪郭modeは文字だけのsegmented controlではなく、pixel preview付きの選択cardで示す。
 - カメラ権限は撮影操作時に要求し、拒否または制限時はiOS設定への導線を提示する。

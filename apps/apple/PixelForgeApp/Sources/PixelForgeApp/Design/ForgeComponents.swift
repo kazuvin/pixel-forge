@@ -1475,18 +1475,46 @@ private struct ForgePaletteSwatches: View {
     let colors: [UInt32]
 
     var body: some View {
-        HStack(spacing: ForgeDesign.Spacing.hairline) {
-            ForEach(Array(colors.prefix(12).enumerated()), id: \.offset) { _, color in
-                Rectangle()
-                    .fill(forgePaletteColor(color))
-                    .frame(maxWidth: .infinity)
-            }
-            if colors.isEmpty {
-                Rectangle()
-                    .fill(palette.muted)
-                    .frame(maxWidth: .infinity)
+        if colors.isEmpty {
+            Rectangle()
+                .fill(palette.muted)
+        } else {
+            Canvas(rendersAsynchronously: false) { context, size in
+                let columns = paletteSwatchColumnCount(colors.count)
+                let rows = Int(ceil(Double(colors.count) / Double(columns)))
+                for row in 0 ..< rows {
+                    let startIndex = row * columns
+                    let colorsInRow = min(columns, colors.count - startIndex)
+                    for column in 0 ..< colorsInRow {
+                        let index = startIndex + column
+                        let minimumX = floor(size.width * CGFloat(column) / CGFloat(colorsInRow))
+                        let maximumX = ceil(size.width * CGFloat(column + 1) / CGFloat(colorsInRow))
+                        let minimumY = floor(size.height * CGFloat(row) / CGFloat(rows))
+                        let maximumY = ceil(size.height * CGFloat(row + 1) / CGFloat(rows))
+                        let rect = CGRect(
+                            x: minimumX,
+                            y: minimumY,
+                            width: maximumX - minimumX,
+                            height: maximumY - minimumY
+                        )
+                        context.fill(Path(rect), with: .color(forgePaletteColor(colors[index])))
+                    }
+                }
             }
         }
+    }
+}
+
+private func paletteSwatchColumnCount(_ colorCount: Int) -> Int {
+    switch colorCount {
+    case ...12:
+        max(1, colorCount)
+    case ...24:
+        Int(ceil(Double(colorCount) / 2))
+    case ...48:
+        Int(ceil(Double(colorCount) / 3))
+    default:
+        Int(ceil(Double(colorCount) / 4))
     }
 }
 
