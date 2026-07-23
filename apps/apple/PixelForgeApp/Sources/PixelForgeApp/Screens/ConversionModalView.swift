@@ -162,7 +162,8 @@ struct ConversionModalView: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     ForgePixelSurface(level: .panel) {
                         VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
-                            presetRail
+                            adjustmentPresetBar
+                            paletteRail
                             ForgeAdvancedSettingsDisclosure(
                                 title: L10n.advancedSettingsTitle,
                                 detail: L10n.advancedSettingsDetail,
@@ -202,58 +203,70 @@ struct ConversionModalView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    private var presetRail: some View {
-        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
-            HStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
-                ForgeSectionHeader(
-                    eyebrow: L10n.conversionStyleEyebrow,
-                    title: L10n.conversionStyleTitle,
-                    detail: L10n.conversionStyleDetail
-                )
-                Spacer(minLength: 0)
-                ForgeIconButton(
-                    icon: .plus,
-                    accessibilityLabel: L10n.recipePresetSave
-                ) {
-                    Task {
-                        await model.loadPresets()
-                        showsPresetLibrary = true
-                    }
+    private var adjustmentPresetBar: some View {
+        ForgeAdjustmentPresetBar(
+            currentLabel: L10n.recipePresetCurrent,
+            currentTitle: model.selectedConversionStyleTitle,
+            loadTitle: L10n.recipePresetLoad,
+            saveTitle: L10n.recipePresetSaveCompact,
+            loadAccessibilityLabel: L10n.recipePresetLoad,
+            saveAccessibilityLabel: L10n.recipePresetSave,
+            load: {
+                Task {
+                    await model.loadPresets()
+                    showsStylePicker = true
+                }
+            },
+            save: {
+                Task {
+                    await model.loadPresets()
+                    showsPresetLibrary = true
                 }
             }
+        )
+    }
+
+    private var paletteRail: some View {
+        VStack(alignment: .leading, spacing: ForgeDesign.Spacing.compact) {
+            ForgeSectionHeader(
+                eyebrow: L10n.paletteEyebrow,
+                title: L10n.palette
+            )
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(alignment: .top, spacing: ForgeDesign.Spacing.compact) {
-                    ForEach(ConversionSessionModel.conversionStylePresets) { preset in
-                        ForgeConversionStyleCard(
-                            title: preset.displayName,
-                            detail: preset.displayDetail,
-                            summary: model.settingsSummary(preset.settings),
-                            colors: model.colorValues(for: preset.settings),
-                            isSelected: model.isConversionStyleSelected(preset),
-                            isLocked: !model.isProActive && model.conversionStyleRequiresPro(preset)
-                        ) {
-                            model.applyConversionStyle(preset)
-                            showsAdvancedSettings = false
-                        }
-                        .frame(width: 172)
+                    ForgeCompactPaletteCard(
+                        title: L10n.paletteSource,
+                        detail: L10n.paletteSourceCardDetail,
+                        colors: [],
+                        isSelected: model.paletteSelection == .source
+                    ) {
+                        model.paletteSelection = .source
                     }
-                    ForEach(model.savedPresets) { preset in
-                        ForgeConversionStyleCard(
-                            title: preset.name,
-                            detail: L10n.conversionStyleSavedDetail,
-                            summary: model.settingsSummary(preset.settings),
-                            colors: model.colorValues(for: preset.settings),
-                            isSelected: model.isSavedPresetSelected(preset),
-                            isLocked: preset.algorithmVersion != PixelCoreInfo.algorithmVersion
-                                || (!model.isProActive && model.savedPresetRequiresPro(preset))
+                    ForgeCompactPaletteCard(
+                        title: L10n.custom,
+                        detail: L10n.compactPaletteColorCount(model.customPaletteColorValues.count),
+                        colors: model.customPaletteColorValues,
+                        isSelected: model.paletteSelection == .custom,
+                        isLocked: !model.isProActive
+                    ) {
+                        model.paletteSelection = .custom
+                        showsPalettePicker = true
+                    }
+                    ForEach(ConversionSessionModel.palettePresets) { preset in
+                        ForgeCompactPaletteCard(
+                            title: preset.displayName,
+                            detail: L10n.compactPaletteColorCount(preset.colorValues.count),
+                            colors: preset.colorValues,
+                            isSelected: model.paletteSelection == .preset(preset.id),
+                            isLocked: !model.isProActive
                         ) {
-                            model.applyPreset(preset)
-                            showsAdvancedSettings = false
+                            model.paletteSelection = .preset(preset.id)
                         }
-                        .frame(width: 172)
                     }
                 }
+                .padding(.horizontal, ForgeDesign.Spacing.regular)
             }
+            .padding(.horizontal, -ForgeDesign.Spacing.regular)
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         }
     }
@@ -281,33 +294,10 @@ struct ConversionModalView: View {
                 suffix: "×",
                 isLocked: !model.isProActive
             )
-            paletteControl
+            if model.paletteSelection != .source {
+                PaletteToneControls(model: model)
+            }
             outlineControls
-            ForgeRecipePresetLibraryButton(
-                title: L10n.recipePresetTitle,
-                detail: L10n.recipePresetCount(model.savedPresets.count)
-            ) {
-                Task {
-                    await model.loadPresets()
-                    showsPresetLibrary = true
-                }
-            }
-        }
-    }
-
-    private var paletteControl: some View {
-        ForgeLabeledControl(
-            label: L10n.palette,
-            isLocked: !model.isProActive && model.paletteSelection != .source
-        ) {
-            ForgePaletteSelectionButton(
-                title: model.selectedPaletteTitle,
-                detail: selectedPaletteDetail,
-                colors: model.selectedPaletteColorValues,
-                isLocked: !model.isProActive && model.paletteSelection != .source
-            ) {
-                showsPalettePicker = true
-            }
         }
     }
 
@@ -482,13 +472,6 @@ struct ConversionModalView: View {
         }
         .padding(ForgeDesign.Spacing.section)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var selectedPaletteDetail: String {
-        if model.paletteSelection == .source {
-            return L10n.paletteSourceDetail
-        }
-        return L10n.paletteColorCount(model.selectedPaletteColorValues.count)
     }
 
     private var modalEyebrow: String {
@@ -741,7 +724,7 @@ private struct PalettePickerView: View {
                     }
                     paletteGrid
                     if model.paletteSelection != .source {
-                        toneControls
+                        PaletteToneControls(model: model)
                     }
                     ForgeButton(title: L10n.done, icon: .selected, role: .primary) {
                         close()
@@ -779,6 +762,15 @@ private struct PalettePickerView: View {
                 ) {
                     model.paletteSelection = .source
                 }
+                ForgePaletteCard(
+                    title: L10n.custom,
+                    detail: L10n.paletteCustomCardDetail,
+                    colors: model.customPaletteColorValues,
+                    isSelected: model.paletteSelection == .custom,
+                    isLocked: !model.isProActive
+                ) {
+                    model.paletteSelection = .custom
+                }
                 ForEach(ConversionSessionModel.palettePresets) { preset in
                     ForgePaletteCard(
                         title: preset.displayName,
@@ -790,20 +782,16 @@ private struct PalettePickerView: View {
                         model.paletteSelection = .preset(preset.id)
                     }
                 }
-                ForgePaletteCard(
-                    title: L10n.custom,
-                    detail: L10n.paletteCustomCardDetail,
-                    colors: model.customPaletteColorValues,
-                    isSelected: model.paletteSelection == .custom,
-                    isLocked: !model.isProActive
-                ) {
-                    model.paletteSelection = .custom
-                }
             }
         }
     }
 
-    private var toneControls: some View {
+}
+
+private struct PaletteToneControls: View {
+    @ObservedObject var model: ConversionSessionModel
+
+    var body: some View {
         VStack(alignment: .leading, spacing: ForgeDesign.Spacing.regular) {
             ForgeSectionHeader(
                 eyebrow: L10n.paletteApplicationEyebrow,

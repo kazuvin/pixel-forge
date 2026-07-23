@@ -77,9 +77,10 @@ Home
 │ │ pinned output preview │ │
 │ └───────────────────────┘ │
 ├───────────────────────────┤
-│ CONVERSION OPTIONS        │
-│ [style][style][style] →   │
-│                  [+保存]  │
+│ 現在: スタンダード        │
+│              [読込][保存] │
+│ カラーパレット            │
+│ [元画像][GB][PICO][…] →   │
 │ [＋ 詳細調整]             │
 ├───────────────────────────┤
 │ [保存/更新][写真][共有]…  │
@@ -88,12 +89,14 @@ Home
 
 - 入力previewはeditingへ表示しない。出力previewをtop bar直下へ固定し、下側の設定領域だけを縦scroll可能にする。
 - 出力previewは選択中presetと詳細値へリアルタイムに追従する。連続変更は短くdebounceし、preview変換を直列化して最新設定の結果だけを表示する。previewの更新だけではlibrary recordを作成または更新しない。
-- 通常は6種類の内蔵変換スタイルと保存済みプリセットから選ぶだけで変換できる。両方を一つの横scroll railへ並べ、各cardにpixel参考画像、概要、使用色、lock、選択状態を示す。
-- preset railの見出しから現在の調整値を名前付きpresetとして保存・管理できる。
-- 論理解像度、拡大率、palette、輪郭は上級者向けの`詳細調整`内だけへ表示する。値を変更して選択presetと一致しなくなった場合は`カスタム調整`と表示する。
+- 内蔵変換スタイルと保存済み調整プリセットは小型の`読み込む`から選び、現在の調整値は小型の`保存`から名前付きpresetとして保存・管理する。同じ行の左側へ現在の調整名を表示し、値がpresetと一致しなくなった場合は`カスタム調整`と表示する。
+- 元画像色、custom、24種類の組み込みpaletteは小型cardの横scroll railへ並べる。cardはpalette名、色数、使用色の小さなswatch、lock、選択状態だけを示し、pixel参考画像や説明文を重ねない。customは組み込みpaletteより前へ置き、長いrailでもすぐ編集できるようにする。
+- 2系統の組み込みpaletteは各系統6色ずつ、単色系は6階調で構成し、cardのswatchは最大12色を省略せず表示する。
+- palette railは親surfaceの左右paddingを打ち消してsurface端までscroll領域を広げ、先頭と末尾へ同じpaddingをscroll contentとして戻す。親paddingでcardが見切れた状態にはしない。
+- 論理解像度、拡大率、paletteの適用方法、輪郭は上級者向けの`詳細調整`内へ表示する。palette選択そのものは詳細調整へ重複配置しない。
 - 切り抜き機能は置かず、入力画像全体を対象にする。
 - 数値は直接入力でき、増減buttonの長押しとtrackの水平scrubでも連続変更できる。
-- paletteは現在の選択を参考画像付きcardで示し、tapすると2列のpalette pickerを開く。pickerの各cardにはpixel参考画像と使用色swatchを表示する。
+- palette cardのtapは選択を出力previewへ即時反映する。custom cardはfull-screen pickerを開き、色を追加、編集、削除できる。
 - custom paletteではカンマ区切り入力を使わず、SwiftUI標準のカラーピッカーから色を1色ずつ追加、編集、削除する。
 - palette適用と輪郭modeはpixel preview付きcardで選択し、文言だけに依存しない。
 - 無料範囲外の設定も隠さずlockを表示する。選択時にProが必要であることを説明し、現在の入力と設定を失わない。

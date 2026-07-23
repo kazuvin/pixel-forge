@@ -95,14 +95,27 @@ struct PhotoLibraryAccessPolicyTests {
 @Suite("Built-in palette presets")
 struct PalettePresetTests {
     @MainActor
-    @Test("picker offers eight distinct non-empty presets")
+    @Test("picker offers twenty-four distinct non-empty presets")
     func providesPaletteCollection() {
         let presets = ConversionSessionModel.palettePresets
-        #expect(presets.count == 8)
+        #expect(presets.count == 24)
         #expect(Set(presets.map(\.id)).count == presets.count)
         #expect(Set(presets.map(\.name)).count == presets.count)
         #expect(presets.allSatisfy { !$0.colorValues.isEmpty })
         #expect(presets.allSatisfy { $0.colors.count == $0.colorValues.count })
+        #expect(presets.allSatisfy { Set($0.colorValues).count == $0.colorValues.count })
+    }
+
+    @MainActor
+    @Test("every palette family has six shades and paired palettes stay balanced")
+    func balancesPaletteFamilies() {
+        let presets = ConversionSessionModel.palettePresets
+        #expect(presets.allSatisfy { preset in
+            (preset.colorFamilies.count == 1 || preset.colorFamilies.count == 2)
+                && preset.colorFamilies.allSatisfy { $0.count == 6 }
+        })
+        #expect(presets.filter { $0.colorFamilies.count == 1 }.count == 3)
+        #expect(presets.filter { $0.colorFamilies.count == 2 }.count == 21)
     }
 }
 

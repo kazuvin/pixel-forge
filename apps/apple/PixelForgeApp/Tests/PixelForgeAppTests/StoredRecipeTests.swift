@@ -232,6 +232,36 @@ func editingPreviewFollowsConversionStyle() async throws {
     #expect(model.state == .editing)
 }
 
+@MainActor
+@Test("editing preview follows palette rail selection without saving a record")
+func editingPreviewFollowsPaletteSelection() async throws {
+    let sourceData = try #require(ReviewConfiguration.sourceData)
+    let model = try ConversionSessionModel(
+        sourceData: sourceData,
+        sourceFilename: "test.png",
+        store: LocalLibraryStore(rootURL: temporaryDirectory()),
+        presetStore: ConversionPresetStore(rootURL: temporaryDirectory()),
+        entitlement: ProEntitlementService(),
+        onLibraryChange: {}
+    )
+
+    model.refreshPreview(immediately: true)
+    try await waitForPreview(model)
+    let sourceColorPreview = model.outputImage?.pngData()
+
+    let gameBoy = try #require(
+        ConversionSessionModel.palettePresets.first(where: { $0.id == "game-boy" })
+    )
+    model.paletteSelection = .preset(gameBoy.id)
+    model.settingsDidChange()
+    try await waitForPreview(model)
+
+    #expect(model.selectedPaletteTitle == gameBoy.displayName)
+    #expect(model.outputImage?.pngData() != sourceColorPreview)
+    #expect(model.currentRecord == nil)
+    #expect(model.state == .editing)
+}
+
 private func record(
     algorithmVersion: String,
     presetReference: ConversionPresetReference? = nil

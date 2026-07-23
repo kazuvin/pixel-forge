@@ -180,13 +180,32 @@ enum L10n {
     static var palettePresetForest8: String { text("palette.preset.forest_8") }
     static var palettePresetCandy8: String { text("palette.preset.candy_8") }
     static var palettePresetSepia6: String { text("palette.preset.sepia_6") }
+    static var palettePresetArcticRose: String { text("palette.preset.arctic_rose") }
+    static var palettePresetEmberTeal: String { text("palette.preset.ember_teal") }
+    static var palettePresetLavenderLime: String { text("palette.preset.lavender_lime") }
+    static var palettePresetMidnightGold: String { text("palette.preset.midnight_gold") }
+    static var palettePresetSakuraInk: String { text("palette.preset.sakura_ink") }
+    static var palettePresetCyberViolet: String { text("palette.preset.cyber_violet") }
+    static var palettePresetDesertNight: String { text("palette.preset.desert_night") }
+    static var palettePresetCrimsonIce: String { text("palette.preset.crimson_ice") }
+    static var palettePresetLagoonCoral: String { text("palette.preset.lagoon_coral") }
+    static var palettePresetPlumMoss: String { text("palette.preset.plum_moss") }
+    static var palettePresetCopperSky: String { text("palette.preset.copper_sky") }
+    static var palettePresetLemonGrape: String { text("palette.preset.lemon_grape") }
+    static var palettePresetRubyJade: String { text("palette.preset.ruby_jade") }
+    static var palettePresetPeachSlate: String { text("palette.preset.peach_slate") }
+    static var palettePresetAurora: String { text("palette.preset.aurora") }
+    static var palettePresetCloudberry: String { text("palette.preset.cloudberry") }
     static var recipePresetEyebrow: String { text("recipe_preset.eyebrow") }
     static var recipePresetTitle: String { text("recipe_preset.title") }
+    static var recipePresetCurrent: String { text("recipe_preset.current") }
+    static var recipePresetLoad: String { text("recipe_preset.load") }
     static var recipePresetDetail: String { text("recipe_preset.detail") }
     static var recipePresetLibraryTitle: String { text("recipe_preset.library.title") }
     static var recipePresetLibraryDetail: String { text("recipe_preset.library.detail") }
     static var recipePresetName: String { text("recipe_preset.name") }
     static var recipePresetSave: String { text("recipe_preset.save") }
+    static var recipePresetSaveCompact: String { text("recipe_preset.save_compact") }
     static var recipePresetApply: String { text("recipe_preset.apply") }
     static var recipePresetEmptyTitle: String { text("recipe_preset.empty.title") }
     static var recipePresetEmptyDetail: String { text("recipe_preset.empty.detail") }
@@ -291,6 +310,10 @@ enum L10n {
 
     static func paletteColorCount(_ value: Int) -> String {
         format("palette.color_count", value)
+    }
+
+    static func compactPaletteColorCount(_ value: Int) -> String {
+        format("palette.color_count_compact", value)
     }
 
     static func scale(_ value: Int) -> String {

@@ -230,6 +230,26 @@ struct ForgeButton: View {
     }
 }
 
+struct ForgeCompactButton: View {
+    let title: String
+    let icon: ForgeIconName
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: ForgeDesign.Spacing.tight) {
+                ForgeIcon(name: icon, size: 14)
+                Text(title)
+                    .forgeTextStyle(.caption)
+                    .lineLimit(1)
+            }
+        }
+        .buttonStyle(ForgeCompactButtonChrome())
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
 struct ForgeIconButton: View {
     let icon: ForgeIconName
     let accessibilityLabel: String
@@ -296,6 +316,26 @@ private struct ForgeIconButtonChrome: ButtonStyle {
             .overlay {
                 ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
             }
+    }
+}
+
+private struct ForgeCompactButtonChrome: ButtonStyle {
+    @Environment(\.forgePalette) private var palette
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(palette.ink)
+            .frame(minHeight: ForgeDesign.Size.controlHeight)
+            .padding(.horizontal, ForgeDesign.Spacing.compact)
+            .background {
+                ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                    .fill(palette.surfaceRaised.opacity(configuration.isPressed ? 0.68 : 1))
+            }
+            .overlay {
+                ForgePixelBorder(color: palette.grid, cut: ForgeDesign.Size.compactCornerCut)
+            }
+            .opacity(isEnabled ? 1 : 0.38)
     }
 }
 
@@ -1018,6 +1058,47 @@ struct ForgeAdvancedSettingsDisclosure: View {
     }
 }
 
+struct ForgeAdjustmentPresetBar: View {
+    @Environment(\.forgePalette) private var palette
+    let currentLabel: String
+    let currentTitle: String
+    let loadTitle: String
+    let saveTitle: String
+    let loadAccessibilityLabel: String
+    let saveAccessibilityLabel: String
+    let load: () -> Void
+    let save: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: ForgeDesign.Spacing.compact) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.hairline) {
+                Text(currentLabel.uppercased())
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.accent)
+                Text(currentTitle)
+                    .forgeTextStyle(.heading)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.78)
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: ForgeDesign.Spacing.tight) {
+                ForgeCompactButton(
+                    title: loadTitle,
+                    icon: .restore,
+                    accessibilityLabel: loadAccessibilityLabel,
+                    action: load
+                )
+                ForgeCompactButton(
+                    title: saveTitle,
+                    icon: .plus,
+                    accessibilityLabel: saveAccessibilityLabel,
+                    action: save
+                )
+            }
+        }
+    }
+}
+
 struct ForgeConversionStyleCard: View {
     @Environment(\.forgePalette) private var palette
     let title: String
@@ -1294,6 +1375,58 @@ struct ForgePaletteCard: View {
     }
 }
 
+struct ForgeCompactPaletteCard: View {
+    @Environment(\.forgePalette) private var palette
+    let title: String
+    let detail: String
+    let colors: [UInt32]
+    let isSelected: Bool
+    var isLocked = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: ForgeDesign.Spacing.tight) {
+                HStack(spacing: ForgeDesign.Spacing.tight) {
+                    Text(title)
+                        .forgeTextStyle(.body)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+                    Spacer(minLength: 0)
+                    ForgeIcon(
+                        name: isLocked ? .lock : (isSelected ? .selected : .unselected),
+                        size: 12,
+                        colorRole: isSelected ? .accent : .muted
+                    )
+                }
+                Text(detail)
+                    .forgeTextStyle(.micro)
+                    .foregroundStyle(palette.muted)
+                    .lineLimit(1)
+                ForgePaletteSwatches(colors: colors)
+                    .frame(height: 10)
+            }
+            .padding(ForgeDesign.Spacing.compact)
+            .frame(maxWidth: .infinity, minHeight: 76, alignment: .topLeading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background {
+            ForgePixelChamferShape(cut: ForgeDesign.Size.compactCornerCut)
+                .fill(isSelected ? palette.surfaceRaised : palette.surface)
+        }
+        .overlay {
+            ForgePixelBorder(
+                color: isSelected ? palette.accent : palette.grid,
+                cut: ForgeDesign.Size.compactCornerCut,
+                lineWidth: isSelected ? ForgeDesign.Size.activeBorder : ForgeDesign.Size.border
+            )
+        }
+        .frame(width: ForgeDesign.Size.compactPaletteCardWidth)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
 private struct ForgePaletteReferencePreview: View {
     @Environment(\.forgePalette) private var palette
     let colors: [UInt32]
@@ -1343,7 +1476,7 @@ private struct ForgePaletteSwatches: View {
 
     var body: some View {
         HStack(spacing: ForgeDesign.Spacing.hairline) {
-            ForEach(Array(colors.prefix(8).enumerated()), id: \.offset) { _, color in
+            ForEach(Array(colors.prefix(12).enumerated()), id: \.offset) { _, color in
                 Rectangle()
                     .fill(forgePaletteColor(color))
                     .frame(maxWidth: .infinity)
@@ -1419,8 +1552,8 @@ struct ForgePreviewPane: View {
             ZStack {
                 ForgePixelGridBackground()
                 if let image {
-                    if pixelated {
-                        Image(uiImage: image)
+                    if pixelated, let cgImage = image.cgImage {
+                        Image(decorative: cgImage, scale: 1, orientation: .up)
                             .resizable()
                             .interpolation(.none)
                             .scaledToFit()

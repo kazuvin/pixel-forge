@@ -105,6 +105,7 @@ enum ForgeDesign {
         static let controlHeight: CGFloat = 44
         static let buttonHeight: CGFloat = 46
         static let toolbarHeight: CGFloat = 82
+        static let compactPaletteCardWidth: CGFloat = 126
         static let recipeWidth: CGFloat = 352
     }
 }

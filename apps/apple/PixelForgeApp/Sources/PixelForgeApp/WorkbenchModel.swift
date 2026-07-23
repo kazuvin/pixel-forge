@@ -213,7 +213,19 @@ enum PaletteSelection: Hashable {
 struct PalettePreset: Identifiable, Hashable {
     let id: String
     let name: String
-    let colorValues: [UInt32]
+    let colorFamilies: [[UInt32]]
+
+    init(id: String, name: String, colorFamilies: [[UInt32]]) {
+        precondition((1 ... 2).contains(colorFamilies.count))
+        precondition(colorFamilies.allSatisfy { $0.count == 6 })
+        self.id = id
+        self.name = name
+        self.colorFamilies = colorFamilies
+    }
+
+    var colorValues: [UInt32] {
+        colorFamilies.flatMap { $0 }
+    }
 
     var colors: [PixelRGBColor] {
         colorValues.map { value in
@@ -235,6 +247,22 @@ struct PalettePreset: Identifiable, Hashable {
         case "forest-8": L10n.palettePresetForest8
         case "candy-8": L10n.palettePresetCandy8
         case "sepia-6": L10n.palettePresetSepia6
+        case "arctic-rose": L10n.palettePresetArcticRose
+        case "ember-teal": L10n.palettePresetEmberTeal
+        case "lavender-lime": L10n.palettePresetLavenderLime
+        case "midnight-gold": L10n.palettePresetMidnightGold
+        case "sakura-ink": L10n.palettePresetSakuraInk
+        case "cyber-violet": L10n.palettePresetCyberViolet
+        case "desert-night": L10n.palettePresetDesertNight
+        case "crimson-ice": L10n.palettePresetCrimsonIce
+        case "lagoon-coral": L10n.palettePresetLagoonCoral
+        case "plum-moss": L10n.palettePresetPlumMoss
+        case "copper-sky": L10n.palettePresetCopperSky
+        case "lemon-grape": L10n.palettePresetLemonGrape
+        case "ruby-jade": L10n.palettePresetRubyJade
+        case "peach-slate": L10n.palettePresetPeachSlate
+        case "aurora": L10n.palettePresetAurora
+        case "cloudberry": L10n.palettePresetCloudberry
         default: name
         }
     }
@@ -1007,34 +1035,182 @@ final class ConversionSessionModel: ObservableObject, Identifiable {
     }
 
     nonisolated static let palettePresets = [
-        PalettePreset(id: "game-boy", name: "Game Boy", colorValues: [
-            0x0F380F, 0x306230, 0x8BAC0F, 0x9BBC0F,
+        PalettePreset(id: "game-boy", name: "Game Boy", colorFamilies: [[
+            0x081C0C, 0x0F380F, 0x306230, 0x5A7D25, 0x8BAC0F, 0xC7D86D,
+        ]]),
+        PalettePreset(id: "pico-8", name: "PICO Spectrum", colorFamilies: [
+            [
+                0x000000, 0x1D2B53, 0x005F73, 0x008751, 0x29ADFF, 0xC2FFED,
+            ],
+            [
+                0x3B102D, 0x7E2553, 0xAB5236, 0xFF004D, 0xFFA300, 0xFFEC27,
+            ],
         ]),
-        PalettePreset(id: "pico-8", name: "PICO-8", colorValues: [
-            0x000000, 0x1D2B53, 0x7E2553, 0x008751,
-            0xFFF1E8, 0xFF004D, 0xFFA300, 0xFFEC27,
+        PalettePreset(id: "mono-ink", name: "Mono Ink", colorFamilies: [[
+            0x111318, 0x303640, 0x505866, 0x7B8491, 0xA9B0BA, 0xF5F1E8,
+        ]]),
+        PalettePreset(id: "ocean-8", name: "Ocean & Coral", colorFamilies: [
+            [
+                0x071A2B, 0x0B3C5D, 0x086788, 0x00A6A6, 0x7FD1B9, 0xD5F2E3,
+            ],
+            [
+                0x3A1E2A, 0x7C3F58, 0xC95C68, 0xF47E60, 0xF0C36E, 0xFFF0C2,
+            ],
         ]),
-        PalettePreset(id: "mono-ink", name: "Mono Ink", colorValues: [
-            0x111318, 0x505866, 0xA9B0BA, 0xF5F1E8,
+        PalettePreset(id: "sunset-8", name: "Violet Sunset", colorFamilies: [
+            [
+                0x211A3A, 0x51355A, 0x713C68, 0x8E3B66, 0xB84A73, 0xE58BA3,
+            ],
+            [
+                0x5A2A24, 0x8E4632, 0xD4515C, 0xF58A5C, 0xFFC46B, 0xFFF4D6,
+            ],
         ]),
-        PalettePreset(id: "ocean-8", name: "Ocean 8", colorValues: [
-            0x071A2B, 0x0B3C5D, 0x086788, 0x00A6A6,
-            0x7FD1B9, 0xD5F2E3, 0xF0C36E, 0xF47E60,
+        PalettePreset(id: "forest-8", name: "Forest & Clay", colorFamilies: [
+            [
+                0x10231A, 0x214E34, 0x397A4A, 0x61A052, 0xA1C95A, 0xD4DB72,
+            ],
+            [
+                0x2A1A16, 0x513326, 0x7A4C34, 0x8A5A3B, 0xB8845C, 0xE8D8A8,
+            ],
         ]),
-        PalettePreset(id: "sunset-8", name: "Sunset 8", colorValues: [
-            0x211A3A, 0x51355A, 0x8E3B66, 0xD4515C,
-            0xF58A5C, 0xFFC46B, 0xFFE7A0, 0xFFF4D6,
+        PalettePreset(id: "candy-8", name: "Berry & Mint", colorFamilies: [
+            [
+                0x2A1B3D, 0x6A2C70, 0xB83B8F, 0xF06F9C, 0xFFB3C6, 0xFFE0EA,
+            ],
+            [
+                0x14363D, 0x28706F, 0x45A6A1, 0x7AD6CF, 0xA0E7E5, 0xB4F8C8,
+            ],
         ]),
-        PalettePreset(id: "forest-8", name: "Forest 8", colorValues: [
-            0x10231A, 0x214E34, 0x397A4A, 0x61A052,
-            0xA1C95A, 0xD4DB72, 0x8A5A3B, 0xE8D8A8,
-        ]),
-        PalettePreset(id: "candy-8", name: "Candy 8", colorValues: [
-            0x2A1B3D, 0x6A2C70, 0xB83B8F, 0xF06F9C,
-            0xFFB3C6, 0xFFD6A5, 0xA0E7E5, 0xB4F8C8,
-        ]),
-        PalettePreset(id: "sepia-6", name: "Sepia 6", colorValues: [
+        PalettePreset(id: "sepia-6", name: "Sepia", colorFamilies: [[
             0x241A14, 0x4D3427, 0x76523A, 0xA47A55, 0xD2AC7B, 0xF1DFC0,
+        ]]),
+        PalettePreset(id: "arctic-rose", name: "Arctic Rose", colorFamilies: [
+            [
+                0x081A33, 0x123B66, 0x1E6091, 0x3185B8, 0x6CB7D9, 0xB9E7F2,
+            ],
+            [
+                0x3A1630, 0x6E2850, 0xA94470, 0xD86C92, 0xF2A2BB, 0xFFD5E2,
+            ],
+        ]),
+        PalettePreset(id: "ember-teal", name: "Ember Teal", colorFamilies: [
+            [
+                0x062B2A, 0x0D4A47, 0x14746F, 0x1B9C91, 0x63C7B8, 0xB9EEE3,
+            ],
+            [
+                0x3B1710, 0x6D2B1A, 0xA84724, 0xD86432, 0xF29A57, 0xFFD2A3,
+            ],
+        ]),
+        PalettePreset(id: "lavender-lime", name: "Lavender Lime", colorFamilies: [
+            [
+                0x211635, 0x44265E, 0x6B3D88, 0x945EB2, 0xC18AD4, 0xE6C5F0,
+            ],
+            [
+                0x1B2A12, 0x36531C, 0x5B7F27, 0x87AB36, 0xB8D85A, 0xE5F29A,
+            ],
+        ]),
+        PalettePreset(id: "midnight-gold", name: "Midnight Gold", colorFamilies: [
+            [
+                0x050D1C, 0x0B1D38, 0x12345C, 0x1E5682, 0x4B7FA8, 0x9CC4DE,
+            ],
+            [
+                0x33220A, 0x61400F, 0x956315, 0xC48C23, 0xE5B84A, 0xFFE49A,
+            ],
+        ]),
+        PalettePreset(id: "sakura-ink", name: "Sakura Ink", colorFamilies: [
+            [
+                0x331623, 0x65243E, 0x9B365C, 0xCF5B7C, 0xF08EAA, 0xFFD0DD,
+            ],
+            [
+                0x10141B, 0x262C36, 0x47515F, 0x6F7B89, 0xA6AFB8, 0xE8E5DF,
+            ],
+        ]),
+        PalettePreset(id: "cyber-violet", name: "Cyber Violet", colorFamilies: [
+            [
+                0x031F2B, 0x063E50, 0x096478, 0x0A8CA0, 0x45BCD0, 0xA6ECF2,
+            ],
+            [
+                0x1C1233, 0x382258, 0x5A3482, 0x8250AE, 0xB080D0, 0xE0C4F0,
+            ],
+        ]),
+        PalettePreset(id: "desert-night", name: "Desert Night", colorFamilies: [
+            [
+                0x342515, 0x654627, 0x947043, 0xC39B66, 0xE4C28F, 0xF7E4BC,
+            ],
+            [
+                0x10142E, 0x202657, 0x343B80, 0x525BA8, 0x8189CB, 0xC4C8EA,
+            ],
+        ]),
+        PalettePreset(id: "crimson-ice", name: "Crimson Ice", colorFamilies: [
+            [
+                0x320E16, 0x621723, 0x982433, 0xC53A4C, 0xE86B78, 0xF8B5BC,
+            ],
+            [
+                0x0B2633, 0x16495F, 0x24748D, 0x3FA4B8, 0x82D1DA, 0xD5F4F2,
+            ],
+        ]),
+        PalettePreset(id: "lagoon-coral", name: "Lagoon Coral", colorFamilies: [
+            [
+                0x042A33, 0x07515E, 0x0A7A87, 0x12A4AC, 0x62CDD0, 0xB8F0E9,
+            ],
+            [
+                0x3B1820, 0x702B34, 0xA9444D, 0xD96368, 0xF29A91, 0xFFD1BD,
+            ],
+        ]),
+        PalettePreset(id: "plum-moss", name: "Plum Moss", colorFamilies: [
+            [
+                0x2B142A, 0x522146, 0x7D315F, 0xA84D7A, 0xD17C9F, 0xF0BDD2,
+            ],
+            [
+                0x182418, 0x31462A, 0x506A3D, 0x78934F, 0xA7BC70, 0xDCE0A0,
+            ],
+        ]),
+        PalettePreset(id: "copper-sky", name: "Copper Sky", colorFamilies: [
+            [
+                0x32170D, 0x64301A, 0x964B26, 0xC36B39, 0xE69A65, 0xF4C9A2,
+            ],
+            [
+                0x0A2440, 0x17466B, 0x286E96, 0x4B98BE, 0x8BC9E1, 0xD2EEF6,
+            ],
+        ]),
+        PalettePreset(id: "lemon-grape", name: "Lemon Grape", colorFamilies: [
+            [
+                0x332C08, 0x665A0D, 0x988A15, 0xC7B52B, 0xE9D85B, 0xFFF2A6,
+            ],
+            [
+                0x251438, 0x4A2468, 0x713893, 0x9B5ABE, 0xC98CDB, 0xEACAF2,
+            ],
+        ]),
+        PalettePreset(id: "ruby-jade", name: "Ruby Jade", colorFamilies: [
+            [
+                0x350D1E, 0x68142F, 0x9D2347, 0xCC3E62, 0xEC7590, 0xF7B8C7,
+            ],
+            [
+                0x06291F, 0x0D513C, 0x18795A, 0x2AA379, 0x70C7A1, 0xBCE8D1,
+            ],
+        ]),
+        PalettePreset(id: "peach-slate", name: "Peach Slate", colorFamilies: [
+            [
+                0x3A201B, 0x714035, 0xA96350, 0xD5856E, 0xF1B09A, 0xFFE0CF,
+            ],
+            [
+                0x151D29, 0x2D3A4A, 0x4B5C6F, 0x71869A, 0xA4B3C1, 0xDCE2E7,
+            ],
+        ]),
+        PalettePreset(id: "aurora", name: "Aurora", colorFamilies: [
+            [
+                0x032A2F, 0x07545B, 0x0C7E84, 0x16A8AA, 0x61D0C9, 0xB8EFE2,
+            ],
+            [
+                0x32132F, 0x621F5A, 0x963080, 0xC84C9F, 0xE87DBB, 0xF7BEDA,
+            ],
+        ]),
+        PalettePreset(id: "cloudberry", name: "Cloudberry", colorFamilies: [
+            [
+                0x131C2B, 0x2A3A52, 0x455A76, 0x657B98, 0x94A7BD, 0xD4DDE7,
+            ],
+            [
+                0x351328, 0x69213F, 0x9E365B, 0xCB587A, 0xE88FA3, 0xF7C7D2,
+            ],
         ]),
     ]
 

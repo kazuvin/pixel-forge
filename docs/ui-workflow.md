@@ -61,7 +61,8 @@
 ├───────────────────────────┤
 │ pinned output preview     │
 ├───────────────────────────┤
-│ preset rail →             │
+│ current preset  load save │
+│ compact palette rail →    │
 │ advanced settings         │
 ├───────────────────────────┤
 │ save/update  export icons │
