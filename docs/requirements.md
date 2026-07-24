@@ -131,11 +131,12 @@ Pixel Forgeは、写真を機械的かつ再現可能なピクセルアートへ
 - 画像生成はCodex skillが担当し、model API、認証、prompt実行をRust workspaceとiPhoneアプリへ持ち込まない。
 - parts sheetは見えない固定gridの各cellへbody、head、arm、leg、equipmentなどを分離して配置する。part名と個数は固定せず、monster固有の構成をmanifestへ記録する。
 - parts sheet全体を一度だけ共通の論理解像度とpaletteへ変換してからpartへ分割し、part単位の色ぶれを避ける。
-- 透過partをinteger pixel offsetと明示z-orderで合成し、1frame 64x64、8frame、8fpsのidle animationを横一列のPNGへ出力する。
-- head、body、armの沈みはmanifestのframe配列で定義し、legは接地を守る標準presetを用意する。
+- 透過partをinteger pixel offsetと明示z-orderで合成し、1frame 64x64、8frame、8fpsのidle animationを横一列のPNGへ出力する。z-orderは全frame共通値に加えてframeごとの差分を指定できる。
+- head、body、armの沈みはmanifestのframe配列で定義し、legは接地を守る標準presetを用意する。editorには静止、呼吸、重量級、小刻み、浮遊のcharacter motion presetを用意し、適用後もframeごとの値を編集できる。
+- partはframeごとにopaque boundsの幅と高さをinteger pixel差分で変更できる。resizeは明示した固定点を維持するnearest-neighborとし、色補間を行わない。
 - game用の論理sprite sheet、nearest-neighbor拡大preview、frame metadata、各part PNG、入力hashとalgorithm versionを持つrecipeを出力する。
 - 同じ透過parts sheetとmanifestから同じdecode後RGBA、metadata、recipeを生成する。
-- 生成済みpartの基準位置、接続点、z-order、frameごとのoffsetを調整するローカル専用editorを提供する。
+- 生成済みpartの基準位置、接続点、全体およびframeごとのz-order、frameごとのoffsetと幅・高さ差分を調整するローカル専用editorを提供する。
 - editorはpartのドラッグ、矢印キーによる1pixel移動、8frameの選択と再生、任意の完成参考画像のoverlay、manifestの書き出しを提供する。
 - editorの保存は候補manifestを一時出力でCLI buildしてから元のmanifestへ反映し、game用assetも同じ`pixel-cli sprite build`で再生成する。
 - editorのlocal serverは`127.0.0.1`だけへbindし、起動時に指定したrepository内path以外を読み書きしない。公開Webへ含めず、deployしない。

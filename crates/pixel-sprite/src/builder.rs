@@ -1,13 +1,13 @@
 use image::{
     ColorType, ImageEncoder, Rgba, RgbaImage, codecs::png::PngEncoder, imageops::FilterType,
 };
-use pixel_core::{PixelSession, PixelSettings};
+use pixel_core::{MAX_TARGET_SIDE, PixelSession, PixelSettings};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
-use crate::{Offset, PartSpec, SpriteError, SpriteManifest};
+use crate::{PartSpec, ResizeAnchor, SpriteError, SpriteManifest};
 
-const SPRITE_ALGORITHM_VERSION: &str = "0.1.0";
+const SPRITE_ALGORITHM_VERSION: &str = "0.2.0";
 const SPRITE_RECIPE_SCHEMA_VERSION: u32 = 1;
 const SPRITE_METADATA_SCHEMA_VERSION: u32 = 1;
 
@@ -74,7 +74,7 @@ impl SpriteBuilder {
         let logical_parts_sheet = image::load_from_memory(&pixelized.png_bytes)?.to_rgba8();
         let mut parts = extract_parts(&logical_parts_sheet, manifest)?;
         parts.sort_by_key(|part| (part.spec.z_index, part.manifest_index));
-        let logical_sheet = compose_sheet(&parts, manifest);
+        let logical_sheet = compose_sheet(&parts, manifest)?;
         let scaled_sheet = image::imageops::resize(
             &logical_sheet,
             logical_sheet.width() * manifest.render.preview_scale,
@@ -128,6 +128,15 @@ struct PreparedPart<'manifest> {
     manifest_index: usize,
     spec: &'manifest PartSpec,
     image: RgbaImage,
+    opaque_bounds: OpaqueBounds,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct OpaqueBounds {
+    left: u32,
+    top: u32,
+    width: u32,
+    height: u32,
 }
 
 fn extract_parts<'manifest>(
@@ -152,35 +161,126 @@ fn extract_parts<'manifest>(
             if image.pixels().all(|pixel| pixel[3] == 0) {
                 return Err(SpriteError::EmptyPart(part.id.clone()));
             }
+            let opaque_bounds =
+                find_opaque_bounds(&image).expect("empty part was rejected before measuring");
             Ok(PreparedPart {
                 manifest_index,
                 spec: part,
                 image,
+                opaque_bounds,
             })
         })
         .collect()
 }
 
-fn compose_sheet(parts: &[PreparedPart<'_>], manifest: &SpriteManifest) -> RgbaImage {
+fn compose_sheet(
+    parts: &[PreparedPart<'_>],
+    manifest: &SpriteManifest,
+) -> Result<RgbaImage, SpriteError> {
     let mut sheet = RgbaImage::new(
         manifest.canvas.width * manifest.animation.frames,
         manifest.canvas.height,
     );
     for frame in 0..manifest.animation.frames {
         let frame_x = frame * manifest.canvas.width;
-        for part in parts {
+        let mut frame_parts = parts.iter().collect::<Vec<_>>();
+        frame_parts.sort_by_key(|part| {
+            (
+                part.spec.effective_z_index(frame as usize),
+                part.manifest_index,
+            )
+        });
+        for part in frame_parts {
+            let transformed = transform_part(part, frame)?;
             composite_part(
                 &mut sheet,
-                &part.image,
+                &transformed.image,
                 frame_x,
                 manifest.canvas.width,
                 manifest.canvas.height,
-                part.spec,
-                part.spec.offsets[frame as usize],
+                transformed.left,
+                transformed.top,
             );
         }
     }
-    sheet
+    Ok(sheet)
+}
+
+struct TransformedPart {
+    image: RgbaImage,
+    left: i32,
+    top: i32,
+}
+
+fn transform_part(part: &PreparedPart<'_>, frame: u32) -> Result<TransformedPart, SpriteError> {
+    let offset = part.spec.offsets[frame as usize];
+    let size_delta = part.spec.size_delta(frame as usize);
+    let bounds = part.opaque_bounds;
+    let target_width = i64::from(bounds.width) + i64::from(size_delta.width);
+    let target_height = i64::from(bounds.height) + i64::from(size_delta.height);
+    if !(1..=i64::from(MAX_TARGET_SIDE)).contains(&target_width)
+        || !(1..=i64::from(MAX_TARGET_SIDE)).contains(&target_height)
+    {
+        return Err(SpriteError::PartResizeOutsideBounds {
+            id: part.spec.id.clone(),
+            frame,
+            width: target_width,
+            height: target_height,
+            maximum: MAX_TARGET_SIDE,
+        });
+    }
+    let target_width = u32::try_from(target_width).expect("validated resize width fits in u32");
+    let target_height = u32::try_from(target_height).expect("validated resize height fits in u32");
+    let content = image::imageops::crop_imm(
+        &part.image,
+        bounds.left,
+        bounds.top,
+        bounds.width,
+        bounds.height,
+    )
+    .to_image();
+    let image = if target_width == bounds.width && target_height == bounds.height {
+        content
+    } else {
+        image::imageops::resize(&content, target_width, target_height, FilterType::Nearest)
+    };
+    let (source_pivot_x, source_pivot_y) =
+        pivot_offsets(bounds.width, bounds.height, part.spec.resize_anchor);
+    let (target_pivot_x, target_pivot_y) =
+        pivot_offsets(target_width, target_height, part.spec.resize_anchor);
+    let cell_left =
+        i64::from(part.spec.position.x) + i64::from(offset.x) - i64::from(part.spec.anchor.x);
+    let cell_top =
+        i64::from(part.spec.position.y) + i64::from(offset.y) - i64::from(part.spec.anchor.y);
+    let left =
+        cell_left + i64::from(bounds.left) + i64::from(source_pivot_x) - i64::from(target_pivot_x);
+    let top =
+        cell_top + i64::from(bounds.top) + i64::from(source_pivot_y) - i64::from(target_pivot_y);
+
+    Ok(TransformedPart {
+        image,
+        left: clamp_i64_to_i32(left),
+        top: clamp_i64_to_i32(top),
+    })
+}
+
+fn pivot_offsets(width: u32, height: u32, anchor: ResizeAnchor) -> (u32, u32) {
+    let x = match anchor {
+        ResizeAnchor::TopLeft | ResizeAnchor::CenterLeft | ResizeAnchor::BottomLeft => 0,
+        ResizeAnchor::TopCenter | ResizeAnchor::Center | ResizeAnchor::BottomCenter => width / 2,
+        ResizeAnchor::TopRight | ResizeAnchor::CenterRight | ResizeAnchor::BottomRight => width,
+    };
+    let y = match anchor {
+        ResizeAnchor::TopLeft | ResizeAnchor::TopCenter | ResizeAnchor::TopRight => 0,
+        ResizeAnchor::CenterLeft | ResizeAnchor::Center | ResizeAnchor::CenterRight => height / 2,
+        ResizeAnchor::BottomLeft | ResizeAnchor::BottomCenter | ResizeAnchor::BottomRight => height,
+    };
+    (x, y)
+}
+
+fn clamp_i64_to_i32(value: i64) -> i32 {
+    i32::try_from(value.clamp(i64::from(i32::MIN), i64::from(i32::MAX)))
+        .expect("clamped coordinate fits in i32")
 }
 
 fn composite_part(
@@ -189,11 +289,9 @@ fn composite_part(
     frame_x: u32,
     frame_width: u32,
     frame_height: u32,
-    spec: &PartSpec,
-    offset: Offset,
+    left: i32,
+    top: i32,
 ) {
-    let left = spec.position.x + offset.x - spec.anchor.x;
-    let top = spec.position.y + offset.y - spec.anchor.y;
     for (source_x, source_y, source) in part.enumerate_pixels() {
         if source[3] == 0 {
             continue;
@@ -212,6 +310,30 @@ fn composite_part(
         let destination = sheet.get_pixel_mut(frame_x + destination_x, destination_y);
         *destination = over(*source, *destination);
     }
+}
+
+fn find_opaque_bounds(image: &RgbaImage) -> Option<OpaqueBounds> {
+    let mut left = image.width();
+    let mut top = image.height();
+    let mut right = 0;
+    let mut bottom = 0;
+    let mut found = false;
+    for (x, y, pixel) in image.enumerate_pixels() {
+        if pixel[3] == 0 {
+            continue;
+        }
+        found = true;
+        left = left.min(x);
+        top = top.min(y);
+        right = right.max(x);
+        bottom = bottom.max(y);
+    }
+    found.then_some(OpaqueBounds {
+        left,
+        top,
+        width: right - left + 1,
+        height: bottom - top + 1,
+    })
 }
 
 fn over(source: Rgba<u8>, destination: Rgba<u8>) -> Rgba<u8> {
@@ -324,7 +446,8 @@ pub(crate) mod tests {
 
     use super::*;
     use crate::{
-        AnimationSpec, Cell, GenerationSpec, GridSpec, Point, RenderSpec, Size, SpriteManifest,
+        AnimationSpec, Cell, GenerationSpec, GridSpec, Offset, Point, RenderSpec, ResizeAnchor,
+        Size, SizeDelta, SpriteManifest,
     };
 
     pub(crate) fn fixture_manifest() -> SpriteManifest {
@@ -367,6 +490,9 @@ pub(crate) mod tests {
                     position: Point { x: 4, y: 4 },
                     z_index: 1,
                     offsets: vec![Offset::default()],
+                    size_deltas: vec![],
+                    z_index_deltas: vec![],
+                    resize_anchor: ResizeAnchor::Center,
                 },
                 PartSpec {
                     id: "head".into(),
@@ -375,6 +501,9 @@ pub(crate) mod tests {
                     position: Point { x: 4, y: 2 },
                     z_index: 2,
                     offsets: vec![Offset::default()],
+                    size_deltas: vec![],
+                    z_index_deltas: vec![],
+                    resize_anchor: ResizeAnchor::Center,
                 },
             ],
         }
@@ -386,5 +515,93 @@ pub(crate) mod tests {
             over(Rgba([200, 0, 0, 128]), Rgba([0, 0, 200, 255])),
             Rgba([100, 0, 100, 255])
         );
+    }
+
+    #[test]
+    fn bottom_anchored_resize_keeps_the_opaque_footprint_grounded() {
+        let mut image = RgbaImage::new(6, 6);
+        let colors = [
+            Rgba([220, 80, 40, 255]),
+            Rgba([180, 60, 30, 255]),
+            Rgba([140, 40, 20, 255]),
+            Rgba([100, 20, 10, 255]),
+        ];
+        for (row, color) in colors.into_iter().enumerate() {
+            let y = u32::try_from(row).expect("fixture row fits in u32") + 1;
+            image.put_pixel(2, y, color);
+            image.put_pixel(3, y, color);
+        }
+        let spec = PartSpec {
+            id: "leg".into(),
+            cell: Cell { column: 0, row: 0 },
+            anchor: Point { x: 0, y: 0 },
+            position: Point { x: 0, y: 0 },
+            z_index: 0,
+            offsets: vec![Offset::default()],
+            size_deltas: vec![SizeDelta {
+                width: 0,
+                height: -2,
+            }],
+            z_index_deltas: vec![0],
+            resize_anchor: ResizeAnchor::BottomCenter,
+        };
+        let prepared = PreparedPart {
+            manifest_index: 0,
+            spec: &spec,
+            opaque_bounds: find_opaque_bounds(&image).expect("fixture has opaque pixels"),
+            image,
+        };
+
+        let transformed = transform_part(&prepared, 0).expect("resize should succeed");
+
+        assert_eq!(transformed.image.dimensions(), (2, 2));
+        assert_eq!((transformed.left, transformed.top), (2, 3));
+        assert_eq!(
+            transformed.top
+                + i32::try_from(transformed.image.height()).expect("fixture height fits in i32"),
+            5
+        );
+        assert!(
+            transformed
+                .image
+                .pixels()
+                .all(|pixel| colors.contains(pixel))
+        );
+    }
+
+    #[test]
+    fn frame_z_delta_can_move_a_part_in_front_without_changing_base_order() {
+        let mut manifest = fixture_manifest();
+        manifest.schema_version = 2;
+        manifest.animation.frames = 2;
+        for part in &mut manifest.parts {
+            part.anchor = Point { x: 0, y: 0 };
+            part.position = Point { x: 4, y: 4 };
+            part.offsets = vec![Offset::default(); 2];
+            part.size_deltas = vec![SizeDelta::default(); 2];
+        }
+        manifest.parts[0].z_index_deltas = vec![0, 10];
+        manifest.parts[1].z_index_deltas = vec![0, -10];
+        let body = RgbaImage::from_pixel(1, 1, Rgba([220, 50, 40, 255]));
+        let head = RgbaImage::from_pixel(1, 1, Rgba([40, 80, 220, 255]));
+        let parts = vec![
+            PreparedPart {
+                manifest_index: 0,
+                spec: &manifest.parts[0],
+                opaque_bounds: find_opaque_bounds(&body).expect("body is opaque"),
+                image: body,
+            },
+            PreparedPart {
+                manifest_index: 1,
+                spec: &manifest.parts[1],
+                opaque_bounds: find_opaque_bounds(&head).expect("head is opaque"),
+                image: head,
+            },
+        ];
+
+        let sheet = compose_sheet(&parts, &manifest).expect("composition should succeed");
+
+        assert_eq!(sheet.get_pixel(4, 4), &Rgba([40, 80, 220, 255]));
+        assert_eq!(sheet.get_pixel(12, 4), &Rgba([220, 50, 40, 255]));
     }
 }

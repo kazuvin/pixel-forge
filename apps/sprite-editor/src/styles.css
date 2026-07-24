@@ -305,30 +305,66 @@ select:focus-visible {
   padding: 8px;
 }
 
+.part-row-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: stretch;
+  width: 100%;
+  min-height: 56px;
+  margin: 0 0 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+}
+
 .part-row {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   width: 100%;
-  min-height: 56px;
-  margin: 0 0 5px;
-  padding: 5px 8px 5px 5px;
-  border: 1px solid transparent;
-  border-radius: 3px;
+  min-width: 0;
+  padding: 5px 5px;
+  border: 0;
+  border-radius: 2px 0 0 2px;
   background: transparent;
   text-align: left;
   cursor: pointer;
 }
 
-.part-row:hover {
+.part-row-shell:hover {
   background: var(--panel-raised);
 }
 
-.part-row.is-selected {
+.part-row-shell.is-selected {
   border-color: var(--copper);
   background: #28282a;
   box-shadow: inset 3px 0 0 var(--copper);
+}
+
+.layer-order-controls {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  border-left: 1px solid var(--line);
+}
+
+.layer-order-controls button {
+  padding: 0;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.layer-order-controls button:first-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.layer-order-controls button:hover {
+  color: var(--amber);
+  background: var(--ink);
 }
 
 .part-thumb,
@@ -410,7 +446,7 @@ select:focus-visible {
 
 .workbench {
   display: grid;
-  grid-template-rows: 52px minmax(0, 1fr) 128px;
+  grid-template-rows: 52px minmax(0, 1fr) 286px;
   min-width: 0;
   min-height: 0;
   background: #0f1619;
@@ -582,7 +618,7 @@ select:focus-visible {
 .stage-part {
   position: absolute;
   display: block;
-  overflow: visible;
+  overflow: hidden;
   margin: 0;
   padding: 0;
   border: 0;
@@ -669,18 +705,27 @@ select:focus-visible {
 
 .timeline-panel {
   display: grid;
-  grid-template-columns: 148px minmax(0, 1fr);
+  grid-template-columns: 182px minmax(0, 1fr);
   min-width: 0;
+  min-height: 0;
   border-top: 1px solid var(--line-bright);
   background: #151e21;
+}
+
+.timeline-sidebar {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  padding: 10px;
+  border-right: 1px solid var(--line);
 }
 
 .playback-controls {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px;
-  border-right: 1px solid var(--line);
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--line);
 }
 
 .play-button {
@@ -710,6 +755,61 @@ select:focus-visible {
   font-size: 9px;
 }
 
+.preset-selector {
+  display: grid;
+  gap: 5px;
+  margin-top: 9px;
+}
+
+.preset-selector > span,
+.sequencer-heading span,
+.sequencer-heading small {
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.preset-selector select,
+.anchor-select select {
+  width: 100%;
+  min-height: 31px;
+  padding: 0 7px;
+  color: var(--paper);
+  border: 1px solid var(--line-bright);
+  border-radius: 2px;
+  background: var(--panel-raised);
+  font-size: 11px;
+}
+
+.preset-description {
+  min-height: 34px;
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.apply-preset-button {
+  min-height: 32px;
+  margin-top: auto;
+  color: var(--ink);
+  border: 1px solid #ffc878;
+  border-radius: 2px;
+  background: var(--amber);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.timeline-workspace {
+  display: grid;
+  grid-template-rows: 116px minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
 .frame-strip {
   display: grid;
   grid-template-columns: repeat(8, minmax(68px, 1fr));
@@ -723,7 +823,7 @@ select:focus-visible {
   position: relative;
   display: grid;
   min-width: 68px;
-  min-height: 106px;
+  min-height: 96px;
   place-items: center;
   padding: 4px;
   border: 1px solid var(--line);
@@ -757,9 +857,90 @@ select:focus-visible {
   image-rendering: pixelated;
 }
 
+.mini-frame > span {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+}
+
 .mini-frame img {
   position: absolute;
+  display: block;
   image-rendering: pixelated;
+}
+
+.motion-sequencer {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 9px 9px;
+  border-top: 1px solid var(--line);
+  background: #11191c;
+}
+
+.sequencer-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.sequencer-heading strong {
+  color: var(--aqua);
+  font-family: var(--pixel-font);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.sequencer-heading small {
+  margin-left: auto;
+  letter-spacing: 0;
+}
+
+.sequencer-grid {
+  display: grid;
+  gap: 3px;
+  min-width: 520px;
+}
+
+.sequencer-row {
+  display: grid;
+  grid-template-columns: 27px repeat(8, minmax(46px, 1fr));
+  gap: 3px;
+}
+
+.sequencer-row > span {
+  display: grid;
+  place-items: center;
+  color: var(--amber);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+}
+
+.sequencer-row input {
+  width: 100%;
+  min-width: 0;
+  height: 23px;
+  padding: 0 3px;
+  color: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 1px;
+  background: #0b1214;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  text-align: center;
+}
+
+.sequencer-row input.is-current {
+  border-color: var(--copper);
+  background: #292021;
+}
+
+.sequencer-row input:disabled {
+  color: var(--faint);
+  cursor: not-allowed;
 }
 
 .selected-part-card {
@@ -871,10 +1052,35 @@ select:focus-visible {
   line-height: 1.5;
 }
 
+.anchor-select {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.anchor-select > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
 .layer-row {
   display: grid;
   grid-template-columns: 36px 1fr 36px;
   gap: 7px;
+}
+
+.frame-layer-field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.frame-layer-field > span {
+  color: var(--aqua);
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
 }
 
 .layer-row > button,
@@ -1094,8 +1300,8 @@ select:focus-visible {
     overflow-x: auto;
   }
 
-  .part-row {
-    flex: 0 0 190px;
+  .part-row-shell {
+    flex: 0 0 210px;
   }
 
   .panel-note {
@@ -1104,7 +1310,30 @@ select:focus-visible {
 
   .workbench {
     order: 1;
-    min-height: 720px;
+    min-height: 940px;
+  }
+
+  .workbench-toolbar {
+    gap: 6px;
+    padding: 7px 10px;
+  }
+
+  .segmented-control button {
+    padding: 0 8px;
+  }
+
+  .zoom-control {
+    gap: 0;
+  }
+
+  .zoom-control > span {
+    display: none;
+  }
+
+  .canvas-zone {
+    justify-content: center;
+    padding-right: 12px;
+    padding-left: 12px;
   }
 
   .inspector-panel {

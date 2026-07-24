@@ -134,6 +134,9 @@ mod tests {
                 position: Point { x: 20, y: 28 },
                 z_index: 10,
                 offsets: vec![Offset::default(); 8],
+                size_deltas: vec![],
+                z_index_deltas: vec![],
+                resize_anchor: pixel_sprite::ResizeAnchor::Center,
             }],
         };
 

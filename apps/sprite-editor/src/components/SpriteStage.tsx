@@ -7,7 +7,8 @@ import {
 } from "react";
 
 import { partImageUrl } from "../api";
-import type { SpriteManifest } from "../types";
+import { effectiveZIndex } from "../model";
+import type { ResizeAnchor, SpriteManifest, SpritePart } from "../types";
 
 type SpriteStageProps = {
   manifest: SpriteManifest;
@@ -36,6 +37,14 @@ type PartBounds = {
   height: number;
 };
 
+type PartLayout = PartBounds & {
+  imageLeft: number;
+  imageTop: number;
+  imageWidth: number;
+  imageHeight: number;
+  zIndex: number;
+};
+
 export function SpriteStage({
   manifest,
   frame,
@@ -50,7 +59,8 @@ export function SpriteStage({
   const dragState = useRef<DragState | null>(null);
   const [partBounds, setPartBounds] = useState<Record<string, PartBounds>>({});
   const sortedParts = [...manifest.parts].sort(
-    (left, right) => left.zIndex - right.zIndex,
+    (left, right) =>
+      effectiveZIndex(left, frame) - effectiveZIndex(right, frame),
   );
   const selectedPart = manifest.parts.find(
     (part) => part.id === selectedPartId,
@@ -175,10 +185,6 @@ export function SpriteStage({
         ) : null}
         <div className="ground-guide" aria-hidden="true" />
         {sortedParts.map((part) => {
-          const frameOffset = part.offsets[frame] ?? { x: 0, y: 0 };
-          const left =
-            part.position.x + frameOffset.x - part.anchor.x;
-          const top = part.position.y + frameOffset.y - part.anchor.y;
           const selected = part.id === selectedPartId;
           const bounds = partBounds[part.id] ?? {
             left: 0,
@@ -186,6 +192,13 @@ export function SpriteStage({
             width: manifest.grid.logicalCellWidth,
             height: manifest.grid.logicalCellHeight,
           };
+          const layout = computePartLayout(
+            part,
+            frame,
+            bounds,
+            manifest.grid.logicalCellWidth,
+            manifest.grid.logicalCellHeight,
+          );
           return (
             <button
               className={`stage-part${selected ? " is-selected" : ""}`}
@@ -194,11 +207,11 @@ export function SpriteStage({
               type="button"
               aria-label={`${part.id}を選択して移動`}
               style={{
-                left: (left + bounds.left) * zoom,
-                top: (top + bounds.top) * zoom,
-                width: bounds.width * zoom,
-                height: bounds.height * zoom,
-                zIndex: part.zIndex,
+                left: layout.left * zoom,
+                top: layout.top * zoom,
+                width: layout.width * zoom,
+                height: layout.height * zoom,
+                zIndex: layout.zIndex,
               }}
               onPointerDown={(event) => startDrag(event, part.id)}
               onPointerMove={continueDrag}
@@ -211,10 +224,10 @@ export function SpriteStage({
                 draggable={false}
                 onLoad={(event) => measureOpaqueBounds(part.id, event)}
                 style={{
-                  left: -bounds.left * zoom,
-                  top: -bounds.top * zoom,
-                  width: manifest.grid.logicalCellWidth * zoom,
-                  height: manifest.grid.logicalCellHeight * zoom,
+                  left: layout.imageLeft * zoom,
+                  top: layout.imageTop * zoom,
+                  width: layout.imageWidth * zoom,
+                  height: layout.imageHeight * zoom,
                 }}
               />
             </button>
@@ -245,9 +258,23 @@ type MiniFrameProps = {
 };
 
 export function MiniFrame({ manifest, frame, revision }: MiniFrameProps) {
+  const [partBounds, setPartBounds] = useState<Record<string, PartBounds>>({});
   const parts = [...manifest.parts].sort(
-    (left, right) => left.zIndex - right.zIndex,
+    (left, right) =>
+      effectiveZIndex(left, frame) - effectiveZIndex(right, frame),
   );
+  const measureOpaqueBounds = (
+    partId: string,
+    event: SyntheticEvent<HTMLImageElement>,
+  ) => {
+    if (partBounds[partId]) {
+      return;
+    }
+    const bounds = readOpaqueBounds(event.currentTarget);
+    if (bounds) {
+      setPartBounds((current) => ({ ...current, [partId]: bounds }));
+    }
+  };
   return (
     <div
       className="mini-frame"
@@ -258,22 +285,148 @@ export function MiniFrame({ manifest, frame, revision }: MiniFrameProps) {
       aria-hidden="true"
     >
       {parts.map((part) => {
-        const offset = part.offsets[frame] ?? { x: 0, y: 0 };
+        const bounds = partBounds[part.id] ?? {
+          left: 0,
+          top: 0,
+          width: manifest.grid.logicalCellWidth,
+          height: manifest.grid.logicalCellHeight,
+        };
+        const layout = computePartLayout(
+          part,
+          frame,
+          bounds,
+          manifest.grid.logicalCellWidth,
+          manifest.grid.logicalCellHeight,
+        );
         return (
-          <img
+          <span
             key={part.id}
-            src={partImageUrl(part.id, revision)}
-            alt=""
             style={{
-              left: part.position.x + offset.x - part.anchor.x,
-              top: part.position.y + offset.y - part.anchor.y,
-              width: manifest.grid.logicalCellWidth,
-              height: manifest.grid.logicalCellHeight,
-              zIndex: part.zIndex,
+              left: layout.left,
+              top: layout.top,
+              width: layout.width,
+              height: layout.height,
+              zIndex: layout.zIndex,
             }}
-          />
+          >
+            <img
+              src={partImageUrl(part.id, revision)}
+              alt=""
+              onLoad={(event) => measureOpaqueBounds(part.id, event)}
+              style={{
+                left: layout.imageLeft,
+                top: layout.imageTop,
+                width: layout.imageWidth,
+                height: layout.imageHeight,
+              }}
+            />
+          </span>
         );
       })}
     </div>
   );
 }
+
+function readOpaqueBounds(image: HTMLImageElement): PartBounds | null {
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) {
+    return null;
+  }
+  context.drawImage(image, 0, 0);
+  const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+  let left = canvas.width;
+  let top = canvas.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < canvas.height; y += 1) {
+    for (let x = 0; x < canvas.width; x += 1) {
+      if (data[(y * canvas.width + x) * 4 + 3] === 0) {
+        continue;
+      }
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  return right < left || bottom < top
+    ? null
+    : {
+        left,
+        top,
+        width: right - left + 1,
+        height: bottom - top + 1,
+      };
+}
+
+function computePartLayout(
+  part: SpritePart,
+  frame: number,
+  bounds: PartBounds,
+  cellWidth: number,
+  cellHeight: number,
+): PartLayout {
+  const offset = part.offsets[frame] ?? { x: 0, y: 0 };
+  const sizeDelta = part.sizeDeltas[frame] ?? { width: 0, height: 0 };
+  const width = Math.max(1, bounds.width + sizeDelta.width);
+  const height = Math.max(1, bounds.height + sizeDelta.height);
+  const sourcePivot = pivotOffsets(
+    bounds.width,
+    bounds.height,
+    part.resizeAnchor,
+  );
+  const targetPivot = pivotOffsets(width, height, part.resizeAnchor);
+  const left =
+    part.position.x -
+    part.anchor.x +
+    offset.x +
+    bounds.left +
+    sourcePivot.x -
+    targetPivot.x;
+  const top =
+    part.position.y -
+    part.anchor.y +
+    offset.y +
+    bounds.top +
+    sourcePivot.y -
+    targetPivot.y;
+  const scaleX = width / bounds.width;
+  const scaleY = height / bounds.height;
+  return {
+    left,
+    top,
+    width,
+    height,
+    imageLeft: -bounds.left * scaleX,
+    imageTop: -bounds.top * scaleY,
+    imageWidth: cellWidth * scaleX,
+    imageHeight: cellHeight * scaleY,
+    zIndex: effectiveZIndex(part, frame),
+  };
+}
+
+function pivotOffsets(
+  width: number,
+  height: number,
+  anchor: ResizeAnchor,
+): Point {
+  const x = anchor.includes("left")
+    ? 0
+    : anchor.includes("right")
+      ? width
+      : Math.floor(width / 2);
+  const y = anchor.includes("top")
+    ? 0
+    : anchor.includes("bottom")
+      ? height
+      : Math.floor(height / 2);
+  return { x, y };
+}
+
+type Point = {
+  x: number;
+  y: number;
+};

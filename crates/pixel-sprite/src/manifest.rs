@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::SpriteManifestError;
 
-pub const SPRITE_MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const SPRITE_MANIFEST_SCHEMA_VERSION: u32 = 2;
+pub const MIN_SUPPORTED_SPRITE_MANIFEST_SCHEMA_VERSION: u32 = 1;
 pub const MAX_ANIMATION_FRAMES: u32 = 64;
 pub const MAX_ANIMATION_FPS: u32 = 60;
 
@@ -77,6 +78,12 @@ pub struct PartSpec {
     pub position: Point,
     pub z_index: i32,
     pub offsets: Vec<Offset>,
+    #[serde(default)]
+    pub size_deltas: Vec<SizeDelta>,
+    #[serde(default)]
+    pub z_index_deltas: Vec<i32>,
+    #[serde(default)]
+    pub resize_anchor: ResizeAnchor,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -100,6 +107,41 @@ pub struct Offset {
     pub y: i32,
 }
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SizeDelta {
+    pub width: i32,
+    pub height: i32,
+}
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ResizeAnchor {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    CenterLeft,
+    #[default]
+    Center,
+    CenterRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+impl PartSpec {
+    #[must_use]
+    pub fn size_delta(&self, frame: usize) -> SizeDelta {
+        self.size_deltas.get(frame).copied().unwrap_or_default()
+    }
+
+    #[must_use]
+    pub fn effective_z_index(&self, frame: usize) -> i64 {
+        i64::from(self.z_index)
+            + i64::from(self.z_index_deltas.get(frame).copied().unwrap_or_default())
+    }
+}
+
 impl SpriteManifest {
     /// Validates the portable sprite recipe before source pixels are processed.
     ///
@@ -107,10 +149,13 @@ impl SpriteManifest {
     ///
     /// Returns the first invalid manifest field in a stable order.
     pub fn validate(&self) -> Result<(), SpriteManifestError> {
-        if self.schema_version != SPRITE_MANIFEST_SCHEMA_VERSION {
+        if !(MIN_SUPPORTED_SPRITE_MANIFEST_SCHEMA_VERSION..=SPRITE_MANIFEST_SCHEMA_VERSION)
+            .contains(&self.schema_version)
+        {
             return Err(SpriteManifestError::UnsupportedSchemaVersion {
                 provided: self.schema_version,
-                supported: SPRITE_MANIFEST_SCHEMA_VERSION,
+                minimum: MIN_SUPPORTED_SPRITE_MANIFEST_SCHEMA_VERSION,
+                maximum: SPRITE_MANIFEST_SCHEMA_VERSION,
             });
         }
         validate_identifier("sprite", &self.id)?;
@@ -261,8 +306,37 @@ impl SpriteManifest {
             if part.offsets.len() != self.animation.frames as usize {
                 return Err(SpriteManifestError::PartFrameCountMismatch {
                     id: part.id.clone(),
+                    field: "offsets",
                     provided: part.offsets.len(),
                     expected: self.animation.frames,
+                });
+            }
+            if !part.size_deltas.is_empty()
+                && part.size_deltas.len() != self.animation.frames as usize
+            {
+                return Err(SpriteManifestError::PartFrameCountMismatch {
+                    id: part.id.clone(),
+                    field: "sizeDeltas",
+                    provided: part.size_deltas.len(),
+                    expected: self.animation.frames,
+                });
+            }
+            if !part.z_index_deltas.is_empty()
+                && part.z_index_deltas.len() != self.animation.frames as usize
+            {
+                return Err(SpriteManifestError::PartFrameCountMismatch {
+                    id: part.id.clone(),
+                    field: "zIndexDeltas",
+                    provided: part.z_index_deltas.len(),
+                    expected: self.animation.frames,
+                });
+            }
+            if self.schema_version == 1
+                && (!part.size_deltas.is_empty() || !part.z_index_deltas.is_empty())
+            {
+                return Err(SpriteManifestError::PartTransformRequiresSchemaVersion {
+                    id: part.id.clone(),
+                    required: SPRITE_MANIFEST_SCHEMA_VERSION,
                 });
             }
         }

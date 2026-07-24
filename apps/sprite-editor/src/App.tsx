@@ -10,16 +10,29 @@ import {
 import { loadProject, partImageUrl, saveProject } from "./api";
 import { MiniFrame, SpriteStage } from "./components/SpriteStage";
 import {
+  changeFrameMetric,
   changeFrameOffset,
+  changeFrameSize,
+  changeFrameZIndexDelta,
   changePartNumber,
+  changeResizeAnchor,
+  effectiveZIndex,
+  getFrameMetric,
   movePart,
+  normalizeManifest,
+  reorderPart,
   updatePart,
 } from "./model";
+import type { FrameMetric } from "./model";
+import {
+  applyMotionPreset,
+  motionPresets,
+} from "./motionPresets";
 import type {
   EditMode,
   ProjectPaths,
+  ResizeAnchor,
   SpriteManifest,
-  SpritePart,
 } from "./types";
 
 type SaveState = "loading" | "saved" | "dirty" | "building" | "error";
@@ -29,6 +42,30 @@ const moveLabels: Record<EditMode, string> = {
   offset: "このフレーム",
 };
 
+const frameMetrics: Array<{
+  id: FrameMetric;
+  label: string;
+  title: string;
+}> = [
+  { id: "x", label: "X", title: "横移動" },
+  { id: "y", label: "Y", title: "縦移動" },
+  { id: "width", label: "W", title: "幅の変化" },
+  { id: "height", label: "H", title: "高さの変化" },
+  { id: "zIndex", label: "Z", title: "重なり順の差分" },
+];
+
+const resizeAnchors: Array<{ value: ResizeAnchor; label: string }> = [
+  { value: "top-left", label: "左上" },
+  { value: "top-center", label: "上中央" },
+  { value: "top-right", label: "右上" },
+  { value: "center-left", label: "左中央" },
+  { value: "center", label: "中央" },
+  { value: "center-right", label: "右中央" },
+  { value: "bottom-left", label: "左下" },
+  { value: "bottom-center", label: "下中央（接地）" },
+  { value: "bottom-right", label: "右下" },
+];
+
 export function App() {
   const [manifest, setManifest] = useState<SpriteManifest | null>(null);
   const [paths, setPaths] = useState<ProjectPaths | null>(null);
@@ -36,12 +73,13 @@ export function App() {
   const [selectedPartId, setSelectedPartId] = useState("");
   const [frame, setFrame] = useState(0);
   const [editMode, setEditMode] = useState<EditMode>("position");
-  const [zoom, setZoom] = useState(8);
+  const [zoom, setZoom] = useState(4);
   const [playing, setPlaying] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("loading");
   const [message, setMessage] = useState("プロジェクトを読み込んでいます");
   const [referenceUrl, setReferenceUrl] = useState<string | null>(null);
   const [referenceOpacity, setReferenceOpacity] = useState(0.42);
+  const [selectedPresetId, setSelectedPresetId] = useState("gentle-idle");
 
   useEffect(() => {
     let active = true;
@@ -50,7 +88,7 @@ export function App() {
         if (!active) {
           return;
         }
-        setManifest(project.manifest);
+        setManifest(normalizeManifest(project.manifest));
         setPaths(project.paths);
         setRevision(project.revision);
         setSelectedPartId(project.manifest.parts[0]?.id ?? "");
@@ -131,6 +169,19 @@ export function App() {
     }
   }, [manifest, saveState]);
 
+  const applySelectedPreset = useCallback(() => {
+    const preset = motionPresets.find(
+      (candidate) => candidate.id === selectedPresetId,
+    );
+    if (!preset) {
+      return;
+    }
+    changeManifest((current) => applyMotionPreset(current, preset));
+    setFrame(0);
+    setPlaying(false);
+    setMessage(`${preset.name}プリセットを全パーツへ適用しました`);
+  }, [changeManifest, selectedPresetId]);
+
   useEffect(() => {
     const handleKeyboard = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
@@ -208,6 +259,11 @@ export function App() {
   }
 
   const currentOffset = selectedPart?.offsets[frame] ?? { x: 0, y: 0 };
+  const currentSizeDelta = selectedPart?.sizeDeltas[frame] ?? {
+    width: 0,
+    height: 0,
+  };
+  const currentZIndexDelta = selectedPart?.zIndexDeltas[frame] ?? 0;
   const stateLabel = {
     loading: "読込中",
     saved: "保存済み",
@@ -262,36 +318,76 @@ export function App() {
           />
           <div className="part-list">
             {[...manifest.parts]
-              .sort((left, right) => right.zIndex - left.zIndex)
+              .sort(
+                (left, right) =>
+                  effectiveZIndex(right, frame) -
+                  effectiveZIndex(left, frame),
+              )
               .map((part) => (
-                <button
+                <div
                   key={part.id}
-                  className={`part-row${
+                  className={`part-row-shell${
                     part.id === selectedPartId ? " is-selected" : ""
                   }`}
-                  onClick={() => setSelectedPartId(part.id)}
-                  type="button"
                 >
-                  <span className="part-thumb">
-                    <img
-                      src={partImageUrl(part.id, revision)}
-                      alt=""
-                      draggable={false}
-                    />
+                  <button
+                    className="part-row"
+                    onClick={() => setSelectedPartId(part.id)}
+                    type="button"
+                  >
+                    <span className="part-thumb">
+                      <img
+                        src={partImageUrl(part.id, revision)}
+                        alt=""
+                        draggable={false}
+                      />
+                    </span>
+                    <span className="part-copy">
+                      <strong>{part.id}</strong>
+                      <small>
+                        CELL {part.cell.column}:{part.cell.row}
+                      </small>
+                    </span>
+                    <span className="z-badge">
+                      Z{effectiveZIndex(part, frame)}
+                    </span>
+                  </button>
+                  <span className="layer-order-controls">
+                    <button
+                      type="button"
+                      title="1段前面へ"
+                      aria-label={`${part.id}を1段前面へ`}
+                      onClick={() => {
+                        setSelectedPartId(part.id);
+                        changeManifest((current) =>
+                          reorderPart(current, part.id, "forward"),
+                        );
+                      }}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      title="1段背面へ"
+                      aria-label={`${part.id}を1段背面へ`}
+                      onClick={() => {
+                        setSelectedPartId(part.id);
+                        changeManifest((current) =>
+                          reorderPart(current, part.id, "backward"),
+                        );
+                      }}
+                    >
+                      ↓
+                    </button>
                   </span>
-                  <span className="part-copy">
-                    <strong>{part.id}</strong>
-                    <small>
-                      CELL {part.cell.column}:{part.cell.row}
-                    </small>
-                  </span>
-                  <span className="z-badge">Z{part.zIndex}</span>
-                </button>
+                </div>
               ))}
           </div>
           <div className="panel-note">
             <span>操作</span>
-            <p>ドラッグまたは矢印キーで1px移動。Shiftキーで4px移動。</p>
+            <p>
+              ↑↓でレイヤー順を変更。キャンバスではドラッグまたは矢印キーで1px移動。
+            </p>
           </div>
         </aside>
 
@@ -343,47 +439,133 @@ export function App() {
           </div>
 
           <section className="timeline-panel" aria-label="アニメーション">
-            <div className="playback-controls">
-              <button
-                className="play-button"
-                type="button"
-                onClick={() => setPlaying((current) => !current)}
-                aria-label={playing ? "停止" : "再生"}
-              >
-                {playing ? "■" : "▶"}
-              </button>
-              <div>
-                <p>{manifest.animation.name}</p>
-                <span>
-                  {manifest.animation.fps} FPS ·{" "}
-                  {manifest.animation.frames / manifest.animation.fps} SEC
-                </span>
+            <div className="timeline-sidebar">
+              <div className="playback-controls">
+                <button
+                  className="play-button"
+                  type="button"
+                  onClick={() => setPlaying((current) => !current)}
+                  aria-label={playing ? "停止" : "再生"}
+                >
+                  {playing ? "■" : "▶"}
+                </button>
+                <div>
+                  <p>{manifest.animation.name}</p>
+                  <span>
+                    {manifest.animation.fps} FPS ·{" "}
+                    {manifest.animation.frames / manifest.animation.fps} SEC
+                  </span>
+                </div>
               </div>
+              <label className="preset-selector">
+                <span>MOTION PRESET</span>
+                <select
+                  value={selectedPresetId}
+                  onChange={(event) => setSelectedPresetId(event.target.value)}
+                >
+                  {motionPresets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="preset-description">
+                {
+                  motionPresets.find(
+                    (preset) => preset.id === selectedPresetId,
+                  )?.description
+                }
+              </p>
+              <button
+                className="apply-preset-button"
+                type="button"
+                onClick={applySelectedPreset}
+              >
+                全パーツへ適用
+              </button>
             </div>
-            <div className="frame-strip">
-              {Array.from(
-                { length: manifest.animation.frames },
-                (_, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className={`frame-cell${
-                      frame === index ? " is-current" : ""
-                    }`}
-                    onClick={() => {
-                      setFrame(index);
-                      setPlaying(false);
-                    }}
-                  >
-                    <MiniFrame
-                      manifest={manifest}
-                      frame={index}
-                      revision={revision}
-                    />
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                  </button>
-                ),
-              )}
+            <div className="timeline-workspace">
+              <div className="frame-strip">
+                {Array.from(
+                  { length: manifest.animation.frames },
+                  (_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={`frame-cell${
+                        frame === index ? " is-current" : ""
+                      }`}
+                      onClick={() => {
+                        setFrame(index);
+                        setPlaying(false);
+                      }}
+                    >
+                      <MiniFrame
+                        manifest={manifest}
+                        frame={index}
+                        revision={revision}
+                      />
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                    </button>
+                  ),
+                )}
+              </div>
+              <div className="motion-sequencer">
+                <div className="sequencer-heading">
+                  <span>SELECTED PART</span>
+                  <strong>{selectedPart?.id ?? "パーツ未選択"}</strong>
+                  <small>整数px · W/Hは元サイズとの差分</small>
+                </div>
+                <div className="sequencer-grid">
+                  {frameMetrics.map((metric) => (
+                    <div className="sequencer-row" key={metric.id}>
+                      <span title={metric.title}>{metric.label}</span>
+                      {Array.from(
+                        { length: manifest.animation.frames },
+                        (_, index) => (
+                          <input
+                            key={index}
+                            type="number"
+                            step={1}
+                            aria-label={`${metric.title} フレーム${index + 1}`}
+                            className={frame === index ? "is-current" : ""}
+                            disabled={!selectedPart}
+                            value={
+                              selectedPart
+                                ? getFrameMetric(
+                                    selectedPart,
+                                    index,
+                                    metric.id,
+                                  )
+                                : 0
+                            }
+                            onFocus={() => {
+                              setFrame(index);
+                              setPlaying(false);
+                            }}
+                            onChange={(event) => {
+                              const value = Number(event.target.value);
+                              if (!selectedPart || !Number.isInteger(value)) {
+                                return;
+                              }
+                              changeManifest((current) =>
+                                changeFrameMetric(
+                                  current,
+                                  selectedPart.id,
+                                  index,
+                                  metric.id,
+                                  value,
+                                ),
+                              );
+                            }}
+                          />
+                        ),
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
         </section>
@@ -522,6 +704,68 @@ export function App() {
                 </div>
               </InspectorGroup>
 
+              <InspectorGroup
+                title={`フレーム ${frame + 1} のサイズ差分`}
+                badge="RESIZE"
+              >
+                <div className="field-grid">
+                  <NumberField
+                    label="W"
+                    value={currentSizeDelta.width}
+                    onChange={(value) =>
+                      changeManifest((current) =>
+                        changeFrameSize(
+                          current,
+                          selectedPart.id,
+                          frame,
+                          "width",
+                          value,
+                        ),
+                      )
+                    }
+                  />
+                  <NumberField
+                    label="H"
+                    value={currentSizeDelta.height}
+                    onChange={(value) =>
+                      changeManifest((current) =>
+                        changeFrameSize(
+                          current,
+                          selectedPart.id,
+                          frame,
+                          "height",
+                          value,
+                        ),
+                      )
+                    }
+                  />
+                </div>
+                <label className="anchor-select">
+                  <span>サイズ変更の固定点</span>
+                  <select
+                    value={selectedPart.resizeAnchor}
+                    onChange={(event) =>
+                      changeManifest((current) =>
+                        changeResizeAnchor(
+                          current,
+                          selectedPart.id,
+                          event.target.value as ResizeAnchor,
+                        ),
+                      )
+                    }
+                  >
+                    {resizeAnchors.map((anchor) => (
+                      <option key={anchor.value} value={anchor.value}>
+                        {anchor.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="group-help">
+                  脚は「下中央」にすると足裏を動かさずに縮みます。
+                </p>
+              </InspectorGroup>
+
               <InspectorGroup title="重なり順" badge="LAYER">
                 <div className="layer-row">
                   <button
@@ -565,6 +809,29 @@ export function App() {
                     ＋
                   </button>
                 </div>
+                <div className="frame-layer-field">
+                  <NumberField
+                    label="ΔZ"
+                    value={currentZIndexDelta}
+                    onChange={(value) =>
+                      changeManifest((current) =>
+                        changeFrameZIndexDelta(
+                          current,
+                          selectedPart.id,
+                          frame,
+                          value,
+                        ),
+                      )
+                    }
+                  />
+                  <span>
+                    FRAME {frame + 1}: Z
+                    {selectedPart.zIndex + currentZIndexDelta}
+                  </span>
+                </div>
+                <p className="group-help">
+                  左の↑↓は全フレーム、ΔZは現在のフレームだけに反映します。
+                </p>
               </InspectorGroup>
             </>
           ) : (

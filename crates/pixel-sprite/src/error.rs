@@ -2,8 +2,14 @@ use thiserror::Error;
 
 #[derive(Clone, Debug, Eq, Error, PartialEq)]
 pub enum SpriteManifestError {
-    #[error("sprite manifest schema version {provided} is unsupported; expected {supported}")]
-    UnsupportedSchemaVersion { provided: u32, supported: u32 },
+    #[error(
+        "sprite manifest schema version {provided} is unsupported; expected {minimum}..={maximum}"
+    )]
+    UnsupportedSchemaVersion {
+        provided: u32,
+        minimum: u32,
+        maximum: u32,
+    },
     #[error("{kind} identifier must use lowercase ASCII letters, digits, and hyphens: {value}")]
     InvalidIdentifier { kind: &'static str, value: String },
     #[error("generation field {0} must not be empty")]
@@ -58,12 +64,15 @@ pub enum SpriteManifestError {
     PartCellOutsideGrid { id: String, column: u32, row: u32 },
     #[error("part {id} anchor {x},{y} is outside its logical cell")]
     PartAnchorOutsideCell { id: String, x: i32, y: i32 },
-    #[error("part {id} contains {provided} offsets; expected {expected}")]
+    #[error("part {id} contains {provided} {field}; expected {expected}")]
     PartFrameCountMismatch {
         id: String,
+        field: &'static str,
         provided: usize,
         expected: u32,
     },
+    #[error("part {id} uses frame transforms that require manifest schema version {required}")]
+    PartTransformRequiresSchemaVersion { id: String, required: u32 },
 }
 
 #[derive(Debug, Error)]
@@ -80,6 +89,16 @@ pub enum SpriteError {
     SourceHasNoTransparency,
     #[error("part {0} is empty after pixelization")]
     EmptyPart(String),
+    #[error(
+        "part {id} frame {frame} resize produces {width}x{height}; both sides must be within 1..={maximum}"
+    )]
+    PartResizeOutsideBounds {
+        id: String,
+        frame: u32,
+        width: i64,
+        height: i64,
+        maximum: u32,
+    },
     #[error("sprite JSON could not be encoded: {0}")]
     Json(#[from] serde_json::Error),
 }

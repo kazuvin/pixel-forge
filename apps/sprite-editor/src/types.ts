@@ -3,6 +3,22 @@ export type Point = {
   y: number;
 };
 
+export type SizeDelta = {
+  width: number;
+  height: number;
+};
+
+export type ResizeAnchor =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "center-left"
+  | "center"
+  | "center-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
 export type SpritePart = {
   id: string;
   cell: {
@@ -13,6 +29,9 @@ export type SpritePart = {
   position: Point;
   zIndex: number;
   offsets: Point[];
+  sizeDeltas: SizeDelta[];
+  zIndexDeltas: number[];
+  resizeAnchor: ResizeAnchor;
 };
 
 export type SpriteManifest = {

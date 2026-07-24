@@ -3,8 +3,8 @@ use std::io::Cursor;
 use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 use pixel_core::DitherMode;
 use pixel_sprite::{
-    AnimationSpec, Cell, GenerationSpec, GridSpec, Offset, PartSpec, Point, RenderSpec, Size,
-    SpriteBuilder, SpriteManifest,
+    AnimationSpec, Cell, GenerationSpec, GridSpec, Offset, PartSpec, Point, RenderSpec,
+    ResizeAnchor, Size, SpriteBuilder, SpriteManifest,
 };
 
 #[test]
@@ -122,6 +122,9 @@ fn fixture_manifest() -> SpriteManifest {
                     Offset::default(),
                     Offset::default(),
                 ],
+                size_deltas: vec![],
+                z_index_deltas: vec![],
+                resize_anchor: ResizeAnchor::Center,
             },
             PartSpec {
                 id: "head".into(),
@@ -139,6 +142,9 @@ fn fixture_manifest() -> SpriteManifest {
                     Offset { x: 0, y: 1 },
                     Offset::default(),
                 ],
+                size_deltas: vec![],
+                z_index_deltas: vec![],
+                resize_anchor: ResizeAnchor::Center,
             },
         ],
     }

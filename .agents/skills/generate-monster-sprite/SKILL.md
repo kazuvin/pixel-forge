@@ -14,7 +14,7 @@ Create the source bitmap with the standard `imagegen` skill, then use the local 
 3. Copy `examples/sprites/moss-golem/moss-golem.sprite.json` into that directory and adapt:
    - `id` and `generation`
    - parts and grid cells
-   - anchors, canvas positions, z-order, and frame offsets
+   - anchors, canvas positions, z-order, frame offsets, and optional frame resize
    - use `#FF00FF` for green subjects and `#00FF00` otherwise
 4. Validate the manifest:
 
@@ -51,7 +51,7 @@ Create the source bitmap with the standard `imagegen` skill, then use the local 
      --output <output-dir>
    ```
 
-10. Inspect the logical sheet and enlarged preview. Keep feet grounded. Fix assembly by editing `anchor`, `position`, `zIndex`, or `offsets` and rebuilding before regenerating the source.
+10. Inspect the logical sheet and enlarged preview. Keep feet grounded. Fix assembly by editing `anchor`, `position`, `zIndex`, `offsets`, `sizeDeltas`, `resizeAnchor`, or `zIndexDeltas` and rebuilding before regenerating the source.
 11. Regenerate with one targeted prompt change only when a cell is missing, clipped, inconsistent, or contains the wrong part.
 
 ## Acceptance
@@ -61,4 +61,4 @@ Create the source bitmap with the standard `imagegen` skill, then use the local 
 - `sprite build` reports no empty parts.
 - The output contains the logical sheet, scaled preview, frame metadata, recipe, and individual part PNGs.
 - Frame 8 returns to frame 1 placement for a clean loop.
-- No interpolation, rotation, scaling, IK, or provider-specific data enters the manifest or Rust core.
+- Resize uses integer width/height deltas, an explicit fixed anchor, and nearest-neighbor only; no rotation, free scaling, IK, or provider-specific data enters the manifest or Rust core.

@@ -16,6 +16,8 @@
 - Codexのrepo skillから標準`imagegen`を呼び出してparts sheetを作り、model APIや認証をRust CLIへ組み込まない。
 - `apps/sprite-editor`はVite + Reactのローカル専用rig editorとし、公開用`apps/web`から分離する。
 - sprite editorは生成済みpart PNGを画面上で合成して位置を即時確認するが、保存時の検証、減色、分割、frame合成、sheet packingは既存`pixel-cli sprite build`を正本とする。
+- sprite manifest schema version 2はversion 1のinteger offsetを維持したまま、frameごとの`sizeDeltas`、`zIndexDeltas`とpartごとの`resizeAnchor`を追加する。version 1は読み取り互換とし、editorで開いた時点でversion 2へ正規化する。
+- part resizeはpixel化後のopaque boundsだけをnearest-neighborで処理し、`resizeAnchor`のcanvas位置を固定する。小数scale、色補間、mesh変形を利用しない。
 - sprite editorは`127.0.0.1`だけへbindし、起動引数のmanifest、source、outputをrepository内へ制限する。候補manifestの一時buildが成功した場合だけmanifestをatomicに置き換える。
 
 既存のSwift/CLI adapterが利用する`PixelSession::render(PixelSettings)`は移行用の互換入口とし、v1変換仕様の正本には含めない。

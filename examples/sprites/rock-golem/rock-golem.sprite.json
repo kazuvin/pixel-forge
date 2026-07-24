@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "rock-golem",
   "generation": {
     "description": "a compact ancient rock golem monster assembled from massive cracked granite slabs, with broad shoulders, oversized heavy stone fists, short sturdy legs, and two small recessed warm amber eyes",
@@ -136,7 +136,42 @@
           "x": 0,
           "y": 0
         }
-      ]
+      ],
+      "sizeDeltas": [
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": -1
+        },
+        {
+          "width": 0,
+          "height": -2
+        },
+        {
+          "width": 0,
+          "height": -1
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "resizeAnchor": "bottom-center"
     },
     {
       "id": "right-leg",
@@ -186,7 +221,42 @@
           "x": 0,
           "y": 0
         }
-      ]
+      ],
+      "sizeDeltas": [
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": -1
+        },
+        {
+          "width": 0,
+          "height": -2
+        },
+        {
+          "width": 0,
+          "height": -1
+        },
+        {
+          "width": 0,
+          "height": 0
+        },
+        {
+          "width": 0,
+          "height": 0
+        }
+      ],
+      "resizeAnchor": "bottom-center"
     },
     {
       "id": "body",

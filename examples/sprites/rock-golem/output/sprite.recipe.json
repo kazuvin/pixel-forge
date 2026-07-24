@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "algorithmVersion": "0.1.0",
+  "algorithmVersion": "0.2.0",
   "inputSha256": "fa9c3ffd0ec4e14c028e95c03ce2dfa99630a9d56fef6901171dd99994176279",
   "coreRecipe": {
     "algorithmVersion": "0.2.0",
@@ -30,7 +30,7 @@
     "upscale": 1
   },
   "manifest": {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "id": "rock-golem",
     "generation": {
       "description": "a compact ancient rock golem monster assembled from massive cracked granite slabs, with broad shoulders, oversized heavy stone fists, short sturdy legs, and two small recessed warm amber eyes",
@@ -117,7 +117,10 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [],
+        "zIndexDeltas": [],
+        "resizeAnchor": "center"
       },
       {
         "id": "left-leg",
@@ -167,7 +170,43 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": -1
+          },
+          {
+            "width": 0,
+            "height": -2
+          },
+          {
+            "width": 0,
+            "height": -1
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          }
+        ],
+        "zIndexDeltas": [],
+        "resizeAnchor": "bottom-center"
       },
       {
         "id": "right-leg",
@@ -217,7 +256,43 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": -1
+          },
+          {
+            "width": 0,
+            "height": -2
+          },
+          {
+            "width": 0,
+            "height": -1
+          },
+          {
+            "width": 0,
+            "height": 0
+          },
+          {
+            "width": 0,
+            "height": 0
+          }
+        ],
+        "zIndexDeltas": [],
+        "resizeAnchor": "bottom-center"
       },
       {
         "id": "body",
@@ -267,7 +342,10 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [],
+        "zIndexDeltas": [],
+        "resizeAnchor": "center"
       },
       {
         "id": "right-arm",
@@ -317,7 +395,10 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [],
+        "zIndexDeltas": [],
+        "resizeAnchor": "center"
       },
       {
         "id": "head",
@@ -367,7 +448,10 @@
             "x": 0,
             "y": 0
           }
-        ]
+        ],
+        "sizeDeltas": [],
+        "zIndexDeltas": [],
+        "resizeAnchor": "center"
       }
     ]
   }
