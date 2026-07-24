@@ -1,19 +1,16 @@
 [package]
-name = "pixel-cli"
+name = "pixel-sprite"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-anyhow.workspace = true
-clap.workspace = true
-pixel-core = { path = "../pixel-core" }
-pixel-sprite = { path = "../pixel-sprite" }
-serde_json.workspace = true
-
-[dev-dependencies]
 image.workspace = true
-tempfile.workspace = true
+pixel-core = { path = "../pixel-core" }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true

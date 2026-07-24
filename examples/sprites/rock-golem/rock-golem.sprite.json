@@ -1,0 +1,342 @@
+{
+  "schemaVersion": 1,
+  "id": "rock-golem",
+  "generation": {
+    "description": "a compact ancient rock golem monster assembled from massive cracked granite slabs, with broad shoulders, oversized heavy stone fists, short sturdy legs, and two small recessed warm amber eyes",
+    "style": "clean high-resolution hand-painted fantasy game character concept pieces, chunky highly readable silhouettes, restrained granite texture, strong dark charcoal creases between stone plates, consistent outline treatment",
+    "view": "straight-on front view with no perspective tilt; every part faces the viewer exactly as it would in the assembled standing character",
+    "palette": "cool granite gray, dark charcoal, dusty taupe highlights, and two small warm amber eye accents; do not use green",
+    "chromaKey": "#00FF00",
+    "avoid": [
+      "moss",
+      "plants",
+      "metal armor",
+      "weapons",
+      "thin limbs",
+      "floating rubble",
+      "extra eyes"
+    ]
+  },
+  "grid": {
+    "columns": 3,
+    "rows": 3,
+    "logicalCellWidth": 32,
+    "logicalCellHeight": 32
+  },
+  "canvas": {
+    "width": 64,
+    "height": 64
+  },
+  "render": {
+    "colorCount": 12,
+    "dither": "none",
+    "previewScale": 4
+  },
+  "animation": {
+    "name": "idle",
+    "frames": 8,
+    "fps": 8
+  },
+  "parts": [
+    {
+      "id": "left-arm",
+      "cell": {
+        "column": 0,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 5
+      },
+      "position": {
+        "x": 19,
+        "y": 24
+      },
+      "zIndex": 10,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "left-leg",
+      "cell": {
+        "column": 1,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 4
+      },
+      "position": {
+        "x": 27,
+        "y": 39
+      },
+      "zIndex": 15,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "right-leg",
+      "cell": {
+        "column": 2,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 4
+      },
+      "position": {
+        "x": 37,
+        "y": 39
+      },
+      "zIndex": 16,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "body",
+      "cell": {
+        "column": 0,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "position": {
+        "x": 32,
+        "y": 31
+      },
+      "zIndex": 20,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "right-arm",
+      "cell": {
+        "column": 2,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 5
+      },
+      "position": {
+        "x": 45,
+        "y": 24
+      },
+      "zIndex": 30,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "id": "head",
+      "cell": {
+        "column": 1,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "position": {
+        "x": 32,
+        "y": 22
+      },
+      "zIndex": 35,
+      "offsets": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 2
+        },
+        {
+          "x": 0,
+          "y": 1
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    }
+  ]
+}

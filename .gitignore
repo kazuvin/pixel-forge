@@ -15,4 +15,6 @@ node_modules/
 .pnpm-store/
 apps/web/dist/
 apps/web/.astro/
+apps/sprite-editor/dist/
+build/ci-smoke/moss-golem-imagegen-prompt.md
 .wrangler/

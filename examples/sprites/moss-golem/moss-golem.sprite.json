@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "id": "moss-golem",
+  "generation": {
+    "description": "a compact friendly moss golem monster made from stacked weathered sandstone, roots, and small moss patches, with a single warm amber crystal eye and a short wooden club",
+    "style": "clean high-resolution hand-painted fantasy game character concept pieces, chunky readable silhouettes, restrained texture, consistent dark brown outline treatment",
+    "view": "straight-on front view with no perspective tilt; every part faces the viewer exactly as it would in the assembled standing character",
+    "palette": "moss green, muted sandstone beige, dark root brown, and one warm amber accent; do not use magenta",
+    "chromaKey": "#FF00FF",
+    "avoid": [
+      "realistic fur",
+      "thin fragile limbs",
+      "more than one eye",
+      "extra weapons",
+      "detached moss fragments"
+    ]
+  },
+  "grid": {
+    "columns": 3,
+    "rows": 3,
+    "logicalCellWidth": 32,
+    "logicalCellHeight": 32
+  },
+  "canvas": {
+    "width": 64,
+    "height": 64
+  },
+  "render": {
+    "colorCount": 12,
+    "dither": "none",
+    "previewScale": 4
+  },
+  "animation": {
+    "name": "idle",
+    "frames": 8,
+    "fps": 8
+  },
+  "parts": [
+    {
+      "id": "left-arm",
+      "cell": {
+        "column": 2,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 5
+      },
+      "position": {
+        "x": 20,
+        "y": 25
+      },
+      "zIndex": 10,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "left-leg",
+      "cell": {
+        "column": 1,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 4
+      },
+      "position": {
+        "x": 27,
+        "y": 39
+      },
+      "zIndex": 15,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "right-leg",
+      "cell": {
+        "column": 2,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 4
+      },
+      "position": {
+        "x": 37,
+        "y": 39
+      },
+      "zIndex": 16,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "body",
+      "cell": {
+        "column": 0,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "position": {
+        "x": 32,
+        "y": 31
+      },
+      "zIndex": 20,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "right-arm",
+      "cell": {
+        "column": 0,
+        "row": 1
+      },
+      "anchor": {
+        "x": 16,
+        "y": 5
+      },
+      "position": {
+        "x": 44,
+        "y": 25
+      },
+      "zIndex": 30,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "head",
+      "cell": {
+        "column": 1,
+        "row": 0
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "position": {
+        "x": 32,
+        "y": 15
+      },
+      "zIndex": 35,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 2 },
+        { "x": 0, "y": 2 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 0 }
+      ]
+    },
+    {
+      "id": "equipment",
+      "cell": {
+        "column": 0,
+        "row": 2
+      },
+      "anchor": {
+        "x": 16,
+        "y": 8
+      },
+      "position": {
+        "x": 48,
+        "y": 29
+      },
+      "zIndex": 40,
+      "offsets": [
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 1 },
+        { "x": 0, "y": 0 },
+        { "x": 0, "y": 0 }
+      ]
+    }
+  ]
+}

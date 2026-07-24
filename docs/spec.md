@@ -6,12 +6,17 @@
 
 - Rust Cargo workspace、Swift Package、iPhoneアプリ、サポートWebを同じrepositoryに置く。
 - `pixel-core`を変換仕様の正本にする。
+- `pixel-sprite`は`pixel-core`を利用して透過partの分割、frame合成、sprite sheet packingを行い、画像生成providerとfile I/Oを持たない。
 - Swift連携にはUniFFI 0.32を使う。
 - Apple向けRust成果物はstatic libraryをXCFrameworkに包む。
 - core APIは同期処理とし、呼び出し側がbackground taskで実行する。
 - v1のcore APIは`PixelSession::convert(RenderSettings)`とする。
 - 課金、theme、ファイル永続化、画面状態を`pixel-core`と`pixel-ffi`へ持ち込まない。
 - `pixel-cli`は個人利用とし、StoreKitによる課金制限を設けない。一般配布はMVPの対象外とする。
+- Codexのrepo skillから標準`imagegen`を呼び出してparts sheetを作り、model APIや認証をRust CLIへ組み込まない。
+- `apps/sprite-editor`はVite + Reactのローカル専用rig editorとし、公開用`apps/web`から分離する。
+- sprite editorは生成済みpart PNGを画面上で合成して位置を即時確認するが、保存時の検証、減色、分割、frame合成、sheet packingは既存`pixel-cli sprite build`を正本とする。
+- sprite editorは`127.0.0.1`だけへbindし、起動引数のmanifest、source、outputをrepository内へ制限する。候補manifestの一時buildが成功した場合だけmanifestをatomicに置き換える。
 
 既存のSwift/CLI adapterが利用する`PixelSession::render(PixelSettings)`は移行用の互換入口とし、v1変換仕様の正本には含めない。
 
@@ -110,4 +115,4 @@ Cloudflareの現行構成は[Astro framework guide](https://developers.cloudflar
 - Non-Consumableの商品identifier、価格、Family Sharing
 - custom domain、GoogleフォームURL、運営者の法務表記
 - iPadOS版の追加時期
-- sprite sheet、透過背景除去、輪郭強調の追加
+- iPhoneアプリへのsprite asset workflow、透過背景除去、輪郭強調の追加

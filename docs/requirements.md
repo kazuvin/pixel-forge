@@ -125,17 +125,35 @@ Pixel Forgeは、写真を機械的かつ再現可能なピクセルアートへ
 
 詳細は`docs/web-spec.md`を正本とする。
 
+## 個人向けSprite Asset CLI
+
+- Codexの`imagegen`で作った正方形のparts sheetを、個人利用のCLIからgame用sprite assetへ変換できる。
+- 画像生成はCodex skillが担当し、model API、認証、prompt実行をRust workspaceとiPhoneアプリへ持ち込まない。
+- parts sheetは見えない固定gridの各cellへbody、head、arm、leg、equipmentなどを分離して配置する。part名と個数は固定せず、monster固有の構成をmanifestへ記録する。
+- parts sheet全体を一度だけ共通の論理解像度とpaletteへ変換してからpartへ分割し、part単位の色ぶれを避ける。
+- 透過partをinteger pixel offsetと明示z-orderで合成し、1frame 64x64、8frame、8fpsのidle animationを横一列のPNGへ出力する。
+- head、body、armの沈みはmanifestのframe配列で定義し、legは接地を守る標準presetを用意する。
+- game用の論理sprite sheet、nearest-neighbor拡大preview、frame metadata、各part PNG、入力hashとalgorithm versionを持つrecipeを出力する。
+- 同じ透過parts sheetとmanifestから同じdecode後RGBA、metadata、recipeを生成する。
+- 生成済みpartの基準位置、接続点、z-order、frameごとのoffsetを調整するローカル専用editorを提供する。
+- editorはpartのドラッグ、矢印キーによる1pixel移動、8frameの選択と再生、任意の完成参考画像のoverlay、manifestの書き出しを提供する。
+- editorの保存は候補manifestを一時出力でCLI buildしてから元のmanifestへ反映し、game用assetも同じ`pixel-cli sprite build`で再生成する。
+- editorのlocal serverは`127.0.0.1`だけへbindし、起動時に指定したrepository内path以外を読み書きしない。公開Webへ含めず、deployしない。
+- Unityなどのgame engine固有importerは持たない。
+
+詳細は`docs/sprite-workflow.md`を正本とする。
+
 ## MVPに含めない
 
-- 生成AIによる描き直し
-- 手描き編集、レイヤー、アニメーション
+- iPhoneアプリ内の生成AIによる描き直し
+- iPhoneアプリ内の手描き編集、レイヤー、アニメーション
 - クラウド保存、アプリ独自アカウント、端末間の画像同期
 - 広告、サブスクリプション、消費型課金
 - 複数変換の並列実行またはbatch queue
 - Unity/ゲームエンジン固有importer
 - iPadOS、macOS、Mac Catalyst、Windows、Android向けUI
 - ICC profileを使った厳密な印刷色管理
-- 透過背景の維持または背景除去
+- iPhone静止画変換での透過背景の維持または背景除去
 - ディザリング
 - 入力画像からのpalette自動生成
 

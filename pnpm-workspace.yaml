@@ -1,5 +1,6 @@
 packages:
   - apps/web
+  - apps/sprite-editor
 allowBuilds:
   esbuild: true
   sharp: true

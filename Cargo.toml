@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "crates/pixel-core",
+  "crates/pixel-sprite",
   "crates/pixel-ffi",
   "crates/pixel-cli",
   "tools/uniffi-bindgen",
@@ -20,6 +21,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sha2 = "0.10"
 thiserror = "2.0"
+tempfile = "3.27"
 uniffi = "0.32.0"
 
 [workspace.lints.rust]
@@ -28,4 +30,3 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 all = "warn"
 pedantic = "warn"
-

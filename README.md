@@ -5,10 +5,12 @@
 ## 構成
 
 - `crates/pixel-core`: 画像変換の正本。Apple APIやFFIに依存しません。
+- `crates/pixel-sprite`: 透過パーツの分割、8フレーム合成、sprite sheet packingを行います。
 - `crates/pixel-cli`: ゲームアセットをバッチ生成するCLIです。
 - `crates/pixel-ffi`: UniFFIを使ってRust APIをSwiftへ公開します。
 - `packages/PixelCoreKit`: 生成されたSwift bindingとXCFrameworkを包むSwift Packageです。
 - `apps/apple/PixelForgeApp`: 入力、比較、設定、PNG画像の写真アプリ保存を行うiPhone縦向き専用のSwiftUIアプリです。
+- `apps/sprite-editor`: sprite manifestをドラッグ調整してCLIで再ビルドするローカル専用Reactツールです。
 - `apps/web`: 日英のsupport、privacy、termsを静的生成するAstroサイトです。
 
 SwiftUIアプリは黒基調・白基調のtheme、日英localization、DotGothic16を使う共通design systemを持ちます。実装境界とUI変更手順は[`docs/design-system.md`](docs/design-system.md)と[`docs/ui-workflow.md`](docs/ui-workflow.md)を参照してください。
@@ -47,6 +49,7 @@ CLIはApple向け成果物を作らなくても利用できます。
 
 ```bash
 cargo run -p pixel-cli -- \
+  convert \
   fixtures/source-gradient.ppm \
   --output /tmp/pixel-forge-preview.png \
   --width 32 \
@@ -55,6 +58,39 @@ cargo run -p pixel-cli -- \
   --dither bayer4x4 \
   --scale 8
 ```
+
+Codex `imagegen`からmonster parts sheetを作り、8-frame sprite assetへ変換する手順は[`docs/sprite-workflow.md`](docs/sprite-workflow.md)を参照してください。
+
+```bash
+cargo run -p pixel-cli -- sprite validate \
+  examples/sprites/moss-golem/moss-golem.sprite.json
+
+cargo run -p pixel-cli -- sprite prompt \
+  examples/sprites/moss-golem/moss-golem.sprite.json \
+  --output examples/sprites/moss-golem/imagegen-prompt.md
+
+cargo run -p pixel-cli -- sprite build \
+  examples/sprites/moss-golem/moss-golem.sprite.json \
+  --source examples/sprites/moss-golem/parts.png \
+  --output examples/sprites/moss-golem/output
+```
+
+生成後のパーツ位置はローカル専用のSprite Rig Editorで調整できます。標準では岩ゴーレムを開き、`127.0.0.1`以外へbindしません。
+
+```bash
+corepack pnpm sprite-editor:dev
+```
+
+別のmonsterを開く場合はmanifest、透過parts sheet、出力directoryをrepository rootからの相対pathで渡します。
+
+```bash
+corepack pnpm --filter @pixel-forge/sprite-editor dev -- \
+  --manifest examples/sprites/my-golem/my-golem.sprite.json \
+  --source examples/sprites/my-golem/my-golem.parts.png \
+  --output examples/sprites/my-golem/output
+```
+
+画面ではpartをドラッグまたは矢印キーで1pxずつ移動し、基準位置とframe固有offsetを切り替えられます。`保存してビルド`は候補manifestを一時directoryで検証・buildしてから元のmanifestへ保存し、同じRust CLIでgame用PNGを再生成します。
 
 完了前の品質ゲートは次の1コマンドです。
 

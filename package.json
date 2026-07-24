@@ -3,6 +3,10 @@
   "private": true,
   "packageManager": "pnpm@11.15.1",
   "scripts": {
+    "sprite-editor:dev": "pnpm --filter @pixel-forge/sprite-editor dev",
+    "sprite-editor:check": "pnpm --filter @pixel-forge/sprite-editor check",
+    "sprite-editor:test": "pnpm --filter @pixel-forge/sprite-editor test",
+    "sprite-editor:build": "pnpm --filter @pixel-forge/sprite-editor build",
     "web:check": "pnpm --filter @pixel-forge/web check",
     "web:test": "pnpm --filter @pixel-forge/web test",
     "web:build": "pnpm --filter @pixel-forge/web build"

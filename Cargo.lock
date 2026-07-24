@@ -520,7 +520,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "image",
  "pixel-core",
+ "pixel-sprite",
+ "serde_json",
+ "tempfile",
 ]
 
 [[package]]
@@ -541,6 +545,18 @@ dependencies = [
  "pixel-core",
  "thiserror",
  "uniffi",
+]
+
+[[package]]
+name = "pixel-sprite"
+version = "0.1.0"
+dependencies = [
+ "image",
+ "pixel-core",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror",
 ]
 
 [[package]]

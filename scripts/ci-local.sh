@@ -15,6 +15,7 @@ cargo test --workspace
 
 mkdir -p "$smoke_dir"
 cargo run -p pixel-cli -- \
+  convert \
   "$root_dir/fixtures/source-gradient.ppm" \
   --output "$smoke_dir/output.png" \
   --width 16 \
@@ -22,6 +23,12 @@ cargo run -p pixel-cli -- \
   --colors 6 \
   --dither bayer4x4 \
   --scale 4
+
+cargo run -p pixel-cli -- sprite validate \
+  "$root_dir/examples/sprites/moss-golem/moss-golem.sprite.json"
+cargo run -p pixel-cli -- sprite prompt \
+  "$root_dir/examples/sprites/moss-golem/moss-golem.sprite.json" \
+  --output "$smoke_dir/moss-golem-imagegen-prompt.md"
 
 "$root_dir/scripts/build-apple.sh"
 swift test --package-path "$root_dir/packages/PixelCoreKit"
@@ -31,5 +38,8 @@ corepack pnpm --filter @pixel-forge/web test
 corepack pnpm --filter @pixel-forge/web check
 corepack pnpm --filter @pixel-forge/web build
 corepack pnpm --filter @pixel-forge/web deploy:dry-run
+corepack pnpm --filter @pixel-forge/sprite-editor test
+corepack pnpm --filter @pixel-forge/sprite-editor check
+corepack pnpm --filter @pixel-forge/sprite-editor build
 
 echo "ci-local passed"

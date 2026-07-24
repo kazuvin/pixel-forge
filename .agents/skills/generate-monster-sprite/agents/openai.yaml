@@ -1,0 +1,4 @@
+interface:
+  display_name: "Generate Monster Sprite"
+  short_description: "Generate a monster parts sheet and compile an 8-frame sprite"
+  default_prompt: "Use $generate-monster-sprite to generate a monster parts sheet and compile its idle sprite assets."

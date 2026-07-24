@@ -11,8 +11,10 @@
 ## 境界
 
 - `pixel-core`を画像変換仕様の正本とし、Swift、AppKit、UniFFI、CLIの都合を持ち込まない。
+- `pixel-sprite`は`pixel-core`を利用する汎用part合成層とし、monster固有preset、file path、image generation provider、game engine importerを持ち込まない。
 - `pixel-ffi`は型変換だけを担当し、画像処理を実装しない。
 - `pixel-cli`とSwiftアプリは同じ`pixel-core`を利用する。
+- monster parts sheetは`.agents/skills/generate-monster-sprite/`から標準`imagegen`を利用して生成し、model APIや認証をRust workspaceへ実装しない。
 - ゲーム固有の命名、配置、Unity設定はcoreではなくpresetまたは利用側へ置く。
 - MVPはローカル処理だけで成立させる。アカウント、クラウド同期、生成AI、バックエンドは追加しない。
 
